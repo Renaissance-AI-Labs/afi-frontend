@@ -5,8 +5,9 @@ import { reactive, computed } from 'vue';
 export const i18nState = reactive({
   currentLanguage: 'en', // Default to English
   languages: {
-    'en': { name: 'English', code: 'en' },
-    'zh-cn': { name: '简体中文', code: 'zh-cn' },
+    'en': { name: 'English', code: 'en', label: 'EN' },
+    'zh-cn': { name: '简体中文', code: 'zh-cn', label: '简' },
+    'zh-tw': { name: '繁體中文', code: 'zh-tw', label: '繁' },
   }
 });
 
@@ -32,6 +33,16 @@ const languagePacks = {
      'wallet.network': '网络',
      'wallet.disconnect': '断开连接',
      'wallet.noWalletDetected': '未检测到钱包',
+  },
+  'zh-tw': {
+     'header.connectWallet': '連接錢包',
+     'wallet.connectTitle': '連接錢包',
+     'wallet.connectSubtitle': '請選擇錢包',
+     'wallet.connectedTitle': '已連接',
+     'wallet.address': '地址',
+     'wallet.network': '網絡',
+     'wallet.disconnect': '斷開連接',
+     'wallet.noWalletDetected': '未檢測到錢包',
   }
 };
 
