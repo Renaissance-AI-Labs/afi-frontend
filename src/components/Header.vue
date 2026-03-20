@@ -1,53 +1,47 @@
 <template>
-    <div class="header-container" id="site-header">
-        <div class="header-content">
-            <!-- Logo -->
-            <div class="logo-wrapper">
-                <router-link to="/" class="logo-text">
-                  AgentFi
-                </router-link>
-            </div>
-
-            <!-- Desktop Navigation (Structure Kept, Content Empty/Generic) -->
-            <nav class="desktop-nav">
-                <ul class="nav-list">
-                    <!-- Navigation items placeholder -->
-                </ul>
-            </nav>
-
-            <!-- Right Actions -->
-            <div class="header-actions">
-                <!-- Wallet Connect -->
-                <a v-if="!walletState.isConnected" href="#" @click.prevent="openModal" class="connect-btn">
-                    <span class="btn-text">{{ t('header.connectWallet') || 'Connect Wallet' }}</span>
-                </a>
-                <a v-else href="#" @click.prevent="openModal" class="connect-btn connected">
-                    <span class="status-dot"></span>
-                    <span class="address-text">{{ formattedAddress }}</span>
-                </a>
-
-                <!-- Language Selector -->
-                <button class="action-btn lang-btn" @click="openLanguageModal" title="Change Language">
-                    <span>🌐</span>
-                </button>
-            </div>
-        </div>
-    </div>
+  <header class="flex justify-between items-center px-4 py-2 z-10 bg-gradient-to-b from-black/60 to-transparent h-14">
+      <div class="flex items-center gap-2">
+          <svg class="w-6 h-6 text-app-pink" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+          <router-link to="/" class="font-display text-lg tracking-widest text-white shadow-black drop-shadow-md">
+            AGENT.FI
+          </router-link>
+      </div>
+      <div class="flex items-center gap-4 text-white">
+          <div class="flex items-center gap-1 cursor-pointer text-gray-300 hover:text-white transition" @click="openLanguageModal">
+              <i class="ph ph-globe text-xl"></i>
+              <span class="text-[10px] font-bold uppercase">{{ currentLangLabel }}</span>
+          </div>
+          
+          <div v-if="!walletState.isConnected" @click.prevent="openModal" class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/50 cursor-pointer shadow-lg">
+              <i class="ph ph-wallet text-white"></i>
+          </div>
+          <div v-else @click.prevent="openModal" class="px-3 h-8 rounded-full bg-gradient-to-tr from-green-500 to-teal-500 flex items-center justify-center border-2 border-white/50 cursor-pointer shadow-lg text-xs font-bold">
+              {{ formattedAddress }}
+          </div>
+      </div>
+  </header>
 </template>
 
 <script>
 import { walletState, formatAddress } from '@/services/wallet.js';
 import { computed } from 'vue';
-import { t } from '@/i18n';
+import { t, i18nState, currentLanguage } from '@/i18n';
 
 export default {
   name: 'Header',
   setup() {
     const formattedAddress = computed(() => formatAddress(walletState.address));
+    const currentLangLabel = computed(() => {
+        const lang = i18nState.languages[currentLanguage.value];
+        return lang ? lang.label : 'EN';
+    });
 
     return {
       walletState,
       formattedAddress,
+      currentLangLabel,
       t,
     };
   },
@@ -62,99 +56,5 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
-/* LAYOUT ONLY STYLES */
-
-.header-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: var(--header-height);
-  z-index: 1000;
-  /* Visual styles removed (background, border, shadow, radius) */
-}
-
-.header-content {
-  max-width: var(--container-width, 1200px); /* Fallback added */
-  margin: 0 auto;
-  height: 100%;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Logo */
-.logo-wrapper {
-  flex-shrink: 0;
-}
-
-.logo-text {
-  font-weight: bold;
-  font-size: 20px;
-  text-decoration: none;
-  color: inherit; /* Inherit from parent/global */
-}
-
-/* Desktop Navigation */
-.desktop-nav {
-  display: none;
-
-  @media (min-width: 992px) {
-    display: block;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .nav-list {
-    display: flex;
-    align-items: center;
-    gap: 40px;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-}
-
-/* Actions */
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.action-btn {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  /* Visual styles removed */
-}
-
-/* Connect Wallet Button */
-.connect-btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  /* Visual styles removed (border, radius, background) */
-  
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    display: inline-block;
-    background: green; /* kept minimal indicator */
-    border-radius: 50%;
-  }
-}
+<style scoped>
 </style>

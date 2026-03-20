@@ -1,27 +1,29 @@
 <template>
-  <div>
-    <!-- Retaining core wallet functionality components -->
+  <div class="app-container">
     <ToastNotification />
     
-    <Header @open-get-started-modal="openModal" />
-    
-    <!-- Simplified Layout Wrapper -->
-    <div id="wrapper">
-      <router-view />
+    <div class="scroll-content hide-scrollbar relative">
+      <router-view @open-get-started-modal="openModal" @open-language-modal="openLanguageModal" />
+      <Footer />
     </div>
     
-    <Footer />
+    <BottomNav />
     
     <transition name="modal">
       <ConnectWalletModal v-if="isModalVisible" @close="closeModal" />
+    </transition>
+
+    <transition name="modal">
+      <LanguageModal v-if="isLanguageModalVisible" @close="closeLanguageModal" />
     </transition>
   </div>
 </template>
 
 <script>
-import Header from './components/Header.vue';
 import Footer from './components/Footer.vue';
+import BottomNav from './components/BottomNav.vue';
 import ConnectWalletModal from './components/ConnectWalletModal.vue';
+import LanguageModal from './components/LanguageModal.vue';
 import ToastNotification from './components/ToastNotification.vue';
 import { autoConnectWallet } from './services/wallet.js';
 import { initializeLanguage } from './i18n';
@@ -29,14 +31,16 @@ import { initializeLanguage } from './i18n';
 export default {
   name: 'App',
   components: {
-    Header,
     Footer,
+    BottomNav,
     ConnectWalletModal,
+    LanguageModal,
     ToastNotification
   },
   data() {
     return {
       isModalVisible: false,
+      isLanguageModalVisible: false,
     };
   },
   methods: {
@@ -45,6 +49,12 @@ export default {
     },
     closeModal() {
       this.isModalVisible = false;
+    },
+    openLanguageModal() {
+      this.isLanguageModalVisible = true;
+    },
+    closeLanguageModal() {
+      this.isLanguageModalVisible = false;
     }
   },
   mounted() {
@@ -55,11 +65,11 @@ export default {
 </script>
 
 <style scoped>
-/* Removed visual styles, retained necessary layout if any */
-#wrapper {
-  padding-top: var(--header-height); /* Ensure content doesn't hide behind fixed header */
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* Modal transition */
+.modal-enter-active, .modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+.modal-enter-from, .modal-leave-to {
+  opacity: 0;
 }
 </style>

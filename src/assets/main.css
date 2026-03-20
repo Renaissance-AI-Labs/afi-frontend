@@ -1,1 +1,132 @@
-/* Empty main css */
+body {
+    background-color: #0b0914;
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+#app {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* 模拟手机屏幕容器 */
+.app-container {
+    width: 100%;
+    max-width: 414px;
+    height: 100vh;
+    max-height: 896px;
+    background-color: #1a153a;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+}
+
+/* 隐藏滚动条 */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* 英雄区域背景 */
+.hero-bg {
+    background: linear-gradient(to bottom, #2a1b54, #1a153a), url('http://googleusercontent.com/image_generation_content/0');
+    background-blend-mode: overlay;
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+/* 莫比斯风格标题文字描边和发光效果 */
+.title-moebius {
+    font-family: 'Rye', serif;
+    color: #fffae6;
+    -webkit-text-stroke: 1.5px #111;
+    text-shadow: 
+        0 0 15px rgba(255, 255, 255, 0.8),
+        3px 3px 0px #000,
+        -1px -1px 0px #000,
+        1px -1px 0px #000,
+        -1px 1px 0px #000;
+    letter-spacing: 0.05em;
+    animation: pulse-glow 3s infinite alternate;
+}
+
+@keyframes pulse-glow {
+    0% {
+        text-shadow: 
+            0 0 10px rgba(255, 77, 141, 0.5),
+            3px 3px 0px #000,
+            -1px -1px 0px #000,
+            1px -1px 0px #000,
+            -1px 1px 0px #000;
+    }
+    50% {
+        text-shadow: 
+            0 0 25px rgba(168, 85, 247, 0.9),
+            3px 3px 0px #000,
+            -1px -1px 0px #000,
+            1px -1px 0px #000,
+            -1px 1px 0px #000;
+    }
+    100% {
+        text-shadow: 
+            0 0 10px rgba(77, 184, 255, 0.5),
+            3px 3px 0px #000,
+            -1px -1px 0px #000,
+            1px -1px 0px #000,
+            -1px 1px 0px #000;
+    }
+}
+
+.subtitle-moebius {
+    color: #fff;
+    -webkit-text-stroke: 0.5px #000;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+/* 霓虹边框发光效果 - 高度还原线条 */
+.glow-border-pink {
+    border: 2px solid #ff4d8d;
+    box-shadow: 0 0 10px rgba(255, 77, 141, 0.5), inset 0 0 10px rgba(255, 77, 141, 0.3);
+}
+.glow-border-blue {
+    border: 2px solid #4db8ff;
+    box-shadow: 0 0 10px rgba(77, 184, 255, 0.5), inset 0 0 10px rgba(77, 184, 255, 0.3);
+}
+.glow-border-purple {
+    border: 2px solid #a855f7;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.5), inset 0 0 10px rgba(168, 85, 247, 0.3);
+}
+
+/* 面板通用边框 */
+.panel-border {
+    border: 1px solid rgba(255, 77, 141, 0.4);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+.scroll-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 60px;
+}
+
+/* 按钮悬浮特效 */
+.action-btn {
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+}
+.action-btn:active {
+    transform: scale(0.95);
+}

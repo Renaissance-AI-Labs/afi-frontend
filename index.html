@@ -34,9 +34,40 @@
     <link rel="preconnect" href="https://fonts.loli.net">
     <link rel="preconnect" href="https://gstatic.loli.net" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700;800&family=Rye&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Tailwind CSS (CDN for quick setup matching sample) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Bungee', 'cursive'],
+                        serif: ['Rye', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        app: {
+                            bg: '#1a153a',
+                            card: '#221b44',
+                            pink: '#ff4d8d',
+                            blue: '#4db8ff',
+                            purple: '#a855f7',
+                            text: '#f8fafc',
+                            textMuted: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- External CSS Libraries -->
-    <link rel="stylesheet" href="/asset/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="/asset/css/bootstrap.min.css"> -->
     <link rel="stylesheet" href="/asset/css/animate.css">
     <link rel="stylesheet" href="/asset/css/odometer.min.css">
     <link rel="stylesheet" href="/asset/css/swiper-bundle.min.css">
@@ -46,7 +77,7 @@
     <link rel="stylesheet" href="/asset/fonts/fonts.css">
 
     <!-- Main CSS (Retained structure for development) -->
-    <link rel="stylesheet" type="text/css" href="/asset/css/styles.css">
+    <!-- <link rel="stylesheet" type="text/css" href="/asset/css/styles.css"> -->
 </head>
 
 <body class="counter-scroll">

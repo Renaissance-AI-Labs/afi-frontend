@@ -1,19 +1,20 @@
 <template>
-    <footer class="section-footer">
-        <div class="container">
-            <div class="footer-content">
-                <!-- Top: Logo & Info -->
-                <div class="footer-top">
-                    <div class="footer-brand">
-                        <span class="brand-name">AgentFi</span>
-                    </div>
-                </div>
-
-                <!-- Bottom: Copyright -->
-                <div class="footer-bottom">
-                    <p class="copyright">© 2026 AgentFi</p>
+    <footer class="py-4 mt-6 border-t border-app-pink/20 relative z-10 bg-transparent flex flex-col items-center justify-center h-20">
+        <div class="flex flex-col items-center justify-center gap-3">
+            <div class="flex items-center gap-4">
+                <div class="font-display text-lg tracking-widest text-white shadow-black drop-shadow-md">AGENT.FI</div>
+                
+                <div class="flex items-center gap-3">
+                    <a href="https://x.com/AgentFi" target="_blank" class="w-8 h-8 rounded-full bg-[#221b44] border border-purple-500/30 flex items-center justify-center text-gray-400 hover:text-app-pink hover:border-app-pink/60 transition-all shadow-lg">
+                        <i class="ph ph-twitter-logo text-lg"></i>
+                    </a>
+                    <a href="https://t.me/AgentFi" target="_blank" class="w-8 h-8 rounded-full bg-[#221b44] border border-purple-500/30 flex items-center justify-center text-gray-400 hover:text-app-pink hover:border-app-pink/60 transition-all shadow-lg">
+                        <i class="ph ph-telegram-logo text-lg"></i>
+                    </a>
                 </div>
             </div>
+
+            <p class="text-gray-500 text-[9px] tracking-wide">© 2026 AgentFi. All rights reserved.</p>
         </div>
     </footer>
 </template>
@@ -24,57 +25,5 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
-/* LAYOUT ONLY STYLES */
-
-.section-footer {
-    padding: 80px 0 40px;
-    position: relative;
-    z-index: 1;
-    /* Visual styles removed */
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-}
-
-.footer-content {
-    display: flex;
-    flex-direction: column;
-}
-
-.footer-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 60px;
-    
-    @media (max-width: 768px) {
-        flex-direction: column;
-        gap: 40px;
-    }
-}
-
-.footer-brand {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.brand-name {
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-.footer-bottom {
-    display: flex;
-    justify-content: center; /* Centered for simplicity in new design */
-    align-items: center;
-}
-
-.copyright {
-    font-size: 0.9rem;
-}
+<style scoped>
 </style>

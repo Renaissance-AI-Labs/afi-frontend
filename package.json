@@ -19,9 +19,19 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@vitejs/plugin-legacy": "^7.0.0",
     "@vitejs/plugin-vue": "^6.0.1",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
     "sass": "^1.94.2",
+    "tailwindcss": "^4.2.2",
     "vite": "^7.0.6",
     "vite-plugin-vue-devtools": "^8.0.0"
-  }
+  },
+  "browserslist": [
+    "> 0.5%",
+    "last 2 versions",
+    "iOS >= 15",
+    "Android >= 5"
+  ]
 }
