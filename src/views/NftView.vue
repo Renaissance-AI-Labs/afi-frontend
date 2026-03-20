@@ -1,178 +1,258 @@
 <template>
-  <div class="nft-view relative pb-10 min-h-[calc(100vh-140px)]">
+  <div class="nft-view relative pb-20 min-h-[calc(100vh-140px)]">
     <div class="bg-gradient-to-b from-[#1a153a] to-[#0b0914]">
       <Header @open-get-started-modal="$emit('open-get-started-modal')" @open-language-modal="$emit('open-language-modal')" />
     </div>
 
     <!-- 主要内容区域 -->
-    <main class="px-4 pt-6 relative z-20">
+    <main class="px-4 pt-4 relative z-20">
         
-        <!-- AI Agent Pools 模块 -->
-        <section class="mb-5">
+        <!-- NFT 认购 模块 -->
+        <section class="mb-6">
             <div class="bg-app-card/80 backdrop-blur-sm rounded-t-xl border-t border-x border-app-pink/30 px-3 py-1.5 inline-block mb-[-1px] relative z-10">
-                <h2 class="text-[12px] font-display text-white tracking-wider">AI AGENT POOLS</h2>
+                <h2 class="text-[13px] font-display text-white tracking-wider tech-font font-bold">NFT 认购</h2>
             </div>
             
-            <!-- 横向滚动卡片容器 -->
-            <div class="flex gap-3 overflow-x-auto hide-scrollbar pb-3 pt-2 bg-app-card/40 rounded-b-xl rounded-tr-xl border border-app-pink/30 p-2">
-                
-                <!-- 卡片 1 (粉色) -->
-                <div class="min-w-[150px] bg-[#1a153a] rounded-xl p-3 glow-border-pink flex flex-col justify-between shrink-0 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-pink-500/10 rounded-full blur-xl"></div>
-                    <div class="relative z-10">
-                        <div class="text-[9px] text-pink-300 font-bold leading-tight uppercase tracking-wider">Optimized Yield</div>
-                        <div class="text-lg font-display text-white mb-2 tracking-wide">GAMMA</div>
-                        <div class="w-full h-16 rounded border border-pink-500/50 flex items-center justify-center mb-2 overflow-hidden relative">
-                            <div class="absolute inset-0 bg-gradient-to-br from-pink-900/50 to-purple-900/50"></div>
-                            <i class="ph-duotone ph-planet text-3xl text-pink-300 relative z-10"></i>
+            <div class="flex flex-col gap-3 pb-4 pt-3 bg-app-card/40 rounded-b-xl rounded-tr-xl border border-app-pink/30 p-3">
+                <!-- 卡片 1 (第一期) - 左右布局，增加高度 -->
+                <div class="w-full bg-[#1a153a] rounded-xl p-4 glow-border-pink flex relative overflow-hidden gap-4 min-h-[160px]">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl"></div>
+                    
+                    <!-- 左侧：图片和标题 -->
+                    <div class="w-[140px] shrink-0 flex flex-col relative z-10">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="text-[11px] text-pink-300 font-bold leading-tight uppercase tracking-wider tech-font">第一期</div>
+                            <div class="text-[14px] font-display text-white tracking-wide">GAMMA</div>
                         </div>
-                        <div class="text-[13px] font-bold text-white mb-1">APY: 34.8%</div>
-                        <p class="text-[8px] text-gray-400 leading-tight mb-3 h-[24px]">
-                            Description of balance agents, and yield dynamic growth.
-                        </p>
-                    </div>
-                    <button class="action-btn w-full bg-app-pink text-white font-display text-[11px] py-1.5 rounded border border-pink-300 hover:bg-pink-600 relative z-10 tracking-widest">
-                        [DEPLOY]
-                    </button>
-                </div>
-
-                <!-- 卡片 2 (蓝色) -->
-                <div class="min-w-[150px] bg-[#1a153a] rounded-xl p-3 glow-border-blue flex flex-col justify-between shrink-0 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl"></div>
-                    <div class="relative z-10">
-                        <div class="text-[9px] text-blue-300 font-bold leading-tight uppercase tracking-wider">Risk Mitigator</div>
-                        <div class="text-lg font-display text-white mb-2 tracking-wide">ZETA</div>
-                        <div class="w-full h-16 rounded border border-blue-500/50 flex items-center justify-center mb-2 overflow-hidden relative">
-                            <div class="absolute inset-0 bg-gradient-to-br from-blue-900/50 to-cyan-900/50"></div>
-                            <i class="ph-duotone ph-robot text-3xl text-blue-300 relative z-10"></i>
+                        <!-- 正方形图片 -->
+                        <div class="w-full aspect-square rounded-lg border border-pink-500/50 flex items-center justify-center overflow-hidden relative bg-black/40 p-1.5 shadow-inner">
+                            <img src="/asset/images/logo/NFT.png" alt="NFT" class="w-full h-full object-contain relative z-10 drop-shadow-[0_0_10px_rgba(255,77,141,0.6)]" />
                         </div>
-                        <div class="text-[13px] font-bold text-white mb-1">APY: 22.1%</div>
-                        <p class="text-[8px] text-gray-400 leading-tight mb-3 h-[24px]">
-                            Calm approach to change markets, and maintain investments.
-                        </p>
                     </div>
-                    <button class="action-btn w-full bg-app-blue text-[#0b0914] font-display text-[11px] py-1.5 rounded border border-blue-200 hover:bg-blue-400 relative z-10 tracking-widest">
-                        [ACTIVATE]
-                    </button>
-                </div>
 
-                <!-- 卡片 3 (紫色) -->
-                <div class="min-w-[150px] bg-[#1a153a] rounded-xl p-3 glow-border-purple flex flex-col justify-between shrink-0 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full blur-xl"></div>
-                    <div class="relative z-10">
-                        <div class="text-[9px] text-purple-300 font-bold leading-tight uppercase tracking-wider">Arbitrage</div>
-                        <div class="text-lg font-display text-white mb-2 tracking-wide">ALPHA</div>
-                        <div class="w-full h-16 rounded border border-purple-500/50 flex items-center justify-center mb-2 overflow-hidden relative">
-                            <div class="absolute inset-0 bg-gradient-to-br from-purple-900/50 to-indigo-900/50"></div>
-                            <i class="ph-duotone ph-rocket text-3xl text-purple-300 relative z-10"></i>
+                    <!-- 右侧：信息和操作 -->
+                    <div class="flex-1 flex flex-col justify-between relative z-10 py-1">
+                        <div>
+                            <!-- 进度条和售卖数量 -->
+                            <div class="mb-3">
+                                <div class="flex justify-between text-[11px] font-bold text-white mb-1.5">
+                                    <span class="tech-font">已售: 150/500</span>
+                                    <span class="text-pink-300">30%</span>
+                                </div>
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-pink-500 to-purple-500 h-2 rounded-full shadow-[0_0_5px_rgba(255,77,141,0.5)]" style="width: 30%"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- 单价 -->
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-[12px] text-gray-300 tech-font">单价:</span>
+                                <span class="text-white font-bold text-[16px]">100 USDT</span>
+                            </div>
                         </div>
-                        <div class="text-[13px] font-bold text-white mb-1">APY: 28.5%</div>
-                        <p class="text-[8px] text-gray-400 leading-tight mb-3 h-[24px]">
-                            Description of arbitrage merit and multi-chain reallocations.
-                        </p>
-                    </div>
-                    <button class="action-btn w-full bg-app-blue text-[#0b0914] font-display text-[11px] py-1.5 rounded border border-blue-200 hover:bg-blue-400 relative z-10 tracking-widest">
-                        [EXPLORE]
-                    </button>
-                </div>
+                        
+                        <div>
+                            <!-- 数量选择器 -->
+                            <div class="flex items-center w-full bg-black/30 rounded-lg border border-pink-500/30 overflow-hidden mb-3 h-9">
+                                <button @click="quantity > 1 ? quantity-- : null" class="w-10 h-full bg-pink-500/20 text-white flex items-center justify-center hover:bg-pink-500/40 transition text-lg font-bold">-</button>
+                                <input v-model.number="quantity" type="number" class="flex-1 w-full bg-transparent text-center text-white text-[15px] font-bold h-full outline-none tech-font p-0" min="1">
+                                <button @click="quantity++" class="w-10 h-full bg-pink-500/20 text-white flex items-center justify-center hover:bg-pink-500/40 transition text-lg font-bold">+</button>
+                            </div>
 
+                            <!-- 认购按钮 -->
+                            <button @click="subscribe" class="w-full bg-app-pink text-white font-display text-[14px] h-10 rounded-lg border border-pink-300 hover:bg-pink-600 relative z-10 tracking-widest transition tech-font font-bold shadow-[0_0_12px_rgba(255,77,141,0.4)] active:scale-95">
+                                立即认购
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- 底部网格数据区 -->
-        <div class="grid grid-cols-2 gap-3 mb-4">
-            
-            <!-- Your Portfolio -->
-            <div class="bg-[#1a153a] rounded-xl p-3 panel-border relative overflow-hidden">
-                <div class="absolute -top-6 -right-6 w-16 h-16 bg-pink-500/20 rounded-full blur-xl"></div>
-                <h3 class="text-[11px] font-display tracking-wider text-white mb-2">YOUR PORTFOLIO</h3>
-                <div class="text-[9px] text-gray-400 mb-0.5">Total Value:</div>
-                <div class="text-xl font-bold text-white mb-4 tracking-tight drop-shadow-md">$54,321.10</div>
+        <!-- 我的NFT 资产与列表区 (合并优化) -->
+        <section class="mb-6 relative z-10">
+            <!-- 顶部统计栏 (扁平化横向排版，融入列表头部) -->
+            <div class="bg-[#1a153a]/80 backdrop-blur-md rounded-xl border border-white/10 p-3 mb-4 shadow-lg flex items-center justify-between relative overflow-hidden">
+                <div class="absolute -left-10 -top-10 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl"></div>
                 
-                <div class="flex justify-between items-center text-[10px] mb-1.5">
-                    <span class="text-gray-400">Agents Running:</span>
-                    <span class="font-bold text-white">12</span>
+                <div class="flex items-center gap-2 relative z-10">
+                    <i class="ph-fill ph-wallet text-app-pink text-2xl drop-shadow-[0_0_5px_rgba(255,77,141,0.5)]"></i>
+                    <div class="flex flex-col">
+                        <span class="text-[12px] text-gray-400 tech-font leading-tight">总资产</span>
+                        <span class="text-[18px] font-bold text-white tracking-tight leading-tight">{{ myNfts.length }}</span>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center text-[10px]">
-                    <span class="text-gray-400">24H Gain:</span>
-                    <span class="font-bold text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">+$198.76</span>
+                
+                <div class="h-8 w-px bg-white/10 relative z-10"></div>
+                
+                <div class="flex flex-col items-center relative z-10">
+                    <span class="text-[11px] text-gray-400 tech-font leading-tight">已激活</span>
+                    <span class="text-[16px] font-bold text-pink-300 leading-tight">{{ activatedCount }}</span>
+                </div>
+                
+                <div class="h-8 w-px bg-white/10 relative z-10"></div>
+                
+                <div class="flex flex-col items-end relative z-10">
+                    <span class="text-[11px] text-gray-400 tech-font leading-tight">未激活</span>
+                    <span class="text-[16px] font-bold text-gray-300 leading-tight">{{ unactivatedCount }}</span>
                 </div>
             </div>
 
-            <!-- Market Explorer -->
-            <div class="bg-[#1a153a] rounded-xl p-3 panel-border flex flex-col relative">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-[11px] font-display tracking-wider text-white">MARKET EXPLORER</h3>
-                    <div class="flex gap-1">
-                        <i class="ph ph-caret-left text-gray-400 cursor-pointer hover:text-white"></i>
-                        <i class="ph ph-caret-right text-white cursor-pointer hover:text-app-pink"></i>
-                    </div>
+            <!-- 列表容器 -->
+            <div class="flex flex-col gap-3">
+                <!-- 空状态 -->
+                <div v-if="myNfts.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
+                    暂无资产，请先认购
                 </div>
-                
-                <div class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-2.5 relative pr-2">
-                    <!-- 列表项 1 -->
-                    <div class="flex gap-2 items-center">
-                        <div class="w-7 h-7 rounded border border-purple-500/50 bg-gradient-to-br from-purple-900 to-blue-900 shrink-0 flex items-center justify-center shadow-[0_0_8px_rgba(168,85,247,0.4)]">
-                            <i class="ph-fill ph-triangle text-purple-300 text-xs"></i>
+
+                <!-- 列表项 -->
+                <div class="flex flex-col gap-3 bg-[#1a153a] p-3.5 rounded-xl border border-white/5 hover:border-pink-500/30 transition-all shadow-md" v-for="nft in displayedNfts" :key="nft.id">
+                    <div class="flex gap-3 items-center">
+                        <!-- 左侧图片 -->
+                        <div class="w-14 h-14 rounded-lg border border-pink-500/30 overflow-hidden shrink-0 bg-black/40 p-1 flex items-center justify-center">
+                            <img src="/asset/images/logo/NFT.png" class="max-w-full max-h-full object-contain" />
                         </div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-center">
-                                <div class="text-[10px] font-bold text-white">Alpha Bot</div>
-                                <div class="text-[8px] text-yellow-400 drop-shadow-[0_0_2px_rgba(250,204,21,0.8)]">★★★★☆</div>
+                        
+                        <!-- 中间信息 -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <div class="text-[15px] font-bold text-white truncate">{{ nft.name }}</div>
+                                <!-- 状态标签 -->
+                                <span v-if="nft.activated" class="text-[9px] text-pink-300 border border-pink-500/30 px-1.5 py-0.5 rounded tech-font">已激活</span>
+                                <span v-else class="text-[9px] text-gray-400 border border-gray-500/30 px-1.5 py-0.5 rounded tech-font">未激活</span>
                             </div>
-                            <div class="text-[7px] text-gray-400 mt-0.5 truncate w-[85px]">
-                                Agent Bot is the descrip...
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 列表项 2 -->
-                    <div class="flex gap-2 items-center">
-                        <div class="w-7 h-7 rounded border border-green-500/50 bg-gradient-to-br from-green-900 to-teal-900 shrink-0 flex items-center justify-center shadow-[0_0_8px_rgba(34,197,94,0.4)]">
-                            <i class="ph-fill ph-circle text-green-300 text-xs"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-center">
-                                <div class="text-[10px] font-bold text-white">Yield Bot</div>
-                                <div class="text-[8px] text-yellow-400 drop-shadow-[0_0_2px_rgba(250,204,21,0.8)]">★★★★★</div>
-                            </div>
-                            <div class="text-[7px] text-gray-400 mt-0.5 truncate w-[85px]">
-                                Agent toe a estimate fro...
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 列表项 3 -->
-                    <div class="flex gap-2 items-center opacity-60">
-                        <div class="w-7 h-7 rounded border border-red-500/50 bg-gradient-to-br from-red-900 to-orange-900 shrink-0 flex items-center justify-center">
-                            <i class="ph-fill ph-square text-red-300 text-xs"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-center">
-                                <div class="text-[10px] font-bold text-white">Predictor</div>
-                                <div class="text-[8px] text-yellow-400">★★★☆☆</div>
+                            
+                            <!-- 产币信息 -->
+                            <div class="text-[12px] tech-font bg-black/20 rounded px-2 py-1 inline-block border border-white/5">
+                                <span class="text-gray-400">可领取: </span>
+                                <span :class="nft.activated ? 'text-white font-bold' : 'text-gray-500'">
+                                    {{ nft.activated ? nft.yield.toFixed(2) : '0.00' }} <span class="text-[10px]">AFI</span>
+                                </span>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- 模拟自定义发光滚动条 -->
-                    <div class="absolute right-[-4px] top-1 w-1.5 h-12 bg-gradient-to-b from-app-pink via-purple-500 to-transparent rounded-full shadow-[0_0_8px_rgba(255,77,141,0.8)]"></div>
+                    <!-- 下方按钮区 -->
+                    <div class="flex gap-2.5 mt-1">
+                        <template v-if="!nft.activated">
+                            <button @click="activateNft(nft)" class="flex-1 tech-font text-[13px] font-bold bg-pink-500/10 text-pink-400 border border-pink-500/30 py-2 rounded-lg hover:bg-pink-500/20 transition active:scale-95">
+                                激 活
+                            </button>
+                            <button @click="transferNft(nft)" class="flex-1 tech-font text-[13px] font-bold bg-white/5 text-gray-300 border border-white/10 py-2 rounded-lg hover:bg-white/10 transition active:scale-95">
+                                转 让
+                            </button>
+                        </template>
+                        <template v-else>
+                            <!-- 激活后显示领取收益按钮 -->
+                            <button @click="claimYield(nft)" class="flex-1 tech-font text-[13px] font-bold bg-app-pink text-white border border-pink-300 py-2 rounded-lg hover:bg-pink-600 transition shadow-[0_0_8px_rgba(255,77,141,0.3)] active:scale-95">
+                                领 取 收 益
+                            </button>
+                        </template>
+                    </div>
                 </div>
             </div>
 
-        </div>
+            <!-- 加载更多按钮 -->
+            <div v-if="displayCount < myNfts.length" class="mt-5 flex justify-center">
+                <button @click="loadMore" class="text-[12px] text-pink-400 tech-font border border-pink-500/30 rounded-full px-6 py-2 hover:bg-pink-500/10 transition flex items-center gap-1">
+                    点击加载更多 <i class="ph-bold ph-caret-down"></i>
+                </button>
+            </div>
+            <div v-else-if="myNfts.length > 0" class="mt-5 text-center text-[11px] text-gray-500 tech-font">
+                已加载全部资产
+            </div>
+        </section>
+
     </main>
   </div>
 </template>
 
 <script>
 import Header from '@/components/Header.vue';
+import { showToast } from '@/services/notification';
 
 export default {
   name: 'NftView',
   components: {
     Header
+  },
+  data() {
+    return {
+      quantity: 1,
+      displayCount: 10, // 初始显示数量
+      // 模拟生成 15 个数据以测试分页
+      myNfts: Array.from({ length: 15 }, (_, i) => ({
+        id: 101 + i,
+        name: `GAMMA #${101 + i}`,
+        activated: i < 3, // 前3个默认激活
+        yield: i < 3 ? (Math.random() * 50 + 10) : 0 // 激活的有随机收益
+      }))
+    }
+  },
+  computed: {
+    activatedCount() {
+      return this.myNfts.filter(nft => nft.activated).length;
+    },
+    unactivatedCount() {
+      return this.myNfts.filter(nft => !nft.activated).length;
+    },
+    displayedNfts() {
+      return this.myNfts.slice(0, this.displayCount);
+    }
+  },
+  methods: {
+    subscribe() {
+      if (this.quantity < 1) return;
+      // 模拟认购成功，添加新的NFT到列表顶部
+      const newId = 100 + this.myNfts.length + 1;
+      for (let i = 0; i < this.quantity; i++) {
+        this.myNfts.unshift({
+          id: newId + i,
+          name: `GAMMA #${newId + i}`,
+          activated: false,
+          yield: 0
+        });
+      }
+      showToast(`成功认购 ${this.quantity} 个 NFT！`);
+      this.quantity = 1;
+    },
+    activateNft(nft) {
+      nft.activated = true;
+      nft.yield = 0; // 刚激活时收益为0
+      showToast(`NFT ${nft.name} 已激活！`);
+    },
+    transferNft(nft) {
+      showToast(`准备转让 ${nft.name}，后端接口开发中...`);
+    },
+    claimYield(nft) {
+      if (nft.yield <= 0) {
+        showToast('当前没有可领取的收益');
+        return;
+      }
+      showToast(`成功领取 ${nft.yield.toFixed(2)} AFI 收益！`);
+      nft.yield = 0; // 领取后清零
+    },
+    loadMore() {
+      this.displayCount += 10;
+    }
   }
 }
 </script>
 
 <style scoped>
+/* 隐藏输入框的上下箭头 */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* 现代科技风中文字体 */
+.tech-font {
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.05em;
+}
 </style>

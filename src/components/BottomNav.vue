@@ -8,6 +8,10 @@
           <i class="ph ph-robot text-[24px]"></i>
           <span class="text-[9px] font-medium">NFT</span>
       </router-link>
+      <router-link to="/nft-backup" class="flex flex-col items-center gap-1 cursor-pointer transition" :class="[ $route.path === '/nft-backup' ? 'text-app-pink drop-shadow-[0_0_5px_rgba(255,77,141,0.5)]' : 'text-gray-500 hover:text-white' ]">
+          <i class="ph ph-copy text-[24px]"></i>
+          <span class="text-[9px] font-medium">NFT Backup</span>
+      </router-link>
   </nav>
 </template>
 

@@ -1,9 +1,7 @@
 <template>
   <header class="flex justify-between items-center px-4 py-2 z-10 bg-gradient-to-b from-black/60 to-transparent h-14">
       <div class="flex items-center gap-2">
-          <svg class="w-6 h-6 text-app-pink" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-          </svg>
+          <img src="/asset/images/logo/Logo_simple.png" alt="AgentFi Logo" class="w-6 h-6 object-contain" />
           <router-link to="/" class="font-display text-lg tracking-widest text-white shadow-black drop-shadow-md">
             AGENT.FI
           </router-link>
