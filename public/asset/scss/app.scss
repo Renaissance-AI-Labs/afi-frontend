@@ -1,0 +1,48 @@
+/* ---------------------------------------------------------
+    * Name: AgentFi
+    * Version: 1.0.0
+    * Author: AgentFi
+    * Author URI: https://www.agent-fi.ai 
+
+	* Abstracts variable
+    
+    * Reset css styles
+
+    * Components
+
+        * header
+        * footer
+        * accordion
+        * animation
+        * blog
+        * box iocn
+        * button
+        * carousel
+        * avatar
+        * form
+        * hover
+        * nice select
+        * popup
+        * product
+        * shop
+        * slider
+        * testimonial
+        * zoom
+        
+    * Section
+ ------------------------------------------------------------------------------ */
+
+/*--------- Abstracts variable ---------- */
+@use "./abstracts/index" as abstract;
+
+/*---------- Reset css styles ----------- */
+@use "reset";
+
+/*------------ Components ---------------- */
+@use "./component/index" as component;
+
+/*------------ Section ---------------- */
+@use "./sections";
+
+/*------------ Widget ---------------- */
+@use "./widget";

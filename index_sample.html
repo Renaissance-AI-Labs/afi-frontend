@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent.Fi DApp - Moebius Style</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;500;600;700;800&family=Rye&display=swap" rel="stylesheet">
+    <!-- 引入 Phosphor Icons 图标库 -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Bungee', 'cursive'],
+                        serif: ['Rye', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        app: {
+                            bg: '#1a153a', // 更深的迷幻紫蓝底色
+                            card: '#221b44',
+                            pink: '#ff4d8d',
+                            blue: '#4db8ff',
+                            purple: '#a855f7',
+                            text: '#f8fafc',
+                            textMuted: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0914;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* 模拟手机屏幕容器 */
+        .app-container {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 896px;
+            background-color: #1a153a;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* 隐藏滚动条 */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 英雄区域背景 - 使用生成的图片 */
+        .hero-bg {
+            background-image: url('http://googleusercontent.com/image_generation_content/0');
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+        
+        /* 莫比斯风格标题文字描边和发光效果 */
+        .title-moebius {
+            font-family: 'Rye', serif;
+            color: #fffae6;
+            -webkit-text-stroke: 1.5px #111;
+            text-shadow: 
+                0 0 15px rgba(255, 255, 255, 0.8),
+                3px 3px 0px #000,
+                -1px -1px 0px #000,
+                1px -1px 0px #000,
+                -1px 1px 0px #000;
+            letter-spacing: 0.05em;
+        }
+
+        .subtitle-moebius {
+            color: #fff;
+            -webkit-text-stroke: 0.5px #000;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* 霓虹边框发光效果 - 高度还原线条 */
+        .glow-border-pink {
+            border: 2px solid #ff4d8d;
+            box-shadow: 0 0 10px rgba(255, 77, 141, 0.5), inset 0 0 10px rgba(255, 77, 141, 0.3);
+        }
+        .glow-border-blue {
+            border: 2px solid #4db8ff;
+            box-shadow: 0 0 10px rgba(77, 184, 255, 0.5), inset 0 0 10px rgba(77, 184, 255, 0.3);
+        }
+        .glow-border-purple {
+            border: 2px solid #a855f7;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.5), inset 0 0 10px rgba(168, 85, 247, 0.3);
+        }
+
+        /* 面板通用边框 */
+        .panel-border {
+            border: 1px solid rgba(255, 77, 141, 0.4);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .scroll-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 90px;
+        }
+
+        /* 按钮悬浮特效 */
+        .action-btn {
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- 可滚动内容区域 -->
+        <div class="scroll-content hide-scrollbar">
+            
+            <!-- 头部区域 (背景图) -->
+            <div class="hero-bg h-[420px] w-full flex flex-col relative">
+                <!-- 顶部导航栏 -->
+                <header class="flex justify-between items-center p-4 z-10 bg-gradient-to-b from-black/60 to-transparent">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-6 h-6 text-app-pink" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="font-display text-lg tracking-widest text-white shadow-black drop-shadow-md">AGENT.FI</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-white">
+                        <i class="ph ph-list text-2xl cursor-pointer drop-shadow-md"></i>
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center border-2 border-white/50 cursor-pointer shadow-lg">
+                            <i class="ph ph-user text-white"></i>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- 大标题 -->
+                <div class="flex-1 flex flex-col items-center justify-start mt-4 z-10 px-4 text-center">
+                    <h1 class="title-moebius text-5xl mb-1">AGENT.FI</h1>
+                    <p class="subtitle-moebius font-bold text-[11px] tracking-widest">AUTOMATE DEFI WITH AI AGENTS</p>
+                </div>
+
+                <!-- 底部遮罩平滑过渡到深蓝紫背景 -->
+                <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-app-bg via-app-bg/80 to-transparent"></div>
+            </div>
+
+            <!-- 主要内容区域 -->
+            <main class="px-4 -mt-20 relative z-20">
+                
+                <!-- AI Agent Pools 模块 -->
+                <section class="mb-5">
+                    <div class="bg-app-card/80 backdrop-blur-sm rounded-t-xl border-t border-x border-app-pink/30 px-3 py-1.5 inline-block mb-[-1px] relative z-10">
+                        <h2 class="text-[12px] font-display text-white tracking-wider">AI AGENT POOLS</h2>
+                    </div>
+                    
+                    <!-- 横向滚动卡片容器 -->
+                    <div class="flex gap-3 overflow-x-auto hide-scrollbar pb-3 pt-2 bg-app-card/40 rounded-b-xl rounded-tr-xl border border-app-pink/30 p-2">
+                        
+                        <!-- 卡片 1 (粉色) -->
+                        <div class="min-w-[150px] bg-[#1a153a] rounded-xl p-3 glow-border-pink flex flex-col justify-between shrink-0 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-pink-500/10 rounded-full blur-xl"></div>
+                            <div class="relative z-10">
+                                <div class="text-[9px] text-pink-300 font-bold leading-tight uppercase tracking-wider">Optimized Yield</div>
+                                <div class="text-lg font-display text-white mb-2 tracking-wide">GAMMA</div>
+                                <!-- 插画占位图 -->
+                                <div class="w-full h-16 rounded border border-pink-500/50 flex items-center justify-center mb-2 overflow-hidden relative">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-pink-900/50 to-purple-900/50"></div>
+                                    <i class="ph-duotone ph-planet text-3xl text-pink-300 relative z-10"></i>
+                                </div>
+                                <div class="text-[13px] font-bold text-white mb-1">APY: 34.8%</div>
+                                <p class="text-[8px] text-gray-400 leading-tight mb-3 h-[24px]">
+                                    Description of balance agents, and yield dynamic growth.
+                                </p>
+                            </div>
+                            <button class="action-btn w-full bg-app-pink text-white font-display text-[11px] py-1.5 rounded border border-pink-300 hover:bg-pink-600 relative z-10 tracking-widest">
+                                [DEPLOY]
+                            </button>
+                        </div>
+
+                        <!-- 卡片 2 (蓝色) -->
+                        <div class="min-w-[150px] bg-[#1a153a] rounded-xl p-3 glow-border-blue flex flex-col justify-between shrink-0 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl"></div>
+                            <div class="relative z-10">
+                                <div class="text-[9px] text-blue-300 font-bold leading-tight uppercase tracking-wider">Risk Mitigator</div>
+                                <div class="text-lg font-display text-white mb-2 tracking-wide">ZETA</div>
+                                <!-- 插画占位图 -->
+                                <div class="w-full h-16 rounded border border-blue-500/50 flex items-center justify-center mb-2 overflow-hidden relative">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-blue-900/50 to-cyan-900/50"></div>
+                                    <i class="ph-duotone ph-robot text-3xl text-blue-300 relative z-10"></i>
+                                </div>
+                                <div class="text-[13px] font-bold text-white mb-1">APY: 22.1%</div>
+                                <p class="text-[8px] text-gray-400 leading-tight mb-3 h-[24px]">
+                                    Calm approach to change markets, and maintain investments.
+                                </p>
+                            </div>
+                            <button class="action-btn w-full bg-app-blue text-[#0b0914] font-display text-[11px] py-1.5 rounded border border-blue-200 hover:bg-blue-400 relative z-10 tracking-widest">
+                                [ACTIVATE]
+                            </button>
+                        </div>
+
+                        <!-- 卡片 3 (紫色) -->
+                        <div class="min-w-[150px] bg-[#1a153a] rounded-xl p-3 glow-border-purple flex flex-col justify-between shrink-0 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full blur-xl"></div>
+                            <div class="relative z-10">
+                                <div class="text-[9px] text-purple-300 font-bold leading-tight uppercase tracking-wider">Arbitrage</div>
+                                <div class="text-lg font-display text-white mb-2 tracking-wide">ALPHA</div>
+                                <!-- 插画占位图 -->
+                                <div class="w-full h-16 rounded border border-purple-500/50 flex items-center justify-center mb-2 overflow-hidden relative">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-purple-900/50 to-indigo-900/50"></div>
+                                    <i class="ph-duotone ph-rocket text-3xl text-purple-300 relative z-10"></i>
+                                </div>
+                                <div class="text-[13px] font-bold text-white mb-1">APY: 28.5%</div>
+                                <p class="text-[8px] text-gray-400 leading-tight mb-3 h-[24px]">
+                                    Description of arbitrage merit and multi-chain reallocations.
+                                </p>
+                            </div>
+                            <button class="action-btn w-full bg-app-blue text-[#0b0914] font-display text-[11px] py-1.5 rounded border border-blue-200 hover:bg-blue-400 relative z-10 tracking-widest">
+                                [EXPLORE]
+                            </button>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- 底部网格数据区 -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    
+                    <!-- Your Portfolio -->
+                    <div class="bg-[#1a153a] rounded-xl p-3 panel-border relative overflow-hidden">
+                        <div class="absolute -top-6 -right-6 w-16 h-16 bg-pink-500/20 rounded-full blur-xl"></div>
+                        <h3 class="text-[11px] font-display tracking-wider text-white mb-2">YOUR PORTFOLIO</h3>
+                        <div class="text-[9px] text-gray-400 mb-0.5">Total Value:</div>
+                        <div class="text-xl font-bold text-white mb-4 tracking-tight drop-shadow-md">$54,321.10</div>
+                        
+                        <div class="flex justify-between items-center text-[10px] mb-1.5">
+                            <span class="text-gray-400">Agents Running:</span>
+                            <span class="font-bold text-white">12</span>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span class="text-gray-400">24H Gain:</span>
+                            <span class="font-bold text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">+$198.76</span>
+                        </div>
+                    </div>
+
+                    <!-- Market Explorer -->
+                    <div class="bg-[#1a153a] rounded-xl p-3 panel-border flex flex-col relative">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-[11px] font-display tracking-wider text-white">MARKET EXPLORER</h3>
+                            <div class="flex gap-1">
+                                <i class="ph ph-caret-left text-gray-400 cursor-pointer hover:text-white"></i>
+                                <i class="ph ph-caret-right text-white cursor-pointer hover:text-app-pink"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-2.5 relative pr-2">
+                            <!-- 列表项 1 -->
+                            <div class="flex gap-2 items-center">
+                                <div class="w-7 h-7 rounded border border-purple-500/50 bg-gradient-to-br from-purple-900 to-blue-900 shrink-0 flex items-center justify-center shadow-[0_0_8px_rgba(168,85,247,0.4)]">
+                                    <i class="ph-fill ph-triangle text-purple-300 text-xs"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-[10px] font-bold text-white">Alpha Bot</div>
+                                        <div class="text-[8px] text-yellow-400 drop-shadow-[0_0_2px_rgba(250,204,21,0.8)]">★★★★☆</div>
+                                    </div>
+                                    <div class="text-[7px] text-gray-400 mt-0.5 truncate w-[85px]">
+                                        Agent Bot is the descrip...
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 列表项 2 -->
+                            <div class="flex gap-2 items-center">
+                                <div class="w-7 h-7 rounded border border-green-500/50 bg-gradient-to-br from-green-900 to-teal-900 shrink-0 flex items-center justify-center shadow-[0_0_8px_rgba(34,197,94,0.4)]">
+                                    <i class="ph-fill ph-circle text-green-300 text-xs"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-[10px] font-bold text-white">Yield Bot</div>
+                                        <div class="text-[8px] text-yellow-400 drop-shadow-[0_0_2px_rgba(250,204,21,0.8)]">★★★★★</div>
+                                    </div>
+                                    <div class="text-[7px] text-gray-400 mt-0.5 truncate w-[85px]">
+                                        Agent toe a estimate fro...
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 列表项 3 -->
+                            <div class="flex gap-2 items-center opacity-60">
+                                <div class="w-7 h-7 rounded border border-red-500/50 bg-gradient-to-br from-red-900 to-orange-900 shrink-0 flex items-center justify-center">
+                                    <i class="ph-fill ph-square text-red-300 text-xs"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-[10px] font-bold text-white">Predictor</div>
+                                        <div class="text-[8px] text-yellow-400">★★★☆☆</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 模拟自定义发光滚动条 -->
+                            <div class="absolute right-[-4px] top-1 w-1.5 h-12 bg-gradient-to-b from-app-pink via-purple-500 to-transparent rounded-full shadow-[0_0_8px_rgba(255,77,141,0.8)]"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <nav class="absolute bottom-0 w-full bg-[#16132b]/95 backdrop-blur-md border-t border-app-pink/20 px-6 py-3 flex justify-between items-center z-30 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+            <div class="flex flex-col items-center gap-1 cursor-pointer text-app-pink drop-shadow-[0_0_5px_rgba(255,77,141,0.5)]">
+                <i class="ph-fill ph-house text-[26px]"></i>
+                <span class="text-[9px] font-bold">Home</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 cursor-pointer text-gray-500 hover:text-white transition">
+                <i class="ph ph-robot text-[26px]"></i>
+                <span class="text-[9px] font-medium">Agents</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 cursor-pointer text-gray-500 hover:text-white transition">
+                <i class="ph ph-wallet text-[26px]"></i>
+                <span class="text-[9px] font-medium">Portfolio</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 cursor-pointer text-gray-500 hover:text-white transition">
+                <i class="ph ph-chart-line-up text-[26px]"></i>
+                <span class="text-[9px] font-medium">Activity</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 cursor-pointer text-gray-500 hover:text-white transition">
+                <i class="ph ph-gear text-[26px]"></i>
+                <span class="text-[9px] font-medium">Settings</span>
+            </div>
+        </nav>
+
+    </div>
+
+</body>
+</html>
