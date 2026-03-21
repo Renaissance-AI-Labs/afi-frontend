@@ -78,8 +78,7 @@
                         <img src="/asset/images/logo/Node.png" alt="NFT" class="w-full h-full object-contain" />
                     </div>
                     <div class="relative z-10">
-                        <div class="text-white font-display text-[15px] tracking-wide mb-1">连接钱包后查看认购信息</div>
-                        <div class="text-[12px] text-gray-400 tech-font">当前期数、进度、单价和 NFT 图片将在连接后自动读取</div>
+                        <div class="text-white tech-font text-[15px] tracking-wide mb-1">请连接钱包后查看</div>
                     </div>
                 </div>
             </div>
@@ -92,7 +91,7 @@
                 <div class="absolute -left-10 -top-10 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl"></div>
                 
                 <div class="flex items-center gap-2 relative z-10">
-                    <i class="ph-fill ph-wallet text-app-pink text-2xl drop-shadow-[0_0_5px_rgba(255,77,141,0.5)]"></i>
+                    <!-- <i class="ph-fill ph-wallet text-app-pink text-2xl drop-shadow-[0_0_5px_rgba(255,77,141,0.5)]"></i> -->
                     <div class="flex flex-col">
                         <span class="text-[12px] text-gray-400 tech-font leading-tight">总资产</span>
                         <span class="text-[18px] font-bold text-white tracking-tight leading-tight">{{ nftTotalBalance }}</span>
@@ -116,13 +115,21 @@
 
             <!-- 列表容器 -->
             <div class="flex flex-col gap-3">
+                <div v-if="walletState.isConnected && nftListLoading" class="text-center py-8 text-gray-400 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
+                    NFT 资产加载中...
+                </div>
+
                 <!-- 空状态 -->
-                <div v-if="myNfts.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
+                <div v-else-if="walletState.isConnected && myNfts.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
                     暂无资产，请先认购
                 </div>
 
+                <div v-else-if="!walletState.isConnected" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
+                    连接钱包后查看 NFT 资产
+                </div>
+
                 <!-- 列表项 -->
-                <div class="flex flex-col gap-3 bg-[#1a153a] p-3.5 rounded-xl border border-white/5 hover:border-pink-500/30 transition-all shadow-md" v-for="nft in displayedNfts" :key="nft.id">
+                <div v-else class="flex flex-col gap-3 bg-[#1a153a] p-3.5 rounded-xl border border-white/5 hover:border-pink-500/30 transition-all shadow-md" v-for="nft in displayedNfts" :key="nft.id">
                     <div class="flex gap-3 items-center">
                         <!-- 左侧图片 -->
                         <div class="w-14 h-14 rounded-lg border border-pink-500/30 overflow-hidden shrink-0 bg-black/40 p-1 flex items-center justify-center">
@@ -142,7 +149,7 @@
                             <div class="text-[12px] tech-font bg-black/20 rounded px-2 py-1 inline-block border border-white/5">
                                 <span class="text-gray-400">可领取: </span>
                                 <span :class="nft.activated ? 'text-white font-bold' : 'text-gray-500'">
-                                    {{ nft.activated ? nft.yield.toFixed(2) : '0.00' }} <span class="text-[10px]">AFI</span>
+                                    {{ nft.activated ? nft.claimableReward : '0.00' }} <span class="text-[10px]">AFI</span>
                                 </span>
                             </div>
                         </div>
@@ -151,17 +158,17 @@
                     <!-- 下方按钮区 -->
                     <div class="flex gap-2.5 mt-1">
                         <template v-if="!nft.activated">
-                            <button @click="activateNft(nft)" class="flex-1 tech-font text-[13px] font-bold bg-pink-500/10 text-pink-400 border border-pink-500/30 py-2 rounded-lg hover:bg-pink-500/20 transition active:scale-95">
-                                激 活
+                            <button @click="activateNft(nft)" :disabled="isNftActionLoading(nft.id, 'activate')" class="flex-1 tech-font text-[13px] font-bold bg-pink-500/10 text-pink-400 border border-pink-500/30 py-2 rounded-lg hover:bg-pink-500/20 transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                                {{ isNftActionLoading(nft.id, 'activate') ? '激活中...' : '激 活' }}
                             </button>
-                            <button @click="transferNft(nft)" class="flex-1 tech-font text-[13px] font-bold bg-white/5 text-gray-300 border border-white/10 py-2 rounded-lg hover:bg-white/10 transition active:scale-95">
+                            <button @click="transferNft(nft)" :disabled="nftActionLoading" class="flex-1 tech-font text-[13px] font-bold bg-white/5 text-gray-300 border border-white/10 py-2 rounded-lg hover:bg-white/10 transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
                                 转 让
                             </button>
                         </template>
                         <template v-else>
                             <!-- 激活后显示领取收益按钮 -->
-                            <button @click="claimYield(nft)" class="flex-1 tech-font text-[13px] font-bold bg-app-pink text-white border border-pink-300 py-2 rounded-lg hover:bg-pink-600 transition shadow-[0_0_8px_rgba(255,77,141,0.3)] active:scale-95">
-                                领 取 收 益
+                            <button @click="claimYield(nft)" :disabled="isNftActionLoading(nft.id, 'claim')" class="flex-1 tech-font text-[13px] font-bold bg-app-pink text-white border border-pink-300 py-2 rounded-lg hover:bg-pink-600 transition shadow-[0_0_8px_rgba(255,77,141,0.3)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                                {{ isNftActionLoading(nft.id, 'claim') ? '领取中...' : '领 取 收 益' }}
                             </button>
                         </template>
                     </div>
@@ -213,8 +220,13 @@ export default {
       },
       purchaseImageErrored: false,
       purchaseDataRequestId: 0,
+      nftListLoading: false,
+      nftActionLoading: false,
+      nftActionType: '',
+      nftActionTokenId: null,
       nftTotalBalance: 0,
       nftActivatedCount: 0,
+      phaseNames: [],
       purchaseData: {
         purchaseLevel: 0,
         phaseName: '',
@@ -230,13 +242,7 @@ export default {
         allowanceRaw: '0'
       },
       displayCount: 10, // 初始显示数量
-      // 模拟生成 15 个数据以测试分页
-      myNfts: Array.from({ length: 15 }, (_, i) => ({
-        id: 101 + i,
-        name: `GAMMA #${101 + i}`,
-        activated: i < 3, // 前3个默认激活
-        yield: i < 3 ? (Math.random() * 50 + 10) : 0 // 激活的有随机收益
-      }))
+      myNfts: []
     }
   },
   computed: {
@@ -360,6 +366,105 @@ export default {
     formatUsdtAmount(value) {
       return ethers.formatUnits(value, this.purchaseData.usdtDecimals).replace(/\.?0+$/, '') || '0';
     },
+    formatRewardAmount(value) {
+      const formatted = ethers.formatUnits(value, 18);
+      if (formatted === '0.0' || formatted === '0') {
+        return '0.00';
+      }
+      const [integerPart, decimalPart = ''] = formatted.split('.');
+      const trimmedDecimal = decimalPart.slice(0, 4).replace(/0+$/, '');
+      return trimmedDecimal ? `${integerPart}.${trimmedDecimal}` : integerPart;
+    },
+    parsePhaseNames(names) {
+      return names
+        .flatMap(name => String(name).split(','))
+        .map(name => name.trim())
+        .filter(Boolean);
+    },
+    buildNftName(level, tokenId) {
+      const phaseName = this.phaseNames[level - 1] || `NFT L${level}`;
+      return `${phaseName} #${tokenId}`;
+    },
+    isNftActionLoading(tokenId, actionType) {
+      return this.nftActionLoading && this.nftActionTokenId === tokenId && this.nftActionType === actionType;
+    },
+    async fetchMyNfts(nodeContract, requestId = this.purchaseDataRequestId) {
+      if (!this.walletState.isConnected || !this.walletState.address || !nodeContract) {
+        this.myNfts = [];
+        this.nftTotalBalance = 0;
+        this.nftActivatedCount = 0;
+        this.nftListLoading = false;
+        return;
+      }
+
+      this.nftListLoading = true;
+
+      try {
+        const [nftInfosResult, nextCursor] = await nodeContract.levelsOfOwnerBySize(this.walletState.address, 0, 100, 0);
+
+        if (requestId !== this.purchaseDataRequestId || !this.walletState.isConnected) {
+          return;
+        }
+
+        const nftInfos = Array.isArray(nftInfosResult) ? nftInfosResult : [];
+        const rewards = await Promise.all(
+          nftInfos.map(nft => Number(nft.activated) === 1
+            ? nodeContract.pendingReward(nft.id)
+            : Promise.resolve(0n))
+        );
+
+        if (requestId !== this.purchaseDataRequestId || !this.walletState.isConnected) {
+          return;
+        }
+
+        const mappedNfts = nftInfos.map((nft, index) => {
+          const tokenId = Number(nft.id);
+          const level = Number(nft.level);
+          const activated = Number(nft.activated) === 1;
+          const rewardRaw = rewards[index] ?? 0n;
+
+          return {
+            id: tokenId,
+            level,
+            activated,
+            activationTime: Number(nft.activationTime),
+            claimedReward: nft.claimedReward?.toString?.() ?? '0',
+            name: this.buildNftName(level, tokenId),
+            claimableReward: activated ? this.formatRewardAmount(rewardRaw) : '0.00',
+            claimableRewardRaw: rewardRaw.toString()
+          };
+        });
+
+        mappedNfts.sort((a, b) => {
+          if (a.activated !== b.activated) {
+            return Number(b.activated) - Number(a.activated);
+          }
+          return a.id - b.id;
+        });
+
+        this.myNfts = mappedNfts;
+        this.nftTotalBalance = mappedNfts.length;
+        this.nftActivatedCount = mappedNfts.filter(nft => nft.activated).length;
+        this.displayCount = 10;
+
+        console.log('NFT 列表数据', {
+          count: mappedNfts.length,
+          nextCursor: nextCursor?.toString?.() ?? '0',
+          items: mappedNfts
+        });
+      } catch (error) {
+        console.error('获取 NFT 列表失败:', error);
+        if (requestId === this.purchaseDataRequestId) {
+          this.myNfts = [];
+          this.nftTotalBalance = 0;
+          this.nftActivatedCount = 0;
+        }
+      } finally {
+        if (requestId === this.purchaseDataRequestId) {
+          this.nftListLoading = false;
+        }
+      }
+    },
     resetPurchasePaymentState() {
       this.purchasePaymentState = {
         balanceRaw: '0',
@@ -408,6 +513,7 @@ export default {
     resetPurchaseData() {
       this.nftTotalBalance = 0;
       this.nftActivatedCount = 0;
+      this.phaseNames = [];
       this.purchaseData = {
         purchaseLevel: 0,
         phaseName: '',
@@ -421,6 +527,12 @@ export default {
       this.purchaseCardLoading = false;
       this.purchaseSubmitting = false;
       this.purchaseImageErrored = false;
+      this.nftListLoading = false;
+      this.nftActionLoading = false;
+      this.nftActionType = '';
+      this.nftActionTokenId = null;
+      this.myNfts = [];
+      this.displayCount = 10;
       this.clearPurchaseButtonStatus();
       this.resetPurchasePaymentState();
       this.purchaseLogCache = {
@@ -522,9 +634,7 @@ export default {
           purchasePrice,
           names,
           baseURI,
-          usdtDecimals,
-          userNftBalance,
-          activatedNftsResult
+          usdtDecimals
         ] = await Promise.all([
           nodeContract.purchaseLevel(),
           nodeContract.totalPurchased(),
@@ -532,15 +642,10 @@ export default {
           nodeContract.purchasePrice(),
           nodeContract.getInfos('name'),
           nodeContract.baseURI(),
-          usdtContract.decimals(),
-          nodeContract.balanceOf(this.walletState.address),
-          nodeContract.levelsOfOwnerBySize(this.walletState.address, 0, 100, 2)
+          usdtContract.decimals()
         ]);
 
-        const phaseNames = names
-          .flatMap(name => String(name).split(','))
-          .map(name => name.trim())
-          .filter(Boolean);
+        const phaseNames = this.parsePhaseNames(names);
 
         this.logPurchaseDataOnce('raw', 'NFT 认购原始数据', {
           当前售卖期数: purchaseLevel.toString(),
@@ -571,8 +676,7 @@ export default {
           usdtDecimals: Number(usdtDecimals),
           baseURI
         };
-        this.nftTotalBalance = Number(userNftBalance);
-        this.nftActivatedCount = Array.isArray(activatedNftsResult?.[0]) ? activatedNftsResult[0].length : 0;
+        this.phaseNames = phaseNames;
 
         this.logPurchaseDataOnce('formatted', 'NFT 认购格式化后数据', {
           当前售卖期数: this.purchaseData.purchaseLevel,
@@ -581,13 +685,11 @@ export default {
           本期总量: this.purchaseData.maxPurchaseAmount,
           单价: `${formattedPurchasePrice} USDT`,
           进度百分比: `${this.progressPercent}%`,
-          图片地址: this.purchaseImageUrl,
-          持有NFT总数: this.nftTotalBalance,
-          已激活数量: this.nftActivatedCount,
-          未激活数量: this.unactivatedCount
+          图片地址: this.purchaseImageUrl
         });
 
         this.normalizeQuantity();
+        await this.fetchMyNfts(nodeContract, requestId);
         await this.refreshPurchasePaymentState();
       } catch (error) {
         console.error('获取 NFT 认购数据失败:', error);
@@ -675,21 +777,67 @@ export default {
         this.purchaseSubmitting = false;
       }
     },
-    activateNft(nft) {
-      nft.activated = true;
-      nft.yield = 0; // 刚激活时收益为0
-      showToast(`NFT ${nft.name} 已激活！`);
+    async activateNft(nft) {
+      const nodeContract = this.getNodeContract(true);
+      if (!nodeContract) {
+        showToast('合约未就绪');
+        return;
+      }
+
+      this.nftActionLoading = true;
+      this.nftActionType = 'activate';
+      this.nftActionTokenId = nft.id;
+
+      try {
+        const tx = await nodeContract.activateNFT(nft.id);
+        await tx.wait();
+        showToast(`NFT ${nft.name} 激活成功`);
+        await this.fetchMyNfts(this.getNodeContract(), this.purchaseDataRequestId);
+      } catch (error) {
+        console.error('激活 NFT 失败:', error);
+        if (error.code !== 4001 && error.code !== 'ACTION_REJECTED') {
+          showToast('激活失败');
+        }
+      } finally {
+        this.nftActionLoading = false;
+        this.nftActionType = '';
+        this.nftActionTokenId = null;
+      }
     },
     transferNft(nft) {
       showToast(`准备转让 ${nft.name}，后端接口开发中...`);
     },
-    claimYield(nft) {
-      if (nft.yield <= 0) {
+    async claimYield(nft) {
+      if (BigInt(nft.claimableRewardRaw || '0') <= 0n) {
         showToast('当前没有可领取的收益');
         return;
       }
-      showToast(`成功领取 ${nft.yield.toFixed(2)} AFI 收益！`);
-      nft.yield = 0; // 领取后清零
+
+      const nodeContract = this.getNodeContract(true);
+      if (!nodeContract) {
+        showToast('合约未就绪');
+        return;
+      }
+
+      this.nftActionLoading = true;
+      this.nftActionType = 'claim';
+      this.nftActionTokenId = nft.id;
+
+      try {
+        const tx = await nodeContract.claimReward(nft.id);
+        await tx.wait();
+        showToast(`成功领取 ${nft.claimableReward} AFI 收益`);
+        await this.fetchMyNfts(this.getNodeContract(), this.purchaseDataRequestId);
+      } catch (error) {
+        console.error('领取收益失败:', error);
+        if (error.code !== 4001 && error.code !== 'ACTION_REJECTED') {
+          showToast('领取失败');
+        }
+      } finally {
+        this.nftActionLoading = false;
+        this.nftActionType = '';
+        this.nftActionTokenId = null;
+      }
     },
     loadMore() {
       this.displayCount += 10;
