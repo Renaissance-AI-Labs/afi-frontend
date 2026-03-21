@@ -14,7 +14,7 @@ export const CONTRACT_ADDRESSES = {
     testnet: '0x54fd2e30F1df426F1555E83bb7c2bc15743C6667',
     mainnet: '', // To be filled later
   },
-  nft: {
+  node: {
     testnet: '0xd10f6abA776974D3aA107838802894e0Fb113424',
     mainnet: '', // To be filled later
   },
