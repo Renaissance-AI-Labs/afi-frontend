@@ -21,6 +21,10 @@ export const CONTRACT_ADDRESSES = {
   NodePool: {
     testnet: '0x13ccDdd74b3D29D6Fe07391885d465d380942BF6',
     mainnet: '', // To be filled later
+  },
+  IStaking: {
+    testnet: '', // Placeholder: ABI/address not provided yet
+    mainnet: '', // Placeholder: ABI/address not provided yet
   }
 };
 

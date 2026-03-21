@@ -144,13 +144,21 @@
                                 <span v-if="nft.activated" class="text-[9px] text-pink-300 border border-pink-500/30 px-1.5 py-0.5 rounded tech-font">已激活</span>
                                 <span v-else class="text-[9px] text-gray-400 border border-gray-500/30 px-1.5 py-0.5 rounded tech-font">未激活</span>
                             </div>
-                            
-                            <!-- 产币信息 -->
-                            <div class="text-[12px] tech-font bg-black/20 rounded px-2 py-1 inline-block border border-white/5">
-                                <span class="text-gray-400">可领取: </span>
-                                <span :class="nft.activated ? 'text-white font-bold' : 'text-gray-500'">
-                                    {{ nft.activated ? nft.claimableReward : '0.00' }} <span class="text-[10px]">AFI</span>
-                                </span>
+
+                            <div class="flex flex-wrap gap-2 text-[11px] tech-font mb-1.5">
+                                <div class="bg-black/20 rounded px-2 py-1 border border-white/5">
+                                    <span class="text-gray-400">可领取: </span>
+                                    <span :class="nft.activated ? 'text-white font-bold' : 'text-gray-500'">
+                                        {{ nft.activated ? getAnimatedClaimableDisplay(nft) : '0.00' }} <span class="text-[10px]">AFI</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div v-if="!nft.activated && getActivateDisabledReason() && getActivateDisabledReason() !== '每个地址只能激活一个 NFT'" class="text-[10px] tech-font text-amber-300/80 mt-1">
+                                {{ getActivateDisabledReason() }}
+                            </div>
+                            <div v-if="false && nft.activated && getClaimRequirementHint(nft)" class="text-[10px] tech-font text-amber-300/80 mt-1">
+                                {{ getClaimRequirementHint(nft) }}
                             </div>
                         </div>
                     </div>
@@ -158,11 +166,11 @@
                     <!-- 下方按钮区 -->
                     <div class="flex gap-2.5 mt-1">
                         <template v-if="!nft.activated">
-                            <button @click="activateNft(nft)" :disabled="isNftActionLoading(nft.id, 'activate')" class="flex-1 tech-font text-[13px] font-bold bg-pink-500/10 text-pink-400 border border-pink-500/30 py-2 rounded-lg hover:bg-pink-500/20 transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <button v-if="!isActivateDisabled()" @click="activateNft(nft)" :disabled="isNftActionLoading(nft.id, 'activate')" class="flex-1 tech-font text-[13px] font-bold bg-pink-500/10 text-pink-400 border border-pink-500/30 py-2 rounded-lg hover:bg-pink-500/20 transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
                                 {{ isNftActionLoading(nft.id, 'activate') ? '激活中...' : '激 活' }}
                             </button>
-                            <button @click="transferNft(nft)" :disabled="nftActionLoading" class="flex-1 tech-font text-[13px] font-bold bg-white/5 text-gray-300 border border-white/10 py-2 rounded-lg hover:bg-white/10 transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
-                                转 让
+                            <button @click="transferNft(nft)" :disabled="nftActionLoading" :class="isActivateDisabled() ? 'w-full' : 'flex-1'" class="tech-font text-[13px] font-bold bg-white/5 text-gray-300 border border-white/10 py-2 rounded-lg hover:bg-white/10 transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                                {{ isNftActionLoading(nft.id, 'transfer') ? '转让中...' : '转 让' }}
                             </button>
                         </template>
                         <template v-else>
@@ -171,6 +179,23 @@
                                 {{ isNftActionLoading(nft.id, 'claim') ? '领取中...' : '领 取 收 益' }}
                             </button>
                         </template>
+                    </div>
+
+                    <div v-if="!nft.activated && isTransferEditorOpen(nft.id)" class="mt-1 flex gap-2">
+                        <input
+                          :value="getTransferTarget(nft.id)"
+                          @input="setTransferTarget(nft.id, $event.target.value)"
+                          type="text"
+                          placeholder="请输入转让钱包地址"
+                          class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-[12px] text-white tech-font outline-none focus:border-pink-500/50"
+                        >
+                        <button
+                          @click="transferNft(nft)"
+                          :disabled="isNftActionLoading(nft.id, 'transfer')"
+                          class="shrink-0 tech-font text-[12px] font-bold bg-app-pink text-white border border-pink-300 px-4 py-2 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          确认
+                        </button>
                     </div>
                 </div>
             </div>
@@ -187,6 +212,31 @@
         </section>
 
     </main>
+
+    <div v-if="transferConfirmModalVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 animate-fade-in">
+        <div class="bg-[#1a153a] rounded-xl p-5 border border-white/10 w-full max-w-sm shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
+            <h3 class="text-lg font-display text-white mb-3 text-center tech-font font-bold relative z-10">确认转让</h3>
+            <p class="text-[13px] text-gray-300 text-center mb-4 tech-font relative z-10">确认将{{ transferConfirmNftName }}转入以下地址</p>
+
+            <div class="bg-black/30 border border-pink-500/20 rounded-lg p-3 mb-4 break-all text-[12px] text-center text-pink-300 tech-font relative z-10">
+                {{ transferConfirmAddress }}
+            </div>
+
+            <div class="flex gap-3 relative z-10">
+                <button @click="closeTransferConfirmModal" class="flex-1 py-2.5 rounded-lg border border-white/20 text-white text-[13px] font-bold hover:bg-white/10 transition tech-font active:scale-95">
+                    取 消
+                </button>
+                <button
+                  @click="executeTransferNft"
+                  :disabled="transferConfirmCountdown > 0 || isNftActionLoading(transferConfirmNftId, 'transfer')"
+                  class="flex-1 py-2.5 rounded-lg bg-app-pink text-white text-[13px] font-bold border border-pink-300 hover:bg-pink-600 transition tech-font disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
+                >
+                    {{ transferConfirmCountdown > 0 ? `确 认 (${transferConfirmCountdown}s)` : (isNftActionLoading(transferConfirmNftId, 'transfer') ? '转让中...' : '确 认') }}
+                </button>
+            </div>
+        </div>
+    </div>
   </div>
 </template>
 
@@ -197,6 +247,7 @@ import { walletState } from '@/services/wallet.js';
 import { getContractAddress } from '@/services/contracts.js';
 import { ethers } from 'ethers';
 import nodeAbi from '@/abis/node.json';
+import referralAbi from '@/abis/referral.json';
 import usdtAbi from '@/abis/usdt.json';
 
 export default {
@@ -226,7 +277,27 @@ export default {
       nftActionTokenId: null,
       nftTotalBalance: 0,
       nftActivatedCount: 0,
+      rewardTickTimestamp: Math.floor(Date.now() / 1000),
+      rewardTickTimer: null,
+      rewardAnimationFrame: null,
+      rewardDisplayValues: {},
       phaseNames: [],
+      levelRewardsByPhase: {},
+      rewardDurationRaw: '0',
+      afiPriceUsd: null,
+      afiPriceSourceLabel: '待接入 DEX / 预言机',
+      userHasActivatedNft: false,
+      isReferralBound: false,
+      sAfiClaimThresholdRaw: '0',
+      sAfiTokenAddress: '',
+      transferTargetByNftId: {},
+      editingTransferNftId: null,
+      transferConfirmModalVisible: false,
+      transferConfirmCountdown: 5,
+      transferConfirmTimer: null,
+      transferConfirmAddress: '',
+      transferConfirmNftId: null,
+      transferConfirmNftName: '',
       purchaseData: {
         purchaseLevel: 0,
         phaseName: '',
@@ -251,6 +322,12 @@ export default {
     },
     unactivatedCount() {
       return Math.max(this.nftTotalBalance - this.nftActivatedCount, 0);
+    },
+    rewardDurationSeconds() {
+      return Number(this.rewardDurationRaw || '0');
+    },
+    hasAfiPrice() {
+      return Number.isFinite(this.afiPriceUsd) && this.afiPriceUsd > 0;
     },
     displayedNfts() {
       return this.myNfts.slice(0, this.displayCount);
@@ -375,6 +452,19 @@ export default {
       const trimmedDecimal = decimalPart.slice(0, 4).replace(/0+$/, '');
       return trimmedDecimal ? `${integerPart}.${trimmedDecimal}` : integerPart;
     },
+    formatRewardNumber(value) {
+      if (!Number.isFinite(value) || value <= 0) {
+        return '0.00';
+      }
+      const fixed = value.toFixed(4);
+      return fixed.replace(/\.?0+$/, '') || '0.00';
+    },
+    formatPercent(value) {
+      if (!Number.isFinite(value)) {
+        return '--';
+      }
+      return value >= 1000 ? `${value.toFixed(0)}%` : `${value.toFixed(2)}%`;
+    },
     parsePhaseNames(names) {
       return names
         .flatMap(name => String(name).split(','))
@@ -387,6 +477,245 @@ export default {
     },
     isNftActionLoading(tokenId, actionType) {
       return this.nftActionLoading && this.nftActionTokenId === tokenId && this.nftActionType === actionType;
+    },
+    getLevelRewardRaw(level) {
+      return BigInt(this.levelRewardsByPhase[level] || '0');
+    },
+    getRewardPerSecondRaw(level) {
+      const rewardDuration = BigInt(this.rewardDurationRaw || '0');
+      if (rewardDuration <= 0n) {
+        return 0n;
+      }
+      return this.getLevelRewardRaw(level) / rewardDuration;
+    },
+    getApyValue(level) {
+      if (!this.hasAfiPrice || !this.rewardDurationSeconds || !this.purchaseData.purchasePrice) {
+        return null;
+      }
+      const totalReward = Number(ethers.formatUnits(this.getLevelRewardRaw(level), 18));
+      const nftPrice = Number(this.purchaseData.purchasePrice);
+      if (!Number.isFinite(totalReward) || !Number.isFinite(nftPrice) || nftPrice <= 0) {
+        return null;
+      }
+      const durationFactor = (365 * 86400) / this.rewardDurationSeconds;
+      return (totalReward * this.afiPriceUsd / nftPrice) * durationFactor * 100;
+    },
+    getApyDisplay(level) {
+      const apy = this.getApyValue(level);
+      return apy === null ? '--' : this.formatPercent(apy);
+    },
+    getTransferTarget(nftId) {
+      return this.transferTargetByNftId[nftId] || '';
+    },
+    setTransferTarget(nftId, value) {
+      this.transferTargetByNftId = {
+        ...this.transferTargetByNftId,
+        [nftId]: value
+      };
+    },
+    toggleTransferEditor(nftId) {
+      this.editingTransferNftId = this.editingTransferNftId === nftId ? null : nftId;
+    },
+    isTransferEditorOpen(nftId) {
+      return this.editingTransferNftId === nftId;
+    },
+    openTransferConfirmModal(nft, targetAddress) {
+      this.transferConfirmAddress = targetAddress;
+      this.transferConfirmNftId = nft.id;
+      this.transferConfirmNftName = nft.name;
+      this.transferConfirmModalVisible = true;
+      this.transferConfirmCountdown = 5;
+
+      if (this.transferConfirmTimer) {
+        clearInterval(this.transferConfirmTimer);
+      }
+
+      this.transferConfirmTimer = setInterval(() => {
+        if (this.transferConfirmCountdown > 0) {
+          this.transferConfirmCountdown -= 1;
+          return;
+        }
+
+        clearInterval(this.transferConfirmTimer);
+        this.transferConfirmTimer = null;
+      }, 1000);
+    },
+    closeTransferConfirmModal() {
+      this.transferConfirmModalVisible = false;
+      this.transferConfirmCountdown = 5;
+      this.transferConfirmAddress = '';
+      this.transferConfirmNftId = null;
+      this.transferConfirmNftName = '';
+
+      if (this.transferConfirmTimer) {
+        clearInterval(this.transferConfirmTimer);
+        this.transferConfirmTimer = null;
+      }
+    },
+    calculateClaimableRawAtTimestamp(nft, timestampSec) {
+      if (!nft?.activated) {
+        return 0n;
+      }
+
+      const basePendingRaw = BigInt(nft.pendingRewardRaw || '0');
+      const fetchedAt = BigInt(nft.pendingRewardFetchedAt || this.rewardTickTimestamp);
+      const now = BigInt(timestampSec);
+      const rewardDuration = BigInt(this.rewardDurationRaw || '0');
+      const levelRewardRaw = this.getLevelRewardRaw(nft.level);
+      const claimedRewardRaw = BigInt(nft.claimedRewardRaw || '0');
+
+      if (rewardDuration <= 0n || levelRewardRaw <= 0n) {
+        return basePendingRaw;
+      }
+
+      const elapsedSinceFetch = now > fetchedAt ? now - fetchedAt : 0n;
+      const incrementalRaw = levelRewardRaw * elapsedSinceFetch / rewardDuration;
+      const maxClaimableRaw = levelRewardRaw > claimedRewardRaw ? levelRewardRaw - claimedRewardRaw : 0n;
+      const animatedClaimableRaw = basePendingRaw + incrementalRaw;
+
+      return animatedClaimableRaw > maxClaimableRaw ? maxClaimableRaw : animatedClaimableRaw;
+    },
+    calculateAnimatedClaimableRaw(nft) {
+      return this.calculateClaimableRawAtTimestamp(nft, this.rewardTickTimestamp);
+    },
+    getClaimableDisplayNumber(nft, timestampSec = this.rewardTickTimestamp) {
+      return Number(ethers.formatUnits(this.calculateClaimableRawAtTimestamp(nft, timestampSec), 18));
+    },
+    getAnimatedClaimableDisplay(nft) {
+      const displayValue = this.rewardDisplayValues[nft.id];
+      if (typeof displayValue === 'number') {
+        return this.formatRewardNumber(displayValue);
+      }
+      return this.formatRewardNumber(this.getClaimableDisplayNumber(nft));
+    },
+    getClaimableRewardDisplay(nft) {
+      return this.formatRewardAmount(this.calculateAnimatedClaimableRaw(nft));
+    },
+    getRewardPerSecondDisplay(nft) {
+      const rewardPerSecondRaw = this.getRewardPerSecondRaw(nft.level);
+      if (rewardPerSecondRaw <= 0n) {
+        return '0.00';
+      }
+      return this.formatRewardAmount(rewardPerSecondRaw);
+    },
+    getActivateDisabledReason() {
+      if (!this.isReferralBound) {
+        return '请先绑定推荐人';
+      }
+      if (this.userHasActivatedNft) {
+        return '每个地址只能激活一个 NFT';
+      }
+      return '';
+    },
+    isActivateDisabled() {
+      return Boolean(this.getActivateDisabledReason());
+    },
+    getClaimDisabledReason(nft) {
+      if (this.calculateAnimatedClaimableRaw(nft) <= 0n) {
+        return '当前没有可领取的收益';
+      }
+
+      if (BigInt(this.sAfiClaimThresholdRaw || '0') > 0n) {
+        return '待接入 IStaking 质押校验';
+      }
+
+      return '';
+    },
+    isClaimDisabled(nft) {
+      return Boolean(this.getClaimDisabledReason(nft));
+    },
+    getClaimRequirementHint(nft) {
+      const thresholdRaw = BigInt(this.sAfiClaimThresholdRaw || '0');
+      if (thresholdRaw <= 0n) {
+        return '';
+      }
+      if (this.isClaimDisabled(nft)) {
+        return `需质押至少 ${this.formatRewardAmount(thresholdRaw)} sAFI，当前 IStaking 待接入`;
+      }
+      return '';
+    },
+    syncRewardDisplayValues(force = false) {
+      const activatedNfts = this.myNfts.filter(nft => nft.activated);
+      if (!activatedNfts.length) {
+        this.rewardDisplayValues = {};
+        return;
+      }
+
+      const targets = Object.fromEntries(
+        activatedNfts.map(nft => [nft.id, this.getClaimableDisplayNumber(nft)])
+      );
+
+      if (force || Object.keys(this.rewardDisplayValues).length === 0) {
+        this.rewardDisplayValues = targets;
+        return;
+      }
+
+      if (this.rewardAnimationFrame) {
+        cancelAnimationFrame(this.rewardAnimationFrame);
+        this.rewardAnimationFrame = null;
+      }
+
+      const startValues = Object.fromEntries(
+        activatedNfts.map(nft => [
+          nft.id,
+          this.rewardDisplayValues[nft.id] ?? this.getClaimableDisplayNumber(nft, Number(nft.pendingRewardFetchedAt || this.rewardTickTimestamp))
+        ])
+      );
+      const durationMs = 1400;
+      const startAt = performance.now();
+
+      const animate = (now) => {
+        const progress = Math.min((now - startAt) / durationMs, 1);
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        const nextValues = {};
+
+        activatedNfts.forEach((nft) => {
+          const startValue = startValues[nft.id] ?? 0;
+          const targetValue = targets[nft.id] ?? startValue;
+          nextValues[nft.id] = startValue + ((targetValue - startValue) * easedProgress);
+        });
+
+        this.rewardDisplayValues = {
+          ...this.rewardDisplayValues,
+          ...nextValues
+        };
+
+        if (progress < 1) {
+          this.rewardAnimationFrame = requestAnimationFrame(animate);
+          return;
+        }
+
+        this.rewardDisplayValues = {
+          ...this.rewardDisplayValues,
+          ...targets
+        };
+        this.rewardAnimationFrame = null;
+      };
+
+      this.rewardAnimationFrame = requestAnimationFrame(animate);
+    },
+    startRewardTicker() {
+      this.stopRewardTicker();
+      this.rewardTickTimestamp = Math.floor(Date.now() / 1000);
+      this.syncRewardDisplayValues(true);
+      this.rewardTickTimer = setInterval(() => {
+        this.rewardTickTimestamp = Math.floor(Date.now() / 1000);
+        this.syncRewardDisplayValues();
+      }, 6000);
+    },
+    stopRewardTicker() {
+      if (this.rewardTickTimer) {
+        clearInterval(this.rewardTickTimer);
+        this.rewardTickTimer = null;
+      }
+      if (this.rewardAnimationFrame) {
+        cancelAnimationFrame(this.rewardAnimationFrame);
+        this.rewardAnimationFrame = null;
+      }
+    },
+    async fetchAfiPrice() {
+      // Placeholder until the AFI price source is provided.
+      this.afiPriceUsd = null;
     },
     async fetchMyNfts(nodeContract, requestId = this.purchaseDataRequestId) {
       if (!this.walletState.isConnected || !this.walletState.address || !nodeContract) {
@@ -417,6 +746,7 @@ export default {
           return;
         }
 
+        const fetchedAt = Math.floor(Date.now() / 1000);
         const mappedNfts = nftInfos.map((nft, index) => {
           const tokenId = Number(nft.id);
           const level = Number(nft.level);
@@ -428,10 +758,10 @@ export default {
             level,
             activated,
             activationTime: Number(nft.activationTime),
-            claimedReward: nft.claimedReward?.toString?.() ?? '0',
+            claimedRewardRaw: nft.claimedReward?.toString?.() ?? '0',
             name: this.buildNftName(level, tokenId),
-            claimableReward: activated ? this.formatRewardAmount(rewardRaw) : '0.00',
-            claimableRewardRaw: rewardRaw.toString()
+            pendingRewardRaw: rewardRaw.toString(),
+            pendingRewardFetchedAt: fetchedAt
           };
         });
 
@@ -443,9 +773,11 @@ export default {
         });
 
         this.myNfts = mappedNfts;
+        this.rewardTickTimestamp = fetchedAt;
         this.nftTotalBalance = mappedNfts.length;
         this.nftActivatedCount = mappedNfts.filter(nft => nft.activated).length;
         this.displayCount = 10;
+        this.syncRewardDisplayValues(true);
 
         console.log('NFT 列表数据', {
           count: mappedNfts.length,
@@ -496,6 +828,20 @@ export default {
       }
       return new ethers.Contract(address, nodeAbi, provider);
     },
+    getReferralContract(withSigner = false) {
+      const address = getContractAddress('Referral');
+      if (!address) {
+        return null;
+      }
+      if (withSigner && this.walletState.signer) {
+        return new ethers.Contract(address, referralAbi, this.walletState.signer);
+      }
+      const provider = this.getProvider();
+      if (!provider) {
+        return null;
+      }
+      return new ethers.Contract(address, referralAbi, provider);
+    },
     getUsdtContract(withSigner = false) {
       const address = getContractAddress('USDT');
       if (!address) {
@@ -531,6 +877,18 @@ export default {
       this.nftActionLoading = false;
       this.nftActionType = '';
       this.nftActionTokenId = null;
+      this.rewardTickTimestamp = Math.floor(Date.now() / 1000);
+      this.rewardDisplayValues = {};
+      this.levelRewardsByPhase = {};
+      this.rewardDurationRaw = '0';
+      this.afiPriceUsd = null;
+      this.userHasActivatedNft = false;
+      this.isReferralBound = false;
+      this.sAfiClaimThresholdRaw = '0';
+      this.sAfiTokenAddress = '';
+      this.transferTargetByNftId = {};
+      this.editingTransferNftId = null;
+      this.closeTransferConfirmModal();
       this.myNfts = [];
       this.displayCount = 10;
       this.clearPurchaseButtonStatus();
@@ -617,6 +975,7 @@ export default {
 
       const nodeContract = this.getNodeContract();
       const usdtContract = this.getUsdtContract();
+      const referralContract = this.getReferralContract();
       if (!nodeContract || !usdtContract) {
         this.resetPurchaseData();
         return;
@@ -634,7 +993,12 @@ export default {
           purchasePrice,
           names,
           baseURI,
-          usdtDecimals
+          usdtDecimals,
+          rewardDuration,
+          userHasActivated,
+          sAfiClaimThreshold,
+          sAfiToken,
+          isReferralBound
         ] = await Promise.all([
           nodeContract.purchaseLevel(),
           nodeContract.totalPurchased(),
@@ -642,10 +1006,18 @@ export default {
           nodeContract.purchasePrice(),
           nodeContract.getInfos('name'),
           nodeContract.baseURI(),
-          usdtContract.decimals()
+          usdtContract.decimals(),
+          nodeContract.rewardDuration(),
+          nodeContract.userHasActivated(this.walletState.address),
+          nodeContract.sAfiClaimThreshold(),
+          nodeContract.sAfiToken(),
+          referralContract ? referralContract.isBindReferral(this.walletState.address) : Promise.resolve(false)
         ]);
 
         const phaseNames = this.parsePhaseNames(names);
+        const levelRewardsList = await Promise.all(
+          phaseNames.map((_, index) => nodeContract.levelRewards(index + 1))
+        );
 
         this.logPurchaseDataOnce('raw', 'NFT 认购原始数据', {
           当前售卖期数: purchaseLevel.toString(),
@@ -655,7 +1027,12 @@ export default {
           期数名称列表: names,
           拆分后的期数名称列表: phaseNames,
           图片基础地址: baseURI,
-          USDT精度: usdtDecimals.toString()
+          USDT精度: usdtDecimals.toString(),
+          奖励释放周期: rewardDuration.toString(),
+          用户是否已激活NFT: Boolean(userHasActivated),
+          是否已绑定推荐人: Boolean(isReferralBound),
+          sAFI领取门槛: sAfiClaimThreshold.toString(),
+          sAFI合约地址: sAfiToken
         });
 
         if (requestId !== this.purchaseDataRequestId || !this.walletState.isConnected) {
@@ -677,6 +1054,15 @@ export default {
           baseURI
         };
         this.phaseNames = phaseNames;
+        this.levelRewardsByPhase = Object.fromEntries(
+          levelRewardsList.map((value, index) => [index + 1, value.toString()])
+        );
+        this.rewardDurationRaw = rewardDuration.toString();
+        this.userHasActivatedNft = Boolean(userHasActivated);
+        this.isReferralBound = Boolean(isReferralBound);
+        this.sAfiClaimThresholdRaw = sAfiClaimThreshold.toString();
+        this.sAfiTokenAddress = sAfiToken;
+        await this.fetchAfiPrice();
 
         this.logPurchaseDataOnce('formatted', 'NFT 认购格式化后数据', {
           当前售卖期数: this.purchaseData.purchaseLevel,
@@ -685,7 +1071,9 @@ export default {
           本期总量: this.purchaseData.maxPurchaseAmount,
           单价: `${formattedPurchasePrice} USDT`,
           进度百分比: `${this.progressPercent}%`,
-          图片地址: this.purchaseImageUrl
+          图片地址: this.purchaseImageUrl,
+          奖励释放周期秒数: this.rewardDurationRaw,
+          AFI价格来源: this.afiPriceSourceLabel
         });
 
         this.normalizeQuantity();
@@ -778,6 +1166,12 @@ export default {
       }
     },
     async activateNft(nft) {
+      const disabledReason = this.getActivateDisabledReason();
+      if (disabledReason) {
+        showToast(disabledReason);
+        return;
+      }
+
       const nodeContract = this.getNodeContract(true);
       if (!nodeContract) {
         showToast('合约未就绪');
@@ -792,7 +1186,7 @@ export default {
         const tx = await nodeContract.activateNFT(nft.id);
         await tx.wait();
         showToast(`NFT ${nft.name} 激活成功`);
-        await this.fetchMyNfts(this.getNodeContract(), this.purchaseDataRequestId);
+        await this.fetchPurchaseData();
       } catch (error) {
         console.error('激活 NFT 失败:', error);
         if (error.code !== 4001 && error.code !== 'ACTION_REJECTED') {
@@ -804,40 +1198,63 @@ export default {
         this.nftActionTokenId = null;
       }
     },
-    transferNft(nft) {
-      showToast(`准备转让 ${nft.name}，后端接口开发中...`);
+    async transferNft(nft) {
+      const targetAddress = this.getTransferTarget(nft.id).trim();
+      if (!targetAddress) {
+        this.toggleTransferEditor(nft.id);
+        return;
+      }
+      if (!ethers.isAddress(targetAddress)) {
+        showToast('请输入有效的钱包地址');
+        return;
+      }
+      if (targetAddress.toLowerCase() === this.walletState.address?.toLowerCase()) {
+        showToast('不能转让给自己');
+        return;
+      }
+
+      this.openTransferConfirmModal(nft, targetAddress);
     },
-    async claimYield(nft) {
-      if (BigInt(nft.claimableRewardRaw || '0') <= 0n) {
-        showToast('当前没有可领取的收益');
+    async executeTransferNft() {
+      if (!this.transferConfirmNftId || !this.transferConfirmAddress) {
+        this.closeTransferConfirmModal();
         return;
       }
 
       const nodeContract = this.getNodeContract(true);
-      if (!nodeContract) {
+      if (!nodeContract || !this.walletState.address) {
         showToast('合约未就绪');
         return;
       }
 
+      const nftId = this.transferConfirmNftId;
+      const targetAddress = this.transferConfirmAddress;
+      this.closeTransferConfirmModal();
+
       this.nftActionLoading = true;
-      this.nftActionType = 'claim';
-      this.nftActionTokenId = nft.id;
+      this.nftActionType = 'transfer';
+      this.nftActionTokenId = nftId;
 
       try {
-        const tx = await nodeContract.claimReward(nft.id);
+        const tx = await nodeContract.safeTransferFrom(this.walletState.address, targetAddress, nftId);
         await tx.wait();
-        showToast(`成功领取 ${nft.claimableReward} AFI 收益`);
-        await this.fetchMyNfts(this.getNodeContract(), this.purchaseDataRequestId);
+        showToast('NFT 转让成功');
+        this.setTransferTarget(nftId, '');
+        this.editingTransferNftId = null;
+        await this.fetchPurchaseData();
       } catch (error) {
-        console.error('领取收益失败:', error);
+        console.error('转让 NFT 失败:', error);
         if (error.code !== 4001 && error.code !== 'ACTION_REJECTED') {
-          showToast('领取失败');
+          showToast('转让失败');
         }
       } finally {
         this.nftActionLoading = false;
         this.nftActionType = '';
         this.nftActionTokenId = null;
       }
+    },
+    async claimYield(nft) {
+      showToast('暂未开放');
     },
     loadMore() {
       this.displayCount += 10;
@@ -870,6 +1287,7 @@ export default {
     }
   },
   mounted() {
+    this.startRewardTicker();
     if (this.walletState.isConnected) {
       this.fetchPurchaseData();
     }
@@ -878,6 +1296,8 @@ export default {
     if (this.purchaseStatusTimer) {
       clearTimeout(this.purchaseStatusTimer);
     }
+    this.closeTransferConfirmModal();
+    this.stopRewardTicker();
   }
 }
 </script>
