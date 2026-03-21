@@ -12,7 +12,7 @@
           :class="activeTab === 'friends' ? 'text-app-pink' : 'text-gray-500'"
           @click="activeTab = 'friends'"
         >
-          我的好友
+          {{ t('friends.tabs.myFriends') }}
           <div v-if="activeTab === 'friends'" class="absolute -bottom-[9px] left-0 w-full h-[2px] bg-app-pink shadow-[0_0_8px_rgba(255,77,141,0.8)]"></div>
         </button>
         <button 
@@ -20,7 +20,7 @@
           :class="activeTab === 'team' ? 'text-app-pink' : 'text-gray-500'"
           @click="activeTab = 'team'"
         >
-          邀请推荐
+          {{ t('friends.tabs.inviteReferral') }}
           <div v-if="activeTab === 'team'" class="absolute -bottom-[9px] left-0 w-full h-[2px] bg-app-pink shadow-[0_0_8px_rgba(255,77,141,0.8)]"></div>
         </button>
       </div>
@@ -33,7 +33,7 @@
           
           <div class="flex justify-between items-center relative z-10">
             <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">我的等级</span>
+              <span class="text-[11px] text-gray-400 tech-font mb-1">{{ t('friends.stats.myLevel') }}</span>
               <div class="flex items-center gap-1">
                 <i class="ph-fill ph-star text-app-pink text-sm"></i>
                 <span class="text-[16px] font-bold text-white font-display">A{{ myLevel }}</span>
@@ -41,18 +41,18 @@
             </div>
             <div class="h-8 w-px bg-white/10"></div>
             <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">直推人数</span>
-              <span class="text-[16px] font-bold text-white font-display">{{ referralCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
+              <span class="text-[11px] text-gray-400 tech-font mb-1">{{ t('friends.stats.friendCount') }}</span>
+              <span class="text-[16px] font-bold text-white font-display">{{ referralCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">{{ t('common.people') }}</span></span>
             </div>
             <div class="h-8 w-px bg-white/10"></div>
             <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">有效直推</span>
-              <span class="text-[16px] font-bold text-app-pink font-display">{{ activatedDirects }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
+              <span class="text-[11px] text-gray-400 tech-font mb-1">{{ t('friends.stats.activeFriends') }}</span>
+              <span class="text-[16px] font-bold text-app-pink font-display">{{ activatedDirects }} <span class="text-[10px] text-gray-500 font-normal tech-font">{{ t('common.people') }}</span></span>
             </div>
             <div class="h-8 w-px bg-white/10"></div>
             <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">团队人数</span>
-              <span class="text-[16px] font-bold text-white font-display">{{ teamCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
+              <span class="text-[11px] text-gray-400 tech-font mb-1">{{ t('friends.stats.teamCount') }}</span>
+              <span class="text-[16px] font-bold text-white font-display">{{ teamCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">{{ t('common.people') }}</span></span>
             </div>
           </div>
         </div>
@@ -60,22 +60,23 @@
         <!-- Friends List -->
         <h3 class="text-[13px] font-display text-white tracking-wider mb-3 flex items-center gap-2 tech-font font-bold">
             <i class="ph-fill ph-users text-app-pink"></i>
-            直推列表
+            {{ t('friends.list.title') }}
         </h3>
         
         <div v-if="!walletState.isConnected" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
-          请先连接钱包
+          {{ t('common.connectWalletFirst') }}
         </div>
         <div v-else-if="loadingChildren && childrenList.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px]">
-          加载中...
+          {{ t('common.loading') }}
         </div>
         <div v-else-if="childrenList.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
-          暂无直推好友
+          {{ t('friends.list.empty') }}
         </div>
         <div v-else-if="currentChild" class="flex flex-col gap-3">
           <!-- Carousel Card -->
           <transition name="fade" mode="out-in">
             <div :key="currentCardIndex" class="bg-[#1a153a] p-4 rounded-xl border border-white/5 shadow-md relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
               <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
                   <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shadow-[0_0_8px_rgba(255,77,141,0.2)]">
@@ -89,7 +90,7 @@
               
               <div class="flex justify-between items-center bg-black/20 rounded-lg p-3 border border-white/5">
                 <div class="flex flex-col items-center flex-1">
-                  <span class="text-[10px] text-gray-400 tech-font mb-1">好友等级</span>
+                  <span class="text-[10px] text-gray-400 tech-font mb-1">{{ t('friends.list.friendLevel') }}</span>
                   <div class="flex items-center gap-1">
                     <i class="ph-fill ph-star text-pink-400 text-xs"></i>
                     <span class="text-[14px] font-bold text-white font-display">A{{ currentChild.level !== null ? currentChild.level : '...' }}</span>
@@ -97,10 +98,15 @@
                 </div>
                 <div class="h-8 w-px bg-white/10"></div>
                 <div class="flex flex-col items-center flex-1">
-                  <span class="text-[10px] text-gray-400 tech-font mb-1">是否激活</span>
-                  <span class="text-[14px] font-bold font-display" :class="currentChild.userHasActivated ? 'text-green-400' : 'text-gray-500'">
-                    {{ currentChild.userHasActivated ? '已激活' : '未激活' }}
+                  <span class="text-[10px] text-gray-400 tech-font mb-1">{{ t('friends.list.isActivated') }}</span>
+                  <span class="text-[14px] font-bold tech-font" :class="currentChild.userHasActivated ? 'text-green-400' : 'text-gray-500'">
+                    {{ currentChild.userHasActivated ? t('friends.list.activated') : t('friends.list.notActivated') }}
                   </span>
+                </div>
+                <div class="h-8 w-px bg-white/10"></div>
+                <div class="flex flex-col items-center flex-1">
+                  <span class="text-[10px] text-gray-400 tech-font mb-1">{{ t('friends.list.teamCount') }}</span>
+                  <span class="text-[14px] font-bold text-white font-display">{{ currentChild.teamCount }}</span>
                 </div>
               </div>
             </div>
@@ -139,15 +145,15 @@
           <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
           <h3 class="text-[13px] font-display text-white tracking-wider mb-1.5 relative z-10 flex items-center gap-2 tech-font font-bold">
             <i class="ph-fill ph-share-network text-app-pink"></i>
-            我的邀请链接
+            {{ t('friends.referral.myLink') }}
           </h3>
-          <p class="text-[11px] text-gray-400 mb-3 relative z-10 tech-font">分享链接邀请好友加入，获取团队收益</p>
+          <p class="text-[11px] text-gray-400 mb-3 relative z-10 tech-font">{{ t('friends.referral.shareDesc') }}</p>
           
           <div class="flex flex-col gap-3 relative z-10">
-            <div class="bg-black/30 border border-white/10 rounded-lg p-3 break-all text-[12px] text-center min-h-[60px] flex items-center justify-center tech-font" :class="{ 'opacity-60 text-gray-500': !isBound || !hasPurchasedNFT, 'text-gray-300': isBound && hasPurchasedNFT }">
-              <span v-if="!walletState.isConnected">请先连接钱包</span>
-              <span v-else-if="!isBound">请先绑定邀请人</span>
-              <span v-else-if="!hasPurchasedNFT" class="text-app-pink">请先购买 NFT 以获取邀请链接</span>
+            <div class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 break-all text-[13px] text-white text-center min-h-[60px] flex items-center justify-center tech-font leading-5" :class="{ 'opacity-60': !isBound || !hasPurchasedNFT }">
+              <span v-if="!walletState.isConnected">{{ t('common.connectWalletFirst') }}</span>
+              <span v-else-if="!isBound">{{ t('nft.messages.bindReferrerFirst') }}</span>
+              <span v-else-if="!hasPurchasedNFT" class="text-app-pink">{{ t('friends.referral.buyNftFirst') }}</span>
               <span v-else>{{ myReferralLink }}</span>
             </div>
             <button 
@@ -156,13 +162,13 @@
               class="w-full bg-white/5 text-white border border-white/10 text-[13px] font-bold py-3 rounded-lg hover:bg-white/10 hover:border-pink-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 tech-font active:scale-95"
             >
               <i class="ph ph-copy text-lg"></i>
-              复制专属链接
+              {{ t('friends.referral.copyLink') }}
             </button>
           </div>
           
           <div class="mt-4 flex items-start gap-1.5 text-[10px] text-gray-500 bg-black/20 p-2.5 rounded-lg border border-white/5 tech-font leading-relaxed">
             <i class="ph-fill ph-info text-app-pink mt-0.5 shrink-0"></i>
-            <span>提示：您需要先绑定邀请人并购买 NFT，才能生成自己的邀请链接。邀请好友参与，您将获得额外的收益加成。</span>
+            <span>{{ t('friends.referral.tip') }}</span>
           </div>
         </div>
 
@@ -171,11 +177,11 @@
           <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
           <h3 class="text-[13px] font-display text-white tracking-wider mb-1.5 relative z-10 flex items-center gap-2 tech-font font-bold">
             <i class="ph-fill ph-link text-app-pink"></i>
-            我的邀请人
+            {{ t('friends.referral.myReferrer') }}
           </h3>
-          <p class="text-[11px] text-gray-400 mb-3 relative z-10 tech-font" v-if="!isBound">推荐人地址仅支持通过邀请链接自动识别，绑定后不可修改</p>
+          <p class="text-[11px] text-gray-400 mb-3 relative z-10 tech-font" v-if="!isBound">{{ t('friends.referral.bindDesc') }}</p>
           <p class="text-[11px] text-app-pink mb-3 relative z-10 tech-font" v-else>
-            <i class="ph-fill ph-check-circle mr-1"></i>已成功绑定邀请人
+            <i class="ph-fill ph-check-circle mr-1"></i>{{ t('friends.referral.boundSuccess') }}
           </p>
           
           <div class="flex gap-2 relative z-10 items-start">
@@ -184,7 +190,7 @@
               type="text"
               :value="referrerInput"
               readonly
-              :placeholder="walletState.isConnected ? '请通过邀请链接绑定推荐人' : '请先连接钱包'"
+              :placeholder="walletState.isConnected ? t('friends.referral.placeholderBindByLink') : t('common.connectWalletFirst')"
               class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-white outline-none focus:border-app-pink/50 transition-colors tech-font placeholder:text-gray-600"
               :class="{ 'opacity-60 cursor-not-allowed': !referrerInput }"
             />
@@ -192,8 +198,8 @@
               v-else
               :value="referrerInput"
               readonly
-              rows="3"
-              class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-white outline-none transition-colors tech-font resize-none"
+              rows="2"
+              class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-white outline-none transition-colors tech-font resize-none leading-5"
             ></textarea>
             <button 
               v-if="!isBound"
@@ -201,7 +207,7 @@
               :disabled="bindingReferrer || !walletState.isConnected || !referrerInput"
               class="bg-app-pink text-white text-[13px] font-bold px-5 py-2.5 rounded-lg hover:bg-pink-600 transition shadow-[0_0_10px_rgba(255,77,141,0.3)] disabled:opacity-50 disabled:cursor-not-allowed shrink-0 tech-font active:scale-95"
             >
-              {{ bindingReferrer ? '绑定中...' : '绑 定' }}
+              {{ bindingReferrer ? t('friends.referral.bindLoading') : t('friends.referral.bind') }}
             </button>
           </div>
         </div>
@@ -213,21 +219,21 @@
     <!-- Confirm Modal -->
     <div v-if="isConfirmModalVisible" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 animate-fade-in">
       <div class="bg-[#1a153a] border border-app-pink/30 rounded-2xl p-5 w-full max-w-sm shadow-[0_0_30px_rgba(255,77,141,0.2)]">
-        <h3 class="text-lg font-display text-white mb-3 text-center tech-font font-bold">确认绑定</h3>
-        <p class="text-[13px] text-gray-300 text-center mb-4 tech-font">绑定后将无法修改，请确认邀请人地址：</p>
+        <h3 class="text-lg font-display text-white mb-3 text-center tech-font font-bold">{{ t('friends.modal.confirmBindTitle') }}</h3>
+        <p class="text-[13px] text-gray-300 text-center mb-4 tech-font">{{ t('friends.modal.confirmBindDesc') }}</p>
         <div class="bg-black/40 border border-white/10 rounded-lg p-3 text-[12px] text-app-pink break-all text-center mb-6 font-mono">
           {{ confirmAddress }}
         </div>
         <div class="flex gap-3">
           <button @click="closeConfirmModal" class="flex-1 py-2.5 rounded-lg border border-white/20 text-white text-[13px] font-bold hover:bg-white/10 transition tech-font active:scale-95">
-            取 消
+            {{ t('common.cancel') }}
           </button>
           <button 
             @click="executeBind"
             :disabled="confirmCountdown > 0"
             class="flex-1 py-2.5 rounded-lg bg-app-pink text-white text-[13px] font-bold hover:bg-pink-600 transition shadow-[0_0_10px_rgba(255,77,141,0.4)] disabled:opacity-50 disabled:cursor-not-allowed tech-font active:scale-95"
           >
-            {{ confirmCountdown > 0 ? `确 认 (${confirmCountdown}s)` : '确 认' }}
+            {{ confirmCountdown > 0 ? t('common.confirmWithCountdown', { count: confirmCountdown }) : t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -242,6 +248,7 @@ import Header from '@/components/Header.vue';
 import { walletState, formatAddress } from '@/services/wallet.js';
 import { showToast } from '@/services/notification.js';
 import { getContractAddress } from '@/services/contracts.js';
+import { t } from '@/i18n';
 import { ethers } from 'ethers';
 import referralAbi from '@/abis/referral.json';
 import nodeAbi from '@/abis/node.json';
@@ -408,6 +415,7 @@ export default {
           const childObjects = await Promise.all(validChildren.map(async (addr) => {
             let level = 0;
             let userHasActivated = false;
+            let teamCount = 0;
             
             if (nodeContract) {
               try {
@@ -417,11 +425,18 @@ export default {
                 console.error("Error fetching child node data", e);
               }
             }
+
+            try {
+              teamCount = await referralContract.getTeamCount(addr);
+            } catch (e) {
+              console.error("Error fetching child team count", e);
+            }
             
             return {
               address: addr,
               level: Number(level),
-              userHasActivated
+              userHasActivated,
+              teamCount: Number(teamCount)
             };
           }));
           
@@ -461,15 +476,15 @@ export default {
 
     const handleBindReferral = async () => {
       if (!walletState.isConnected) {
-        showToast('请先连接钱包', 'error');
+        showToast(t('common.connectWalletFirst'), 'error');
         return;
       }
       if (!referrerInput.value || !ethers.isAddress(referrerInput.value)) {
-        showToast('请输入有效的钱包地址', 'error');
+        showToast(t('friends.messages.enterValidAddress'), 'error');
         return;
       }
       if (referrerInput.value.toLowerCase() === walletState.address?.toLowerCase()) {
-        showToast('不能绑定自己为邀请人', 'error');
+        showToast(t('friends.messages.cannotBindSelf'), 'error');
         return;
       }
       
@@ -478,7 +493,7 @@ export default {
         if (contract) {
           const isValidReferrer = await contract.isBindReferral(referrerInput.value);
           if (!isValidReferrer) {
-            showToast('该推荐人尚未绑定上级，无法作为您的推荐人', 'error');
+            showToast(t('friends.messages.invalidReferrer'), 'error');
             return;
           }
         }
@@ -514,11 +529,11 @@ export default {
         if (!contract) throw new Error("Contract not initialized");
         
         const tx = await contract.bindReferral(confirmAddress.value);
-        showToast('交易已提交，等待确认...', 'success');
+        showToast(t('friends.messages.txSubmitted'), 'success');
         
         await tx.wait();
         
-        showToast('绑定成功', 'success');
+        showToast(t('friends.messages.bindSuccess'), 'success');
         isBound.value = true;
         fetchReferralData();
       } catch (error) {
@@ -527,9 +542,9 @@ export default {
           return;
         }
         if (error.reason) {
-          showToast('绑定失败: ' + error.reason, 'error');
+          showToast(t('friends.messages.bindFailedReason', { reason: error.reason }), 'error');
         } else {
-          showToast('绑定失败，请检查网络或合约状态', 'error');
+          showToast(t('friends.messages.bindFailed'), 'error');
         }
       } finally {
         bindingReferrer.value = false;
@@ -569,20 +584,20 @@ export default {
           document.body.removeChild(textArea);
           
           if (successful) {
-            showToast('复制成功', 'success');
+            showToast(t('friends.messages.copySuccess'), 'success');
           } else {
-            showToast('复制失败，请手动复制', 'error');
+            showToast(t('friends.messages.copyFailed'), 'error');
           }
         } catch (err) {
           console.error('Fallback copy failed:', err);
-          showToast('复制失败，请手动复制', 'error');
+          showToast(t('friends.messages.copyFailed'), 'error');
         }
       };
 
       // Try modern API first if available and in secure context
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(() => {
-          showToast('复制成功', 'success');
+          showToast(t('friends.messages.copySuccess'), 'success');
         }).catch((err) => {
           console.error('Clipboard API failed:', err);
           fallbackCopy(text);
@@ -649,7 +664,8 @@ export default {
       confirmAddress,
       closeConfirmModal,
       executeBind,
-      copyText
+      copyText,
+      t
     };
   }
 }

@@ -7,7 +7,7 @@
         <!-- 大标题 -->
         <div class="flex-1 flex flex-col items-center justify-center z-10 px-4 text-center">
             <h1 class="title-moebius text-5xl mb-2">AGENT.FI</h1>
-            <p class="subtitle-moebius font-bold text-[11px] tracking-widest">AUTOMATE DEFI WITH AI AGENTS</p>
+            <p class="subtitle-moebius font-bold text-[11px] tracking-widest">{{ t('home.heroSubtitle') }}</p>
         </div>
 
         <!-- Fade hero image into app container background -->
@@ -21,11 +21,17 @@
 
 <script>
 import Header from '@/components/Header.vue';
+import { t } from '@/i18n';
 
 export default {
   name: 'HomeView',
   components: {
     Header
+  },
+  setup() {
+    return {
+      t
+    };
   }
 }
 </script>
@@ -34,6 +40,7 @@ export default {
 /* Match .app-container background (#1a153a); long ease so the image meets footer area cleanly */
 .hero-bottom-fade {
     height: min(42vh, 280px);
+    bottom: -2px !important;
     background: linear-gradient(
         to top,
         #1a153a 0%,

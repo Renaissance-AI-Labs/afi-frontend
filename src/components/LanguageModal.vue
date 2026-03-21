@@ -4,8 +4,8 @@
       <div class="absolute -top-10 -right-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl"></div>
       
       <div class="modal-header flex justify-between items-center mb-6 relative z-10">
-        <h3 class="font-display text-lg tracking-wider text-app-purple drop-shadow-md">
-          LANGUAGE
+        <h3 class="tech-font font-bold text-lg tracking-wider text-app-purple drop-shadow-md">
+          {{ t('language.title') }}
         </h3>
         <button @click="close" class="text-gray-400 hover:text-white transition">
           <i class="ph ph-x text-xl"></i>
@@ -21,7 +21,7 @@
             :class="currentLang === language.code ? 'border-app-purple bg-[#2a2255] shadow-[0_0_10px_rgba(168,85,247,0.3)]' : 'border-purple-500/30 hover:border-app-purple/60 hover:bg-[#2a2255]'"
             @click="selectLanguage(language.code)"
           >
-            <span class="font-bold text-sm tracking-wide transition-colors" :class="currentLang === language.code ? 'text-app-purple' : 'text-gray-300 group-hover:text-white'">
+            <span class="tech-font font-bold text-sm tracking-wide transition-colors" :class="currentLang === language.code ? 'text-app-purple' : 'text-gray-300 group-hover:text-white'">
               {{ language.name }}
             </span>
             <i v-if="currentLang === language.code" class="ph-fill ph-check-circle text-app-purple text-xl"></i>
@@ -77,5 +77,10 @@ export default {
 .panel-border {
     border: 1px solid rgba(168, 85, 247, 0.4);
     box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 0 30px rgba(0,0,0,0.8);
+}
+
+.tech-font {
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.05em;
 }
 </style>
