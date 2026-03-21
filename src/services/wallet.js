@@ -55,7 +55,7 @@ export const walletState = reactive({
 // Utility function to format wallet address
 export const formatAddress = (address) => {
   if (!address || address.length < 10) {
-    return 'Invalid Address';
+    return t('wallet.invalidAddress');
   }
   return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 };
@@ -80,7 +80,7 @@ const authenticateWallet = async (address, signer) => {
   }
 
   try {
-    const message = "Welcome to the OSP platform. Please sign this message to verify your wallet.";
+    const message = t('wallet.signMessage');
     
     // Request signature
     const signature = await signer.signMessage(message);
@@ -148,7 +148,7 @@ export const connectWallet = async (walletType) => {
       if (window.okxwallet) {
         providerObj = window.okxwallet;
       } else {
-        alert('OKX Wallet not detected! Please install it.');
+        showToast(t('wallet.notDetected.okx'), 'error');
         return false;
       }
     } else if (walletType === 'tokenpocket') {
@@ -160,7 +160,7 @@ export const connectWallet = async (walletType) => {
            // Fallback to standard ethereum
            providerObj = window.ethereum;
        } else {
-           alert('TokenPocket not detected! Please install it.');
+           showToast(t('wallet.notDetected.tokenpocket'), 'error');
            return false;
        }
     } else {
@@ -168,7 +168,7 @@ export const connectWallet = async (walletType) => {
       if (window.ethereum) {
         providerObj = window.ethereum;
       } else {
-        alert('No EVM wallet detected!');
+        showToast(t('wallet.notDetected.evm'), 'error');
         return false;
       }
     }
@@ -231,7 +231,9 @@ export const connectWallet = async (walletType) => {
 
   } catch (error) {
     console.error('Failed to connect wallet:', error);
-    alert(`Connection failed: ${error.message || 'An unexpected error occurred.'}`);
+    showToast(t('wallet.connectionFailed', {
+      message: error.message || t('wallet.unexpectedError')
+    }), 'error');
     return false;
   }
 };

@@ -14,14 +14,29 @@
                 </div>
             </div>
 
-            <p class="text-gray-500 text-[9px] tracking-wide">© 2026 AgentFi. All rights reserved.</p>
+            <div class="flex items-center gap-2 text-[9px]">
+                <p class="text-gray-500 tracking-wide">{{ t('footer.copyright') }}</p>
+                <p class="text-gray-600 tracking-[0.2em] uppercase">{{ versionLabel }}</p>
+            </div>
         </div>
     </footer>
 </template>
 
 <script>
+import { computed } from 'vue';
+import { t } from '@/i18n';
+import { APP_ENV } from '@/services/environment';
+
 export default {
-    name: 'Footer'
+    name: 'Footer',
+    setup() {
+        const versionLabel = computed(() => (APP_ENV === 'PROD' ? 'M-1.0.0' : 'T-1.0.0'));
+
+        return {
+            t,
+            versionLabel
+        };
+    }
 }
 </script>
 

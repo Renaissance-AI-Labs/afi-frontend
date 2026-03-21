@@ -4,8 +4,8 @@
       <div class="absolute -top-10 -right-10 w-32 h-32 bg-pink-500/20 rounded-full blur-2xl"></div>
       
       <div class="modal-header flex justify-between items-center mb-4 relative z-10">
-        <h3 class="font-display text-lg tracking-wider text-app-pink drop-shadow-md">
-          {{ !walletState.isConnected ? (t('wallet.connectTitle') || 'CONNECT WALLET') : (t('wallet.connectedTitle') || 'CONNECTED') }}
+        <h3 class="tech-font font-bold text-lg tracking-wider text-app-pink drop-shadow-md">
+          {{ !walletState.isConnected ? t('wallet.connectTitle') : t('wallet.connectedTitle') }}
         </h3>
         <button @click="close" class="text-gray-400 hover:text-white transition">
           <i class="ph ph-x text-xl"></i>
@@ -15,14 +15,14 @@
       <div class="modal-body relative z-10">
         <!-- Not Connected View -->
         <div v-if="!walletState.isConnected">
-          <p class="text-[11px] text-gray-400 mb-4">{{ t('wallet.connectSubtitle') || 'Select your wallet provider' }}</p>
+          <p class="tech-font text-[11px] text-gray-400 mb-4">{{ t('wallet.selectProvider') }}</p>
           
           <div class="wallet-list" v-if="availableWallets.length > 0">
             <ul class="flex flex-col gap-3">
               <li v-for="wallet in availableWallets" :key="wallet.id">
                 <button class="w-full flex items-center gap-3 p-3 bg-[#221b44] rounded-lg border border-purple-500/30 hover:border-app-pink/60 hover:bg-[#2a2255] transition-all group" @click.prevent="handleConnect(wallet.id)">
                   <div class="w-8 h-8 rounded bg-white/10 flex items-center justify-center p-1">
-                    <img :src="getWalletIcon(wallet.id)" :alt="wallet.name" class="w-full h-full object-contain">
+                    <img :src="getWalletIcon(wallet.id)" :alt="wallet.name" class="w-full h-full object-contain" style="background-color: #fff;">
                   </div>
                   <span class="font-bold text-sm tracking-wide group-hover:text-app-pink transition-colors">{{ wallet.name }}</span>
                   <i class="ph ph-caret-right ml-auto text-gray-500 group-hover:text-app-pink"></i>
@@ -32,7 +32,7 @@
           </div>
           <div v-else class="text-center p-6 bg-[#221b44] rounded-lg border border-red-500/30">
             <i class="ph ph-warning-circle text-3xl text-red-400 mb-2"></i>
-            <p class="text-xs text-gray-300">{{ t('wallet.noWalletDetected') || 'No wallet detected' }}</p>
+            <p class="tech-font text-xs text-gray-300">{{ t('wallet.noWalletDetected') }}</p>
           </div>
         </div>
 
@@ -41,17 +41,17 @@
           
           <div class="bg-[#221b44] rounded-lg p-4 border border-green-500/30 mb-4">
             <div class="flex justify-between items-center mb-3">
-              <span class="text-[10px] text-gray-400 uppercase tracking-wider">{{ t('wallet.address') || 'Address' }}</span>
+              <span class="tech-font text-[10px] text-gray-400 uppercase tracking-wider">{{ t('wallet.address') }}</span>
               <span class="text-xs font-mono text-green-400 bg-green-400/10 px-2 py-0.5 rounded">{{ formattedAddress }}</span>
             </div>
             <div class="flex justify-between items-center">
-              <span class="text-[10px] text-gray-400 uppercase tracking-wider">{{ t('wallet.network') || 'Network' }}</span>
+              <span class="tech-font text-[10px] text-gray-400 uppercase tracking-wider">{{ t('wallet.network') }}</span>
               <span class="text-xs font-bold text-white">{{ uppercaseNetwork }}</span>
             </div>
           </div>
           
-          <button @click.prevent="handleDisconnect" class="w-full bg-red-500/20 text-red-400 font-display text-[12px] py-3 rounded-lg border border-red-500/50 hover:bg-red-500 hover:text-white transition-all tracking-widest">
-              [DISCONNECT]
+          <button @click.prevent="handleDisconnect" class="w-full bg-red-500/20 text-red-400 tech-font font-bold text-[12px] py-3 rounded-lg border border-red-500/50 hover:bg-red-500 hover:text-white transition-all tracking-widest">
+              {{ t('wallet.disconnect') }}
           </button>
         </div>
 
@@ -140,5 +140,10 @@ export default {
 .panel-border {
     border: 1px solid rgba(255, 77, 141, 0.4);
     box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 0 30px rgba(0,0,0,0.8);
+}
+
+.tech-font {
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.05em;
 }
 </style>
