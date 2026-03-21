@@ -36,13 +36,18 @@
               <span class="text-[11px] text-gray-400 tech-font mb-1">我的等级</span>
               <div class="flex items-center gap-1">
                 <i class="ph-fill ph-star text-app-pink text-sm"></i>
-                <span class="text-[16px] font-bold text-white font-display">V{{ myLevel }}</span>
+                <span class="text-[16px] font-bold text-white font-display">A{{ myLevel }}</span>
               </div>
             </div>
             <div class="h-8 w-px bg-white/10"></div>
             <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">好友人数</span>
+              <span class="text-[11px] text-gray-400 tech-font mb-1">直推人数</span>
               <span class="text-[16px] font-bold text-white font-display">{{ referralCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
+            </div>
+            <div class="h-8 w-px bg-white/10"></div>
+            <div class="flex flex-col items-center flex-1">
+              <span class="text-[11px] text-gray-400 tech-font mb-1">有效直推</span>
+              <span class="text-[16px] font-bold text-app-pink font-display">{{ activatedDirects }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
             </div>
             <div class="h-8 w-px bg-white/10"></div>
             <div class="flex flex-col items-center flex-1">
@@ -55,7 +60,7 @@
         <!-- Friends List -->
         <h3 class="text-[13px] font-display text-white tracking-wider mb-3 flex items-center gap-2 tech-font font-bold">
             <i class="ph-fill ph-users text-app-pink"></i>
-            好友列表
+            直推列表
         </h3>
         
         <div v-if="!walletState.isConnected" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
@@ -65,7 +70,7 @@
           加载中...
         </div>
         <div v-else-if="childrenList.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
-          暂无好友
+          暂无直推好友
         </div>
         <div v-else-if="currentChild" class="flex flex-col gap-3">
           <!-- Carousel Card -->
@@ -87,13 +92,15 @@
                   <span class="text-[10px] text-gray-400 tech-font mb-1">好友等级</span>
                   <div class="flex items-center gap-1">
                     <i class="ph-fill ph-star text-pink-400 text-xs"></i>
-                    <span class="text-[14px] font-bold text-white font-display">V{{ currentChild.level !== null ? currentChild.level : '...' }}</span>
+                    <span class="text-[14px] font-bold text-white font-display">A{{ currentChild.level !== null ? currentChild.level : '...' }}</span>
                   </div>
                 </div>
                 <div class="h-8 w-px bg-white/10"></div>
                 <div class="flex flex-col items-center flex-1">
-                  <span class="text-[10px] text-gray-400 tech-font mb-1">团队人数</span>
-                  <span class="text-[14px] font-bold text-white font-display">{{ currentChild.teamCount !== null ? currentChild.teamCount : '...' }} <span class="text-[10px] font-normal text-gray-500 tech-font">人</span></span>
+                  <span class="text-[10px] text-gray-400 tech-font mb-1">是否激活</span>
+                  <span class="text-[14px] font-bold font-display" :class="currentChild.userHasActivated ? 'text-green-400' : 'text-gray-500'">
+                    {{ currentChild.userHasActivated ? '已激活' : '未激活' }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -137,12 +144,15 @@
           <p class="text-[11px] text-gray-400 mb-3 relative z-10 tech-font">分享链接邀请好友加入，获取团队收益</p>
           
           <div class="flex flex-col gap-3 relative z-10">
-            <div class="bg-black/30 border border-white/10 rounded-lg p-3 break-all text-[12px] text-gray-300 min-h-[60px] flex items-center tech-font" :class="{ 'opacity-60': !isBound || !walletState.isConnected }">
-              {{ myReferralLink }}
+            <div class="bg-black/30 border border-white/10 rounded-lg p-3 break-all text-[12px] text-center min-h-[60px] flex items-center justify-center tech-font" :class="{ 'opacity-60 text-gray-500': !isBound || !hasPurchasedNFT, 'text-gray-300': isBound && hasPurchasedNFT }">
+              <span v-if="!walletState.isConnected">请先连接钱包</span>
+              <span v-else-if="!isBound">请先绑定邀请人</span>
+              <span v-else-if="!hasPurchasedNFT" class="text-app-pink">请先购买 NFT 以获取邀请链接</span>
+              <span v-else>{{ myReferralLink }}</span>
             </div>
             <button 
               @click="copyText(myReferralLink)"
-              :disabled="!walletState.isConnected || !isBound"
+              :disabled="!walletState.isConnected || !isBound || !hasPurchasedNFT"
               class="w-full bg-white/5 text-white border border-white/10 text-[13px] font-bold py-3 rounded-lg hover:bg-white/10 hover:border-pink-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 tech-font active:scale-95"
             >
               <i class="ph ph-copy text-lg"></i>
@@ -152,7 +162,7 @@
           
           <div class="mt-4 flex items-start gap-1.5 text-[10px] text-gray-500 bg-black/20 p-2.5 rounded-lg border border-white/5 tech-font leading-relaxed">
             <i class="ph-fill ph-info text-app-pink mt-0.5 shrink-0"></i>
-            <span>提示：您需要先绑定邀请人，才能生成自己的邀请链接。邀请好友参与质押，您将获得额外的团队收益加成。</span>
+            <span>提示：您需要先绑定邀请人并购买 NFT，才能生成自己的邀请链接。邀请好友参与，您将获得额外的收益加成。</span>
           </div>
         </div>
 
@@ -163,20 +173,28 @@
             <i class="ph-fill ph-link text-app-pink"></i>
             我的邀请人
           </h3>
-          <p class="text-[11px] text-gray-400 mb-3 relative z-10 tech-font" v-if="!isBound">请绑定您的邀请人地址，绑定后不可修改</p>
+          <p class="text-[11px] text-gray-400 mb-3 relative z-10 tech-font" v-if="!isBound">推荐人地址仅支持通过邀请链接自动识别，绑定后不可修改</p>
           <p class="text-[11px] text-app-pink mb-3 relative z-10 tech-font" v-else>
             <i class="ph-fill ph-check-circle mr-1"></i>已成功绑定邀请人
           </p>
           
-          <div class="flex gap-2 relative z-10">
-            <input 
-              type="text" 
-              v-model="referrerInput"
-              :readonly="isBound"
-              :placeholder="walletState.isConnected ? '请输入邀请人地址' : '请先连接钱包'"
+          <div class="flex gap-2 relative z-10 items-start">
+            <input
+              v-if="!isBound"
+              type="text"
+              :value="referrerInput"
+              readonly
+              :placeholder="walletState.isConnected ? '请通过邀请链接绑定推荐人' : '请先连接钱包'"
               class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-white outline-none focus:border-app-pink/50 transition-colors tech-font placeholder:text-gray-600"
-              :class="{ 'opacity-60 cursor-not-allowed': isBound }"
+              :class="{ 'opacity-60 cursor-not-allowed': !referrerInput }"
             />
+            <textarea
+              v-else
+              :value="referrerInput"
+              readonly
+              rows="3"
+              class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-white outline-none transition-colors tech-font resize-none"
+            ></textarea>
             <button 
               v-if="!isBound"
               @click="handleBindReferral"
@@ -223,7 +241,10 @@ import { ref, computed, watch, onMounted } from 'vue';
 import Header from '@/components/Header.vue';
 import { walletState, formatAddress } from '@/services/wallet.js';
 import { showToast } from '@/services/notification.js';
+import { getContractAddress } from '@/services/contracts.js';
 import { ethers } from 'ethers';
+import referralAbi from '@/abis/referral.json';
+import nodeAbi from '@/abis/node.json';
 
 export default {
   name: 'FriendsView',
@@ -237,12 +258,16 @@ export default {
     const myLevel = ref(0);
     const referralCount = ref(0);
     const teamCount = ref(0);
+    const activatedDirects = ref(0);
+    const hasPurchasedNFT = ref(false);
     
     // Carousel & List State
     const childrenList = ref([]);
     const currentCardIndex = ref(0);
     const loadingChildren = ref(false);
     const hasMoreChildren = ref(false);
+    const childrenCursor = ref(0);
+    const pageSize = 10;
     
     const currentChild = computed(() => {
       if (childrenList.value.length === 0) return null;
@@ -261,59 +286,160 @@ export default {
     const confirmAddress = ref('');
 
     const myReferralLink = computed(() => {
-      if (!walletState.isConnected) return '请先连接钱包';
-      if (!isBound.value) return '请先绑定邀请人';
+      if (!walletState.isConnected || !isBound.value || !hasPurchasedNFT.value) return '';
       const baseUrl = window.location.origin + window.location.pathname;
       return `${baseUrl}?ref=${walletState.address}`;
     });
 
-    // Mock data fetching for UI demonstration
+    const getProvider = () => {
+      if (walletState.provider) return walletState.provider;
+      if (window.ethereum) return new ethers.BrowserProvider(window.ethereum);
+      return null;
+    };
+
+    const getReferralContract = (withSigner = false) => {
+      const address = getContractAddress('Referral');
+      if (!address) return null;
+      if (withSigner && walletState.signer) {
+        return new ethers.Contract(address, referralAbi, walletState.signer);
+      }
+      const provider = getProvider();
+      if (!provider) return null;
+      return new ethers.Contract(address, referralAbi, provider);
+    };
+
+    const getNodeContract = () => {
+      const address = getContractAddress('node');
+      if (!address) return null;
+      const provider = getProvider();
+      if (!provider) return null;
+      return new ethers.Contract(address, nodeAbi, provider);
+    };
+
     const fetchReferralData = async () => {
-      if (!walletState.isConnected) return;
+      if (!walletState.isConnected || !walletState.address) return;
       
-      // Mocking data since Staking contract is not available
-      myLevel.value = 2;
-      referralCount.value = 12;
-      teamCount.value = 45;
+      try {
+        const referralContract = getReferralContract();
+        const nodeContract = getNodeContract();
+        
+        if (referralContract) {
+          const bound = await referralContract.isBindReferral(walletState.address);
+          isBound.value = bound;
+          
+          if (bound) {
+            const referrer = await referralContract.getReferral(walletState.address);
+            if (referrer && referrer !== ethers.ZeroAddress) {
+              referrerInput.value = referrer;
+            }
+          } else {
+            checkUrlParam();
+          }
+
+          const rCount = await referralContract.getReferralCount(walletState.address);
+          referralCount.value = Number(rCount);
+          
+          const tCount = await referralContract.getTeamCount(walletState.address);
+          teamCount.value = Number(tCount);
+        }
+
+        if (nodeContract) {
+          const balance = await nodeContract.balanceOf(walletState.address);
+          hasPurchasedNFT.value = Number(balance) > 0;
+          
+          const directs = await nodeContract.activatedDirects(walletState.address);
+          activatedDirects.value = Number(directs);
+          
+          const level = await nodeContract.userLevel(walletState.address);
+          myLevel.value = Number(level);
+        }
+        
+        loadChildren(true);
+      } catch (error) {
+        console.error("Error fetching referral data:", error);
+      }
+    };
+
+    const checkUrlParam = () => {
+      if (isBound.value) return;
+      const urlParams = new URLSearchParams(window.location.search);
+      const refParam = urlParams.get('ref');
       
-      isBound.value = true;
-      referrerInput.value = '0x1234567890123456789012345678901234567890';
-      
-      loadChildren(true);
+      if (refParam && ethers.isAddress(refParam)) {
+        if (walletState.address && refParam.toLowerCase() === walletState.address.toLowerCase()) {
+          referrerInput.value = '';
+          return;
+        }
+        referrerInput.value = refParam;
+      }
     };
 
     const loadChildren = async (reset = false) => {
+      if (!walletState.address) return;
+      
+      const referralContract = getReferralContract();
+      const nodeContract = getNodeContract();
+      if (!referralContract) return;
+
       if (reset) {
+        childrenCursor.value = 0;
         childrenList.value = [];
-        hasMoreChildren.value = true;
         currentCardIndex.value = 0;
+        hasMoreChildren.value = true;
       }
       
       if (!hasMoreChildren.value && !reset) return;
       
       loadingChildren.value = true;
       
-      // Simulate API call
-      setTimeout(() => {
-        const remaining = referralCount.value - childrenList.value.length;
-        const toLoad = Math.min(5, remaining); // Load 5 at a time
+      try {
+        const result = await referralContract.getChildren(
+          walletState.address,
+          childrenCursor.value,
+          pageSize
+        );
         
-        if (toLoad > 0) {
-          const newItems = Array.from({ length: toLoad }, (_, i) => ({
-            address: `0x${Math.random().toString(16).slice(2, 42).padEnd(40, '0')}`,
-            level: Math.floor(Math.random() * 5),
-            teamCount: Math.floor(Math.random() * 20)
+        const newChildren = result[0];
+        const newCursor = result[1];
+        
+        if (newChildren && newChildren.length > 0) {
+          const validChildren = newChildren.filter(addr => addr !== ethers.ZeroAddress);
+          
+          const childObjects = await Promise.all(validChildren.map(async (addr) => {
+            let level = 0;
+            let userHasActivated = false;
+            
+            if (nodeContract) {
+              try {
+                level = await nodeContract.userLevel(addr);
+                userHasActivated = await nodeContract.userHasActivated(addr);
+              } catch (e) {
+                console.error("Error fetching child node data", e);
+              }
+            }
+            
+            return {
+              address: addr,
+              level: Number(level),
+              userHasActivated
+            };
           }));
           
-          childrenList.value = [...childrenList.value, ...newItems];
-        }
-        
-        loadingChildren.value = false;
-        
-        if (childrenList.value.length >= referralCount.value) {
+          childrenList.value = [...childrenList.value, ...childObjects];
+          childrenCursor.value = Number(newCursor);
+          
+          if (newChildren.length < pageSize) {
+            hasMoreChildren.value = false;
+          }
+        } else {
           hasMoreChildren.value = false;
         }
-      }, 500);
+      } catch (error) {
+        console.error("Error loading children:", error);
+        hasMoreChildren.value = false;
+      } finally {
+        loadingChildren.value = false;
+      }
     };
 
     const prevCard = () => {
@@ -327,14 +453,13 @@ export default {
         currentCardIndex.value++;
       } else if (hasMoreChildren.value && !loadingChildren.value) {
         await loadChildren(false);
-        // After loading, if new items were added, advance
         if (currentCardIndex.value < childrenList.value.length - 1) {
           currentCardIndex.value++;
         }
       }
     };
 
-    const handleBindReferral = () => {
+    const handleBindReferral = async () => {
       if (!walletState.isConnected) {
         showToast('请先连接钱包', 'error');
         return;
@@ -346,6 +471,19 @@ export default {
       if (referrerInput.value.toLowerCase() === walletState.address?.toLowerCase()) {
         showToast('不能绑定自己为邀请人', 'error');
         return;
+      }
+      
+      try {
+        const contract = getReferralContract();
+        if (contract) {
+          const isValidReferrer = await contract.isBindReferral(referrerInput.value);
+          if (!isValidReferrer) {
+            showToast('该推荐人尚未绑定上级，无法作为您的推荐人', 'error');
+            return;
+          }
+        }
+      } catch (e) {
+        console.error(e);
       }
       
       confirmAddress.value = referrerInput.value;
@@ -367,21 +505,40 @@ export default {
       if (confirmTimer.value) clearInterval(confirmTimer.value);
     };
 
-    const executeBind = () => {
+    const executeBind = async () => {
       closeConfirmModal();
       bindingReferrer.value = true;
       
-      // Simulate binding
-      setTimeout(() => {
-        bindingReferrer.value = false;
-        isBound.value = true;
+      try {
+        const contract = getReferralContract(true);
+        if (!contract) throw new Error("Contract not initialized");
+        
+        const tx = await contract.bindReferral(confirmAddress.value);
+        showToast('交易已提交，等待确认...', 'success');
+        
+        await tx.wait();
+        
         showToast('绑定成功', 'success');
-      }, 1500);
+        isBound.value = true;
+        fetchReferralData();
+      } catch (error) {
+        console.error("Binding failed:", error);
+        if (error.code === 4001 || error.code === 'ACTION_REJECTED' || (error.reason && error.reason.includes('rejected'))) {
+          return;
+        }
+        if (error.reason) {
+          showToast('绑定失败: ' + error.reason, 'error');
+        } else {
+          showToast('绑定失败，请检查网络或合约状态', 'error');
+        }
+      } finally {
+        bindingReferrer.value = false;
+      }
     };
 
     // Robust copy function for older iOS devices
     const copyText = (text) => {
-      if (!text || text === '请先连接钱包' || text === '请先绑定邀请人') return;
+      if (!text) return;
       
       const fallbackCopy = (textToCopy) => {
         try {
@@ -442,10 +599,13 @@ export default {
         myLevel.value = 0;
         referralCount.value = 0;
         teamCount.value = 0;
+        activatedDirects.value = 0;
+        hasPurchasedNFT.value = false;
         childrenList.value = [];
         currentCardIndex.value = 0;
         isBound.value = false;
         referrerInput.value = '';
+        checkUrlParam();
       }
     });
 
@@ -453,13 +613,12 @@ export default {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('ref') || urlParams.get('tab') === 'team') {
         activeTab.value = 'team';
-        if (urlParams.get('ref') && ethers.isAddress(urlParams.get('ref'))) {
-          referrerInput.value = urlParams.get('ref');
-        }
       }
-
+      
       if (walletState.isConnected) {
         fetchReferralData();
+      } else {
+        checkUrlParam();
       }
     });
 
@@ -470,6 +629,8 @@ export default {
       myLevel,
       referralCount,
       teamCount,
+      activatedDirects,
+      hasPurchasedNFT,
       childrenList,
       loadingChildren,
       hasMoreChildren,

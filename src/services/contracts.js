@@ -24,6 +24,11 @@ export const CONTRACT_ADDRESSES = {
   }
 };
 
+export const getContractAddress = (name) => {
+  const network = import.meta.env.VITE_NETWORK || 'testnet';
+  return CONTRACT_ADDRESSES[name]?.[network] || '';
+};
+
 /**
  * Initializes all contract instances.
  * Cleaned up for new project structure.
