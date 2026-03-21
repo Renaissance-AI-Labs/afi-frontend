@@ -75,7 +75,7 @@
                 >
                     <div class="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl"></div>
                     <div class="w-16 h-16 rounded-xl border border-pink-500/40 overflow-hidden bg-black/40 p-2 mb-3 relative z-10">
-                        <img src="/asset/images/logo/NFT.png" alt="NFT" class="w-full h-full object-contain" />
+                        <img src="/asset/images/logo/Node.png" alt="NFT" class="w-full h-full object-contain" />
                     </div>
                     <div class="relative z-10">
                         <div class="text-white font-display text-[15px] tracking-wide mb-1">连接钱包后查看认购信息</div>
@@ -95,7 +95,7 @@
                     <i class="ph-fill ph-wallet text-app-pink text-2xl drop-shadow-[0_0_5px_rgba(255,77,141,0.5)]"></i>
                     <div class="flex flex-col">
                         <span class="text-[12px] text-gray-400 tech-font leading-tight">总资产</span>
-                        <span class="text-[18px] font-bold text-white tracking-tight leading-tight">{{ myNfts.length }}</span>
+                        <span class="text-[18px] font-bold text-white tracking-tight leading-tight">{{ nftTotalBalance }}</span>
                     </div>
                 </div>
                 
@@ -126,7 +126,7 @@
                     <div class="flex gap-3 items-center">
                         <!-- 左侧图片 -->
                         <div class="w-14 h-14 rounded-lg border border-pink-500/30 overflow-hidden shrink-0 bg-black/40 p-1 flex items-center justify-center">
-                            <img src="/asset/images/logo/NFT.png" class="max-w-full max-h-full object-contain" />
+                            <img src="/asset/images/logo/Node.png" class="max-w-full max-h-full object-contain" />
                         </div>
                         
                         <!-- 中间信息 -->
@@ -213,6 +213,8 @@ export default {
       },
       purchaseImageErrored: false,
       purchaseDataRequestId: 0,
+      nftTotalBalance: 0,
+      nftActivatedCount: 0,
       purchaseData: {
         purchaseLevel: 0,
         phaseName: '',
@@ -239,10 +241,10 @@ export default {
   },
   computed: {
     activatedCount() {
-      return this.myNfts.filter(nft => nft.activated).length;
+      return this.nftActivatedCount;
     },
     unactivatedCount() {
-      return this.myNfts.filter(nft => !nft.activated).length;
+      return Math.max(this.nftTotalBalance - this.nftActivatedCount, 0);
     },
     displayedNfts() {
       return this.myNfts.slice(0, this.displayCount);
@@ -291,7 +293,7 @@ export default {
     },
     purchaseImageUrl() {
       if (this.purchaseImageErrored || !this.purchaseData.baseURI || !this.purchaseData.phaseName) {
-        return '/asset/images/logo/NFT.png';
+        return '/asset/images/logo/Node.png';
       }
       const baseURI = this.purchaseData.baseURI.endsWith('/')
         ? this.purchaseData.baseURI
@@ -404,6 +406,8 @@ export default {
       return new ethers.Contract(address, usdtAbi, provider);
     },
     resetPurchaseData() {
+      this.nftTotalBalance = 0;
+      this.nftActivatedCount = 0;
       this.purchaseData = {
         purchaseLevel: 0,
         phaseName: '',
@@ -518,7 +522,9 @@ export default {
           purchasePrice,
           names,
           baseURI,
-          usdtDecimals
+          usdtDecimals,
+          userNftBalance,
+          activatedNftsResult
         ] = await Promise.all([
           nodeContract.purchaseLevel(),
           nodeContract.totalPurchased(),
@@ -526,7 +532,9 @@ export default {
           nodeContract.purchasePrice(),
           nodeContract.getInfos('name'),
           nodeContract.baseURI(),
-          usdtContract.decimals()
+          usdtContract.decimals(),
+          nodeContract.balanceOf(this.walletState.address),
+          nodeContract.levelsOfOwnerBySize(this.walletState.address, 0, 100, 2)
         ]);
 
         const phaseNames = names
@@ -563,6 +571,8 @@ export default {
           usdtDecimals: Number(usdtDecimals),
           baseURI
         };
+        this.nftTotalBalance = Number(userNftBalance);
+        this.nftActivatedCount = Array.isArray(activatedNftsResult?.[0]) ? activatedNftsResult[0].length : 0;
 
         this.logPurchaseDataOnce('formatted', 'NFT 认购格式化后数据', {
           当前售卖期数: this.purchaseData.purchaseLevel,
@@ -571,7 +581,10 @@ export default {
           本期总量: this.purchaseData.maxPurchaseAmount,
           单价: `${formattedPurchasePrice} USDT`,
           进度百分比: `${this.progressPercent}%`,
-          图片地址: this.purchaseImageUrl
+          图片地址: this.purchaseImageUrl,
+          持有NFT总数: this.nftTotalBalance,
+          已激活数量: this.nftActivatedCount,
+          未激活数量: this.unactivatedCount
         });
 
         this.normalizeQuantity();
@@ -579,6 +592,8 @@ export default {
       } catch (error) {
         console.error('获取 NFT 认购数据失败:', error);
         if (requestId === this.purchaseDataRequestId) {
+          this.nftTotalBalance = 0;
+          this.nftActivatedCount = 0;
           this.resetPurchaseData();
         }
       } finally {
