@@ -14,19 +14,21 @@
             </div>
             
             <div class="flex flex-col gap-3 pb-4 pt-3 bg-app-card/40 rounded-b-xl rounded-tr-xl border border-app-pink/30 p-3">
-                <!-- 卡片 1 (第一期) - 左右布局，增加高度 -->
-                <div class="w-full bg-[#1a153a] rounded-xl p-4 glow-border-pink flex relative overflow-hidden gap-4 min-h-[160px]">
+                <div
+                  v-if="walletState.isConnected"
+                  class="w-full bg-[#1a153a] rounded-xl p-4 glow-border-pink flex relative overflow-hidden gap-4 min-h-[160px]"
+                >
                     <div class="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl"></div>
                     
                     <!-- 左侧：图片和标题 -->
                     <div class="w-[140px] shrink-0 flex flex-col relative z-10">
                         <div class="flex justify-between items-center mb-2">
-                            <div class="text-[11px] text-pink-300 font-bold leading-tight uppercase tracking-wider tech-font">第一期</div>
-                            <div class="text-[14px] font-display text-white tracking-wide">GAMMA</div>
+                            <div class="text-[11px] text-pink-300 font-bold leading-tight uppercase tracking-wider tech-font">{{ currentPhaseLabel }}</div>
+                            <div class="text-[14px] font-display text-white tracking-wide">{{ currentPhaseName }}</div>
                         </div>
                         <!-- 正方形图片 -->
                         <div class="w-full aspect-square rounded-lg border border-pink-500/50 flex items-center justify-center overflow-hidden relative bg-black/40 p-1.5 shadow-inner">
-                            <img src="/asset/images/logo/NFT.png" alt="NFT" class="w-full h-full object-contain relative z-10 drop-shadow-[0_0_10px_rgba(255,77,141,0.6)]" />
+                            <img :src="purchaseImageUrl" @error="onSubscriptionImageError" alt="NFT" class="w-full h-full object-contain relative z-10 drop-shadow-[0_0_10px_rgba(255,77,141,0.6)]" />
                         </div>
                     </div>
 
@@ -36,34 +38,48 @@
                             <!-- 进度条和售卖数量 -->
                             <div class="mb-3">
                                 <div class="flex justify-between text-[11px] font-bold text-white mb-1.5">
-                                    <span class="tech-font">已售: 150/500</span>
-                                    <span class="text-pink-300">30%</span>
+                                    <span class="tech-font">已售: {{ purchaseData.totalPurchased }}/{{ purchaseData.maxPurchaseAmount }}</span>
+                                    <span class="text-pink-300">{{ formattedProgressPercent }}</span>
                                 </div>
                                 <div class="w-full bg-gray-700 rounded-full h-2">
-                                    <div class="bg-gradient-to-r from-pink-500 to-purple-500 h-2 rounded-full shadow-[0_0_5px_rgba(255,77,141,0.5)]" style="width: 30%"></div>
+                                    <div class="bg-gradient-to-r from-pink-500 to-purple-500 h-2 rounded-full shadow-[0_0_5px_rgba(255,77,141,0.5)]" :style="{ width: `${progressPercent}%` }"></div>
                                 </div>
                             </div>
                             
-                            <!-- 单价 -->
+                            <!-- 总价 -->
                             <div class="flex justify-between items-center mb-3">
-                                <span class="text-[12px] text-gray-300 tech-font">单价:</span>
-                                <span class="text-white font-bold text-[16px]">100 USDT</span>
+                                <span class="text-[12px] text-gray-300 tech-font">总价:</span>
+                                <span class="text-white font-bold text-[16px]">{{ formattedTotalPurchasePrice }}</span>
                             </div>
                         </div>
                         
                         <div>
                             <!-- 数量选择器 -->
                             <div class="flex items-center w-full bg-black/30 rounded-lg border border-pink-500/30 overflow-hidden mb-3 h-9">
-                                <button @click="quantity > 1 ? quantity-- : null" class="w-10 h-full bg-pink-500/20 text-white flex items-center justify-center hover:bg-pink-500/40 transition text-lg font-bold">-</button>
-                                <input v-model.number="quantity" type="number" class="flex-1 w-full bg-transparent text-center text-white text-[15px] font-bold h-full outline-none tech-font p-0" min="1">
-                                <button @click="quantity++" class="w-10 h-full bg-pink-500/20 text-white flex items-center justify-center hover:bg-pink-500/40 transition text-lg font-bold">+</button>
+                                <button @click="decreaseQuantity" class="w-10 h-full bg-pink-500/20 text-white flex items-center justify-center hover:bg-pink-500/40 transition text-lg font-bold">-</button>
+                                <input v-model.number="quantity" @change="normalizeQuantity" type="number" class="flex-1 w-full bg-transparent text-center text-white text-[15px] font-bold h-full outline-none tech-font p-0" min="1">
+                                <button @click="increaseQuantity" class="w-10 h-full bg-pink-500/20 text-white flex items-center justify-center hover:bg-pink-500/40 transition text-lg font-bold">+</button>
                             </div>
 
                             <!-- 认购按钮 -->
-                            <button @click="subscribe" class="w-full bg-app-pink text-white font-display text-[14px] h-10 rounded-lg border border-pink-300 hover:bg-pink-600 relative z-10 tracking-widest transition tech-font font-bold shadow-[0_0_12px_rgba(255,77,141,0.4)] active:scale-95">
-                                立即认购
+                            <button @click="subscribe" :disabled="isPurchaseButtonDisabled" class="w-full bg-app-pink text-white font-display text-[14px] h-10 rounded-lg border border-pink-300 hover:bg-pink-600 relative z-10 tracking-widest transition tech-font font-bold shadow-[0_0_12px_rgba(255,77,141,0.4)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-app-pink">
+                                {{ purchaseButtonText }}
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <div
+                  v-else
+                  class="w-full bg-[#1a153a] rounded-xl p-5 glow-border-pink relative overflow-hidden min-h-[160px] flex flex-col items-center justify-center text-center"
+                >
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl"></div>
+                    <div class="w-16 h-16 rounded-xl border border-pink-500/40 overflow-hidden bg-black/40 p-2 mb-3 relative z-10">
+                        <img src="/asset/images/logo/NFT.png" alt="NFT" class="w-full h-full object-contain" />
+                    </div>
+                    <div class="relative z-10">
+                        <div class="text-white font-display text-[15px] tracking-wide mb-1">连接钱包后查看认购信息</div>
+                        <div class="text-[12px] text-gray-400 tech-font">当前期数、进度、单价和 NFT 图片将在连接后自动读取</div>
                     </div>
                 </div>
             </div>
@@ -170,6 +186,11 @@
 <script>
 import Header from '@/components/Header.vue';
 import { showToast } from '@/services/notification';
+import { walletState } from '@/services/wallet.js';
+import { getContractAddress } from '@/services/contracts.js';
+import { ethers } from 'ethers';
+import nodeAbi from '@/abis/node.json';
+import usdtAbi from '@/abis/usdt.json';
 
 export default {
   name: 'NftView',
@@ -178,7 +199,34 @@ export default {
   },
   data() {
     return {
+      walletState,
       quantity: 1,
+      purchaseCardLoading: false,
+      purchaseSubmitting: false,
+      purchasePaymentStateLoading: false,
+      purchaseButtonStatus: '',
+      purchaseStatusTimer: null,
+      purchaseLogCache: {
+        raw: '',
+        formatted: '',
+        payment: ''
+      },
+      purchaseImageErrored: false,
+      purchaseDataRequestId: 0,
+      purchaseData: {
+        purchaseLevel: 0,
+        phaseName: '',
+        totalPurchased: 0,
+        maxPurchaseAmount: 0,
+        purchasePrice: '0',
+        purchasePriceRaw: '0',
+        usdtDecimals: 18,
+        baseURI: ''
+      },
+      purchasePaymentState: {
+        balanceRaw: '0',
+        allowanceRaw: '0'
+      },
       displayCount: 10, // 初始显示数量
       // 模拟生成 15 个数据以测试分页
       myNfts: Array.from({ length: 15 }, (_, i) => ({
@@ -198,23 +246,419 @@ export default {
     },
     displayedNfts() {
       return this.myNfts.slice(0, this.displayCount);
+    },
+    currentPhaseLabel() {
+      if (!this.purchaseData.purchaseLevel) {
+        return '--';
+      }
+      return `第${this.purchaseData.purchaseLevel}期`;
+    },
+    currentPhaseName() {
+      return this.purchaseData.phaseName || '--';
+    },
+    progressPercent() {
+      if (!this.purchaseData.maxPurchaseAmount) {
+        return 0;
+      }
+      const progress = (this.purchaseData.totalPurchased / this.purchaseData.maxPurchaseAmount) * 100;
+      return Math.min(progress, 100);
+    },
+    formattedProgressPercent() {
+      const progress = this.progressPercent;
+      return Number.isInteger(progress) ? `${progress}%` : `${progress.toFixed(2)}%`;
+    },
+    formattedPurchasePrice() {
+      return `${this.purchaseData.purchasePrice} USDT`;
+    },
+    formattedTotalPurchasePrice() {
+      return `${this.totalPurchasePrice} USDT`;
+    },
+    totalPurchasePrice() {
+      return this.formatUsdtAmount(this.totalPurchasePriceRaw);
+    },
+    remainingPurchaseAmount() {
+      return Math.max(this.purchaseData.maxPurchaseAmount - this.purchaseData.totalPurchased, 0);
+    },
+    totalPurchasePriceRaw() {
+      const priceRaw = BigInt(this.purchaseData.purchasePriceRaw || '0');
+      return priceRaw * BigInt(this.quantity || 0);
+    },
+    hasEnoughUsdtBalance() {
+      return BigInt(this.purchasePaymentState.balanceRaw || '0') >= this.totalPurchasePriceRaw;
+    },
+    hasEnoughUsdtAllowance() {
+      return BigInt(this.purchasePaymentState.allowanceRaw || '0') >= this.totalPurchasePriceRaw;
+    },
+    purchaseImageUrl() {
+      if (this.purchaseImageErrored || !this.purchaseData.baseURI || !this.purchaseData.phaseName) {
+        return '/asset/images/logo/NFT.png';
+      }
+      const baseURI = this.purchaseData.baseURI.endsWith('/')
+        ? this.purchaseData.baseURI
+        : `${this.purchaseData.baseURI}/`;
+      return `${baseURI}${this.purchaseData.phaseName}.png`;
+    },
+    purchaseButtonText() {
+      if (!this.walletState.isConnected) {
+        return '请先连接钱包';
+      }
+      if (this.purchaseButtonStatus) {
+        return this.purchaseButtonStatus;
+      }
+      if (this.purchaseCardLoading || this.purchasePaymentStateLoading) {
+        return '加载中...';
+      }
+      if (this.remainingPurchaseAmount <= 0) {
+        return '已售罄';
+      }
+      if (this.quantity < 1) {
+        return '请输入数量';
+      }
+      if (!this.hasEnoughUsdtBalance) {
+        return 'USDT余额不足';
+      }
+      if (!this.hasEnoughUsdtAllowance) {
+        return '授权USDT';
+      }
+      return '立即认购';
+    },
+    isPurchaseButtonDisabled() {
+      return !this.walletState.isConnected || this.purchaseCardLoading || this.purchasePaymentStateLoading || this.purchaseSubmitting || this.remainingPurchaseAmount <= 0 || this.quantity < 1 || !this.hasEnoughUsdtBalance;
     }
   },
   methods: {
-    subscribe() {
-      if (this.quantity < 1) return;
-      // 模拟认购成功，添加新的NFT到列表顶部
-      const newId = 100 + this.myNfts.length + 1;
-      for (let i = 0; i < this.quantity; i++) {
-        this.myNfts.unshift({
-          id: newId + i,
-          name: `GAMMA #${newId + i}`,
-          activated: false,
-          yield: 0
-        });
+    setPurchaseButtonStatus(text, duration = 0) {
+      this.purchaseButtonStatus = text;
+      if (this.purchaseStatusTimer) {
+        clearTimeout(this.purchaseStatusTimer);
+        this.purchaseStatusTimer = null;
       }
-      showToast(`成功认购 ${this.quantity} 个 NFT！`);
+      if (duration > 0) {
+        this.purchaseStatusTimer = setTimeout(() => {
+          this.purchaseButtonStatus = '';
+          this.purchaseStatusTimer = null;
+        }, duration);
+      }
+    },
+    clearPurchaseButtonStatus() {
+      if (this.purchaseStatusTimer) {
+        clearTimeout(this.purchaseStatusTimer);
+        this.purchaseStatusTimer = null;
+      }
+      this.purchaseButtonStatus = '';
+    },
+    logPurchaseDataOnce(cacheKey, title, payload) {
+      const snapshot = JSON.stringify(payload);
+      if (this.purchaseLogCache[cacheKey] === snapshot) {
+        return;
+      }
+      this.purchaseLogCache[cacheKey] = snapshot;
+      console.log(title, payload);
+    },
+    formatUsdtAmount(value) {
+      return ethers.formatUnits(value, this.purchaseData.usdtDecimals).replace(/\.?0+$/, '') || '0';
+    },
+    resetPurchasePaymentState() {
+      this.purchasePaymentState = {
+        balanceRaw: '0',
+        allowanceRaw: '0'
+      };
+      this.purchasePaymentStateLoading = false;
+      this.purchaseLogCache.payment = '';
+    },
+    getProvider() {
+      if (this.walletState.provider) {
+        return this.walletState.provider;
+      }
+      if (window.ethereum) {
+        return new ethers.BrowserProvider(window.ethereum);
+      }
+      return null;
+    },
+    getNodeContract(withSigner = false) {
+      const address = getContractAddress('node');
+      if (!address) {
+        return null;
+      }
+      if (withSigner && this.walletState.signer) {
+        return new ethers.Contract(address, nodeAbi, this.walletState.signer);
+      }
+      const provider = this.getProvider();
+      if (!provider) {
+        return null;
+      }
+      return new ethers.Contract(address, nodeAbi, provider);
+    },
+    getUsdtContract(withSigner = false) {
+      const address = getContractAddress('USDT');
+      if (!address) {
+        return null;
+      }
+      if (withSigner && this.walletState.signer) {
+        return new ethers.Contract(address, usdtAbi, this.walletState.signer);
+      }
+      const provider = this.getProvider();
+      if (!provider) {
+        return null;
+      }
+      return new ethers.Contract(address, usdtAbi, provider);
+    },
+    resetPurchaseData() {
+      this.purchaseData = {
+        purchaseLevel: 0,
+        phaseName: '',
+        totalPurchased: 0,
+        maxPurchaseAmount: 0,
+        purchasePrice: '0',
+        purchasePriceRaw: '0',
+        usdtDecimals: 18,
+        baseURI: ''
+      };
+      this.purchaseCardLoading = false;
+      this.purchaseSubmitting = false;
+      this.purchaseImageErrored = false;
+      this.clearPurchaseButtonStatus();
+      this.resetPurchasePaymentState();
+      this.purchaseLogCache = {
+        raw: '',
+        formatted: '',
+        payment: ''
+      };
       this.quantity = 1;
+    },
+    normalizeQuantity() {
+      const parsed = Number(this.quantity);
+      if (!Number.isFinite(parsed) || parsed < 1) {
+        this.quantity = 1;
+        return;
+      }
+      const normalized = Math.floor(parsed);
+      if (this.remainingPurchaseAmount > 0 && normalized > this.remainingPurchaseAmount) {
+        this.quantity = this.remainingPurchaseAmount;
+        return;
+      }
+      this.quantity = normalized;
+    },
+    decreaseQuantity() {
+      if (this.quantity > 1) {
+        this.quantity -= 1;
+      }
+    },
+    increaseQuantity() {
+      if (this.remainingPurchaseAmount > 0 && this.quantity >= this.remainingPurchaseAmount) {
+        return;
+      }
+      this.quantity += 1;
+    },
+    onSubscriptionImageError() {
+      this.purchaseImageErrored = true;
+    },
+    async refreshPurchasePaymentState() {
+      if (!this.walletState.isConnected || !this.walletState.address) {
+        this.resetPurchasePaymentState();
+        return;
+      }
+
+      const nodeAddress = getContractAddress('node');
+      const usdtContract = this.getUsdtContract();
+      if (!nodeAddress || !usdtContract) {
+        this.resetPurchasePaymentState();
+        return;
+      }
+
+      this.purchasePaymentStateLoading = true;
+
+      try {
+        const [balanceRaw, allowanceRaw] = await Promise.all([
+          usdtContract.balanceOf(this.walletState.address),
+          usdtContract.allowance(this.walletState.address, nodeAddress)
+        ]);
+
+        this.purchasePaymentState = {
+          balanceRaw: balanceRaw.toString(),
+          allowanceRaw: allowanceRaw.toString()
+        };
+
+        this.logPurchaseDataOnce('payment', 'NFT 认购支付检查', {
+          购买数量: this.quantity,
+          单价: `${this.purchaseData.purchasePrice} USDT`,
+          总价: `${this.totalPurchasePrice} USDT`,
+          钱包USDT余额: this.formatUsdtAmount(balanceRaw),
+          当前授权额度: this.formatUsdtAmount(allowanceRaw)
+        });
+      } catch (error) {
+        console.error('获取 NFT 支付状态失败:', error);
+        this.resetPurchasePaymentState();
+      } finally {
+        this.purchasePaymentStateLoading = false;
+      }
+    },
+    async fetchPurchaseData() {
+      if (!this.walletState.isConnected) {
+        this.resetPurchaseData();
+        return;
+      }
+
+      const nodeContract = this.getNodeContract();
+      const usdtContract = this.getUsdtContract();
+      if (!nodeContract || !usdtContract) {
+        this.resetPurchaseData();
+        return;
+      }
+
+      const requestId = ++this.purchaseDataRequestId;
+      this.purchaseCardLoading = true;
+      this.purchaseImageErrored = false;
+
+      try {
+        const [
+          purchaseLevel,
+          totalPurchased,
+          maxPurchaseAmount,
+          purchasePrice,
+          names,
+          baseURI,
+          usdtDecimals
+        ] = await Promise.all([
+          nodeContract.purchaseLevel(),
+          nodeContract.totalPurchased(),
+          nodeContract.maxPurchaseAmount(),
+          nodeContract.purchasePrice(),
+          nodeContract.getInfos('name'),
+          nodeContract.baseURI(),
+          usdtContract.decimals()
+        ]);
+
+        const phaseNames = names
+          .flatMap(name => String(name).split(','))
+          .map(name => name.trim())
+          .filter(Boolean);
+
+        this.logPurchaseDataOnce('raw', 'NFT 认购原始数据', {
+          当前售卖期数: purchaseLevel.toString(),
+          已售数量: totalPurchased.toString(),
+          本期总量: maxPurchaseAmount.toString(),
+          单价原始值: purchasePrice.toString(),
+          期数名称列表: names,
+          拆分后的期数名称列表: phaseNames,
+          图片基础地址: baseURI,
+          USDT精度: usdtDecimals.toString()
+        });
+
+        if (requestId !== this.purchaseDataRequestId || !this.walletState.isConnected) {
+          return;
+        }
+
+        const currentLevel = Number(purchaseLevel);
+        const phaseName = currentLevel > 0 ? (phaseNames[currentLevel - 1] || '') : '';
+        const formattedPurchasePrice = ethers.formatUnits(purchasePrice, Number(usdtDecimals)).replace(/\.?0+$/, '');
+
+        this.purchaseData = {
+          purchaseLevel: currentLevel,
+          phaseName,
+          totalPurchased: Number(totalPurchased),
+          maxPurchaseAmount: Number(maxPurchaseAmount),
+          purchasePrice: formattedPurchasePrice,
+          purchasePriceRaw: purchasePrice.toString(),
+          usdtDecimals: Number(usdtDecimals),
+          baseURI
+        };
+
+        this.logPurchaseDataOnce('formatted', 'NFT 认购格式化后数据', {
+          当前售卖期数: this.purchaseData.purchaseLevel,
+          期数名称: this.purchaseData.phaseName,
+          已售数量: this.purchaseData.totalPurchased,
+          本期总量: this.purchaseData.maxPurchaseAmount,
+          单价: `${formattedPurchasePrice} USDT`,
+          进度百分比: `${this.progressPercent}%`,
+          图片地址: this.purchaseImageUrl
+        });
+
+        this.normalizeQuantity();
+        await this.refreshPurchasePaymentState();
+      } catch (error) {
+        console.error('获取 NFT 认购数据失败:', error);
+        if (requestId === this.purchaseDataRequestId) {
+          this.resetPurchaseData();
+        }
+      } finally {
+        if (requestId === this.purchaseDataRequestId) {
+          this.purchaseCardLoading = false;
+        }
+      }
+    },
+    async subscribe() {
+      if (!this.walletState.isConnected) {
+        this.setPurchaseButtonStatus('请先连接钱包', 2000);
+        return;
+      }
+      this.normalizeQuantity();
+      if (this.quantity < 1) {
+        this.setPurchaseButtonStatus('数量错误', 2000);
+        return;
+      }
+      if (this.remainingPurchaseAmount <= 0) {
+        this.setPurchaseButtonStatus('已售罄', 2000);
+        return;
+      }
+      if (this.quantity > this.remainingPurchaseAmount) {
+        this.quantity = this.remainingPurchaseAmount;
+      }
+
+      const nodeContract = this.getNodeContract(true);
+      const usdtContract = this.getUsdtContract(true);
+      const nodeAddress = getContractAddress('node');
+      if (!nodeAddress || !nodeContract || !usdtContract || !this.walletState.address) {
+        this.setPurchaseButtonStatus('合约未就绪', 2500);
+        return;
+      }
+
+      const totalCostRaw = this.totalPurchasePriceRaw;
+
+      this.purchaseSubmitting = true;
+
+      try {
+        this.setPurchaseButtonStatus(this.hasEnoughUsdtAllowance ? '购买中...' : '授权中...');
+        let balanceRaw = BigInt(this.purchasePaymentState.balanceRaw || '0');
+        let allowanceRaw = BigInt(this.purchasePaymentState.allowanceRaw || '0');
+
+        if (balanceRaw < totalCostRaw) {
+          this.setPurchaseButtonStatus('USDT余额不足', 2500);
+          return;
+        }
+
+        if (allowanceRaw < totalCostRaw) {
+          const approveTx = await usdtContract.approve(nodeAddress, ethers.MaxUint256);
+          this.setPurchaseButtonStatus('等待授权确认...');
+          await approveTx.wait();
+          await this.refreshPurchasePaymentState();
+          this.clearPurchaseButtonStatus();
+          showToast('授权成功');
+          return;
+        }
+
+        this.setPurchaseButtonStatus('购买中...');
+        const buyTx = await nodeContract.buyNFTs(this.quantity);
+        this.setPurchaseButtonStatus('等待购买确认...');
+        await buyTx.wait();
+
+        this.setPurchaseButtonStatus('认购成功', 2500);
+        showToast(`成功认购 ${this.quantity} 个 NFT`);
+        this.quantity = 1;
+        await this.fetchPurchaseData();
+        await this.refreshPurchasePaymentState();
+      } catch (error) {
+        console.error('NFT 认购失败:', error);
+        if (error.code === 4001 || error.code === 'ACTION_REJECTED') {
+          this.clearPurchaseButtonStatus();
+          await this.refreshPurchasePaymentState();
+          return;
+        }
+        this.setPurchaseButtonStatus('认购失败', 2500);
+        await this.refreshPurchasePaymentState();
+      } finally {
+        this.purchaseSubmitting = false;
+      }
     },
     activateNft(nft) {
       nft.activated = true;
@@ -235,6 +679,42 @@ export default {
     loadMore() {
       this.displayCount += 10;
     }
+  },
+  watch: {
+    'walletState.isConnected'(connected) {
+      if (connected) {
+        this.fetchPurchaseData();
+        return;
+      }
+      this.purchaseDataRequestId += 1;
+      this.resetPurchaseData();
+    },
+    'walletState.address'(newAddress, oldAddress) {
+      if (this.walletState.isConnected && newAddress && newAddress !== oldAddress) {
+        this.fetchPurchaseData();
+      }
+    },
+    'walletState.chainId'(newChainId, oldChainId) {
+      if (this.walletState.isConnected && newChainId && newChainId !== oldChainId) {
+        this.fetchPurchaseData();
+      }
+    },
+    quantity() {
+      this.normalizeQuantity();
+      if (this.walletState.isConnected) {
+        this.refreshPurchasePaymentState();
+      }
+    }
+  },
+  mounted() {
+    if (this.walletState.isConnected) {
+      this.fetchPurchaseData();
+    }
+  },
+  beforeUnmount() {
+    if (this.purchaseStatusTimer) {
+      clearTimeout(this.purchaseStatusTimer);
+    }
   }
 }
 </script>
@@ -247,6 +727,7 @@ input[type=number]::-webkit-outer-spin-button {
   margin: 0; 
 }
 input[type=number] {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
