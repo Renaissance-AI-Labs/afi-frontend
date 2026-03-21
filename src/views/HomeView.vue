@@ -10,8 +10,11 @@
             <p class="subtitle-moebius font-bold text-[11px] tracking-widest">AUTOMATE DEFI WITH AI AGENTS</p>
         </div>
 
-        <!-- 底部遮罩平滑过渡到深蓝紫背景 -->
-        <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-app-bg via-app-bg/80 to-transparent"></div>
+        <!-- Fade hero image into app container background -->
+        <div
+            class="hero-bottom-fade pointer-events-none absolute bottom-0 left-0 z-[1] w-full"
+            aria-hidden="true"
+        />
     </div>
   </div>
 </template>
@@ -28,4 +31,16 @@ export default {
 </script>
 
 <style scoped>
+/* Match .app-container background (#1a153a); long ease so the image meets footer area cleanly */
+.hero-bottom-fade {
+    height: min(42vh, 280px);
+    background: linear-gradient(
+        to top,
+        #1a153a 0%,
+        rgba(26, 21, 58, 0.92) 12%,
+        rgba(26, 21, 58, 0.65) 38%,
+        rgba(26, 21, 58, 0.28) 68%,
+        transparent 100%
+    );
+}
 </style>
