@@ -34,6 +34,7 @@ export default {
 /* Match .app-container background (#1a153a); long ease so the image meets footer area cleanly */
 .hero-bottom-fade {
     height: min(42vh, 280px);
+    bottom: -2px !important;
     background: linear-gradient(
         to top,
         #1a153a 0%,

@@ -33,7 +33,7 @@
                     </div>
 
                     <!-- 右侧：信息和操作 -->
-                    <div class="flex-1 flex flex-col justify-between relative z-10 py-1">
+                    <div class="flex-1 flex flex-col justify-between relative z-10 py-1" style="padding-top: 0.2rem !important;">
                         <div>
                             <!-- 进度条和售卖数量 -->
                             <div class="mb-3">
@@ -129,8 +129,9 @@
                 </div>
 
                 <!-- 列表项 -->
-                <div v-else class="flex flex-col gap-3 bg-[#1a153a] p-3.5 rounded-xl border border-white/5 hover:border-pink-500/30 transition-all shadow-md" v-for="nft in displayedNfts" :key="nft.id">
-                    <div class="flex gap-3 items-center">
+                <div v-else class="flex flex-col gap-3 bg-[#1a153a] p-3.5 rounded-xl border border-white/5 hover:border-pink-500/30 transition-all shadow-md relative overflow-hidden" v-for="nft in displayedNfts" :key="nft.id">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
+                    <div class="flex gap-3 items-center relative z-10">
                         <!-- 左侧图片 -->
                         <div class="w-14 h-14 rounded-lg border border-pink-500/30 overflow-hidden shrink-0 bg-black/40 p-1 flex items-center justify-center">
                             <img src="/asset/images/logo/Node.png" class="max-w-full max-h-full object-contain" />
@@ -164,7 +165,7 @@
                     </div>
                     
                     <!-- 下方按钮区 -->
-                    <div class="flex gap-2.5 mt-1">
+                    <div class="flex gap-2.5 mt-1 relative z-10">
                         <template v-if="!nft.activated">
                             <button v-if="!isActivateDisabled()" @click="activateNft(nft)" :disabled="isNftActionLoading(nft.id, 'activate')" class="flex-1 tech-font text-[13px] font-bold bg-pink-500/10 text-pink-400 border border-pink-500/30 py-2 rounded-lg hover:bg-pink-500/20 transition active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
                                 {{ isNftActionLoading(nft.id, 'activate') ? '激活中...' : '激 活' }}
@@ -181,7 +182,7 @@
                         </template>
                     </div>
 
-                    <div v-if="!nft.activated && isTransferEditorOpen(nft.id)" class="mt-1 flex gap-2">
+                    <div v-if="!nft.activated && isTransferEditorOpen(nft.id)" class="mt-1 flex gap-2 relative z-10">
                         <input
                           :value="getTransferTarget(nft.id)"
                           @input="setTransferTarget(nft.id, $event.target.value)"

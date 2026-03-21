@@ -41,12 +41,12 @@
             </div>
             <div class="h-8 w-px bg-white/10"></div>
             <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">直推人数</span>
+              <span class="text-[11px] text-gray-400 tech-font mb-1">好友人数</span>
               <span class="text-[16px] font-bold text-white font-display">{{ referralCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
             </div>
             <div class="h-8 w-px bg-white/10"></div>
             <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">有效直推</span>
+              <span class="text-[11px] text-gray-400 tech-font mb-1">有效好友</span>
               <span class="text-[16px] font-bold text-app-pink font-display">{{ activatedDirects }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
             </div>
             <div class="h-8 w-px bg-white/10"></div>
@@ -60,7 +60,7 @@
         <!-- Friends List -->
         <h3 class="text-[13px] font-display text-white tracking-wider mb-3 flex items-center gap-2 tech-font font-bold">
             <i class="ph-fill ph-users text-app-pink"></i>
-            直推列表
+            好友列表
         </h3>
         
         <div v-if="!walletState.isConnected" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
@@ -70,12 +70,13 @@
           加载中...
         </div>
         <div v-else-if="childrenList.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
-          暂无直推好友
+          暂无好友
         </div>
         <div v-else-if="currentChild" class="flex flex-col gap-3">
           <!-- Carousel Card -->
           <transition name="fade" mode="out-in">
             <div :key="currentCardIndex" class="bg-[#1a153a] p-4 rounded-xl border border-white/5 shadow-md relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
               <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
                   <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shadow-[0_0_8px_rgba(255,77,141,0.2)]">
@@ -98,9 +99,14 @@
                 <div class="h-8 w-px bg-white/10"></div>
                 <div class="flex flex-col items-center flex-1">
                   <span class="text-[10px] text-gray-400 tech-font mb-1">是否激活</span>
-                  <span class="text-[14px] font-bold font-display" :class="currentChild.userHasActivated ? 'text-green-400' : 'text-gray-500'">
+                  <span class="text-[14px] font-bold tech-font" :class="currentChild.userHasActivated ? 'text-green-400' : 'text-gray-500'">
                     {{ currentChild.userHasActivated ? '已激活' : '未激活' }}
                   </span>
+                </div>
+                <div class="h-8 w-px bg-white/10"></div>
+                <div class="flex flex-col items-center flex-1">
+                  <span class="text-[10px] text-gray-400 tech-font mb-1">团队人数</span>
+                  <span class="text-[14px] font-bold text-white font-display">{{ currentChild.teamCount }}</span>
                 </div>
               </div>
             </div>
@@ -408,6 +414,7 @@ export default {
           const childObjects = await Promise.all(validChildren.map(async (addr) => {
             let level = 0;
             let userHasActivated = false;
+            let teamCount = 0;
             
             if (nodeContract) {
               try {
@@ -417,11 +424,18 @@ export default {
                 console.error("Error fetching child node data", e);
               }
             }
+
+            try {
+              teamCount = await referralContract.getTeamCount(addr);
+            } catch (e) {
+              console.error("Error fetching child team count", e);
+            }
             
             return {
               address: addr,
               level: Number(level),
-              userHasActivated
+              userHasActivated,
+              teamCount: Number(teamCount)
             };
           }));
           
