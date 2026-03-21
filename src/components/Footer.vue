@@ -5,10 +5,10 @@
                 <div class="font-display text-lg tracking-widest text-white shadow-black drop-shadow-md">AGENT.FI</div>
                 
                 <div class="flex items-center gap-3">
-                    <a href="https://x.com/AgentFi" target="_blank" class="w-8 h-8 rounded-full bg-[#221b44] border border-purple-500/30 flex items-center justify-center text-gray-400 hover:text-app-pink hover:border-app-pink/60 transition-all shadow-lg">
+                    <a href="https://x.com/Agentfiafi0" target="_blank" class="w-8 h-8 rounded-full bg-[#221b44] border border-purple-500/30 flex items-center justify-center text-gray-400 hover:text-app-pink hover:border-app-pink/60 transition-all shadow-lg">
                         <i class="ph ph-twitter-logo text-lg"></i>
                     </a>
-                    <a href="https://t.me/AgentFi" target="_blank" class="w-8 h-8 rounded-full bg-[#221b44] border border-purple-500/30 flex items-center justify-center text-gray-400 hover:text-app-pink hover:border-app-pink/60 transition-all shadow-lg">
+                    <a href="https://t.me/AgentFi_AFI" target="_blank" class="w-8 h-8 rounded-full bg-[#221b44] border border-purple-500/30 flex items-center justify-center text-gray-400 hover:text-app-pink hover:border-app-pink/60 transition-all shadow-lg">
                         <i class="ph ph-telegram-logo text-lg"></i>
                     </a>
                 </div>
