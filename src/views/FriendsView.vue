@@ -31,34 +31,23 @@
         <div class="bg-[#1a153a]/80 backdrop-blur-md rounded-xl border border-white/10 p-4 mb-5 shadow-lg relative overflow-hidden">
           <div class="absolute -right-10 -top-10 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl"></div>
           
-          <div class="flex justify-between items-center mb-4 relative z-10">
+          <div class="flex justify-between items-center relative z-10">
+            <div class="flex flex-col items-center flex-1">
+              <span class="text-[11px] text-gray-400 tech-font mb-1">我的等级</span>
+              <div class="flex items-center gap-1">
+                <i class="ph-fill ph-star text-app-pink text-sm"></i>
+                <span class="text-[16px] font-bold text-white font-display">V{{ myLevel }}</span>
+              </div>
+            </div>
+            <div class="h-8 w-px bg-white/10"></div>
             <div class="flex flex-col items-center flex-1">
               <span class="text-[11px] text-gray-400 tech-font mb-1">好友人数</span>
               <span class="text-[16px] font-bold text-white font-display">{{ referralCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
             </div>
             <div class="h-8 w-px bg-white/10"></div>
             <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">有效直推</span>
-              <span class="text-[16px] font-bold text-white font-display">{{ validDirectReferrals }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
-            </div>
-            <div class="h-8 w-px bg-white/10"></div>
-            <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">我的质押</span>
-              <span class="text-[16px] font-bold text-white font-display">{{ myStakedAmount }} <span class="text-[10px] text-gray-500 font-normal tech-font">U</span></span>
-            </div>
-          </div>
-          
-          <div class="h-px w-full bg-white/10 mb-4 relative z-10"></div>
-          
-          <div class="flex justify-between items-center relative z-10">
-            <div class="flex flex-col items-center flex-1">
               <span class="text-[11px] text-gray-400 tech-font mb-1">团队人数</span>
               <span class="text-[16px] font-bold text-white font-display">{{ teamCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">人</span></span>
-            </div>
-            <div class="h-8 w-px bg-white/10"></div>
-            <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">团队业绩</span>
-              <span class="text-[16px] font-bold text-app-pink drop-shadow-[0_0_5px_rgba(255,77,141,0.5)] font-display">{{ myTeamTotalInvestValue }} <span class="text-[10px] font-normal tech-font">U</span></span>
             </div>
           </div>
         </div>
@@ -95,18 +84,16 @@
               
               <div class="flex justify-between items-center bg-black/20 rounded-lg p-3 border border-white/5">
                 <div class="flex flex-col items-center flex-1">
-                  <span class="text-[10px] text-gray-400 tech-font mb-1">好友质押</span>
-                  <span class="text-[14px] font-bold text-white font-display">{{ currentChild.friendStaking !== null ? currentChild.friendStaking : '...' }} <span class="text-[10px] font-normal text-gray-500 tech-font">U</span></span>
+                  <span class="text-[10px] text-gray-400 tech-font mb-1">好友等级</span>
+                  <div class="flex items-center gap-1">
+                    <i class="ph-fill ph-star text-pink-400 text-xs"></i>
+                    <span class="text-[14px] font-bold text-white font-display">V{{ currentChild.level !== null ? currentChild.level : '...' }}</span>
+                  </div>
                 </div>
                 <div class="h-8 w-px bg-white/10"></div>
                 <div class="flex flex-col items-center flex-1">
                   <span class="text-[10px] text-gray-400 tech-font mb-1">团队人数</span>
                   <span class="text-[14px] font-bold text-white font-display">{{ currentChild.teamCount !== null ? currentChild.teamCount : '...' }} <span class="text-[10px] font-normal text-gray-500 tech-font">人</span></span>
-                </div>
-                <div class="h-8 w-px bg-white/10"></div>
-                <div class="flex flex-col items-center flex-1">
-                  <span class="text-[10px] text-gray-400 tech-font mb-1">团队业绩</span>
-                  <span class="text-[14px] font-bold text-pink-300 font-display">{{ currentChild.teamTotalInvestValue !== null ? currentChild.teamTotalInvestValue : '...' }} <span class="text-[10px] font-normal tech-font">U</span></span>
                 </div>
               </div>
             </div>
@@ -247,11 +234,9 @@ export default {
     const activeTab = ref('friends');
     
     // Data State
+    const myLevel = ref(0);
     const referralCount = ref(0);
-    const validDirectReferrals = ref(0);
     const teamCount = ref(0);
-    const myTeamTotalInvestValue = ref('0.0');
-    const myStakedAmount = ref('0.0');
     
     // Carousel & List State
     const childrenList = ref([]);
@@ -287,11 +272,9 @@ export default {
       if (!walletState.isConnected) return;
       
       // Mocking data since Staking contract is not available
+      myLevel.value = 2;
       referralCount.value = 12;
-      validDirectReferrals.value = 5;
       teamCount.value = 45;
-      myTeamTotalInvestValue.value = '12500.0';
-      myStakedAmount.value = '1000.0';
       
       isBound.value = true;
       referrerInput.value = '0x1234567890123456789012345678901234567890';
@@ -318,9 +301,8 @@ export default {
         if (toLoad > 0) {
           const newItems = Array.from({ length: toLoad }, (_, i) => ({
             address: `0x${Math.random().toString(16).slice(2, 42).padEnd(40, '0')}`,
-            friendStaking: (Math.random() * 1000).toFixed(1),
-            teamCount: Math.floor(Math.random() * 20),
-            teamTotalInvestValue: (Math.random() * 5000).toFixed(1)
+            level: Math.floor(Math.random() * 5),
+            teamCount: Math.floor(Math.random() * 20)
           }));
           
           childrenList.value = [...childrenList.value, ...newItems];
@@ -457,11 +439,9 @@ export default {
       if (newVal) {
         fetchReferralData();
       } else {
+        myLevel.value = 0;
         referralCount.value = 0;
-        validDirectReferrals.value = 0;
         teamCount.value = 0;
-        myTeamTotalInvestValue.value = '0.0';
-        myStakedAmount.value = '0.0';
         childrenList.value = [];
         currentCardIndex.value = 0;
         isBound.value = false;
@@ -487,11 +467,9 @@ export default {
       activeTab,
       walletState,
       formatAddress,
+      myLevel,
       referralCount,
-      validDirectReferrals,
       teamCount,
-      myTeamTotalInvestValue,
-      myStakedAmount,
       childrenList,
       loadingChildren,
       hasMoreChildren,
