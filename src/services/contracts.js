@@ -1,4 +1,5 @@
 // src/services/contracts.js
+import { APP_ENV } from './environment';
 import { walletState } from './wallet';
 
 export const CONTRACT_ADDRESSES = {
@@ -12,15 +13,15 @@ export const CONTRACT_ADDRESSES = {
   },
   Referral: {
     testnet: '0x54fd2e30F1df426F1555E83bb7c2bc15743C6667',
-    mainnet: '', // To be filled later
+    mainnet: '0x8b81fF0FeFa6Cd889ab7942eeeae6C8ea66d061F',
   },
   node: {
     testnet: '0xd10f6abA776974D3aA107838802894e0Fb113424',
-    mainnet: '', // To be filled later
+    mainnet: '0x54fd2e30F1df426F1555E83bb7c2bc15743C6667',
   },
   NodePool: {
     testnet: '0x13ccDdd74b3D29D6Fe07391885d465d380942BF6',
-    mainnet: '', // To be filled later
+    mainnet: '0xd10f6abA776974D3aA107838802894e0Fb113424',
   },
   IStaking: {
     testnet: '', // Placeholder: ABI/address not provided yet
@@ -29,7 +30,7 @@ export const CONTRACT_ADDRESSES = {
 };
 
 export const getContractAddress = (name) => {
-  const network = import.meta.env.VITE_NETWORK || 'testnet';
+  const network = APP_ENV === 'PROD' ? 'mainnet' : 'testnet';
   return CONTRACT_ADDRESSES[name]?.[network] || '';
 };
 
