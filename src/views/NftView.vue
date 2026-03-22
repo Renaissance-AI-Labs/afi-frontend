@@ -1,6 +1,14 @@
 <template>
   <div class="nft-view relative pb-20 min-h-[calc(100vh-140px)]">
-    <div class="bg-gradient-to-b from-[#1a153a] to-[#0b0914]">
+    <!-- Fixed Background Glows -->
+    <div class="fixed inset-0 z-0 pointer-events-none">
+      <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-pink-500/80 rounded-full blur-[80px] mix-blend-screen animate-glow-float-slow"></div>
+      <div class="absolute bottom-[10%] right-[-10%] w-[60%] h-[60%] bg-purple-500/80 rounded-full blur-[100px] mix-blend-screen animate-glow-float-delayed"></div>
+    </div>
+
+    <div class="fixed inset-0 bg-gradient-to-b from-[#1a153a]/20 to-[#0b0914]/40 z-10 backdrop-blur-sm pointer-events-none"></div>
+
+    <div class="relative z-20">
       <Header @open-get-started-modal="$emit('open-get-started-modal')" @open-language-modal="$emit('open-language-modal')" />
     </div>
 
@@ -87,13 +95,13 @@
         <!-- 我的NFT 资产与列表区 (合并优化) -->
         <section class="mb-6 relative z-10">
             <!-- 顶部统计栏 (扁平化横向排版，融入列表头部) -->
-            <div class="bg-[#1a153a]/80 backdrop-blur-md rounded-xl border border-white/10 p-3 mb-4 shadow-lg flex items-center justify-between relative overflow-hidden">
+            <div class="bg-[#1a153a]/80 backdrop-blur-md rounded-xl border-2 border-white/10 p-3 mb-4 shadow-lg flex items-center justify-between relative overflow-hidden">
                 <div class="absolute -left-10 -top-10 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl"></div>
                 
                 <div class="flex items-center gap-2 relative z-10">
                     <!-- <i class="ph-fill ph-wallet text-app-pink text-2xl drop-shadow-[0_0_5px_rgba(255,77,141,0.5)]"></i> -->
                     <div class="flex flex-col">
-                        <span class="text-[12px] text-gray-400 tech-font leading-tight">{{ t('nft.section.assetsTotal') }}</span>
+                        <span class="text-[13px] text-gray-300 tech-font leading-tight">{{ t('nft.section.assetsTotal') }}</span>
                         <span class="text-[18px] font-bold text-white tracking-tight leading-tight">{{ nftTotalBalance }}</span>
                     </div>
                 </div>
@@ -101,39 +109,42 @@
                 <div class="h-8 w-px bg-white/10 relative z-10"></div>
                 
                 <div class="flex flex-col items-center relative z-10">
-                    <span class="text-[11px] text-gray-400 tech-font leading-tight">{{ t('nft.section.activated') }}</span>
-                    <span class="text-[16px] font-bold text-pink-300 leading-tight">{{ activatedCount }}</span>
+                    <span class="text-[12px] text-gray-300 tech-font leading-tight">{{ t('nft.section.activated') }}</span>
+                    <span class="text-[17px] font-bold text-pink-300 leading-tight">{{ activatedCount }}</span>
                 </div>
                 
                 <div class="h-8 w-px bg-white/10 relative z-10"></div>
                 
                 <div class="flex flex-col items-end relative z-10">
-                    <span class="text-[11px] text-gray-400 tech-font leading-tight">{{ t('nft.section.notActivated') }}</span>
-                    <span class="text-[16px] font-bold text-gray-300 leading-tight">{{ unactivatedCount }}</span>
+                    <span class="text-[12px] text-gray-300 tech-font leading-tight">{{ t('nft.section.notActivated') }}</span>
+                    <span class="text-[17px] font-bold text-gray-200 leading-tight">{{ unactivatedCount }}</span>
                 </div>
             </div>
 
             <!-- 列表容器 -->
             <div class="flex flex-col gap-3">
-                <div v-if="walletState.isConnected && nftListLoading" class="text-center py-8 text-gray-400 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
+                <div v-if="walletState.isConnected && nftListLoading" class="text-center py-8 text-gray-400 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border-2 border-white/10">
                     {{ t('nft.section.assetsLoading') }}
                 </div>
 
                 <!-- 空状态 -->
-                <div v-else-if="walletState.isConnected && myNfts.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
+                <div v-else-if="walletState.isConnected && myNfts.length === 0" class="text-center py-8 text-gray-300 tech-font text-[13px] bg-[#1a153a]/50 rounded-xl border-2 border-white/10">
                     {{ t('nft.section.assetsEmpty') }}
                 </div>
 
-                <div v-else-if="!walletState.isConnected" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
+                <div v-else-if="!walletState.isConnected" class="text-center py-8 text-gray-300 tech-font text-[13px] bg-[#1a153a]/50 rounded-xl border-2 border-white/10">
                     {{ t('nft.section.assetsConnectWallet') }}
                 </div>
 
                 <!-- 列表项 -->
-                <div v-else class="flex flex-col gap-3 bg-[#1a153a] p-3.5 rounded-xl border border-white/5 hover:border-pink-500/30 transition-all shadow-md relative overflow-hidden" v-for="nft in displayedNfts" :key="nft.id">
-                    <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
+                <div v-else class="flex flex-col gap-3 bg-[#1a153a] p-3.5 rounded-xl transition-all relative overflow-hidden" 
+                     :class="nft.activated ? 'glow-border-blue' : 'border-2 border-white/10 hover:border-pink-500/50 shadow-md'"
+                     v-for="nft in displayedNfts" :key="nft.id">
+                    <div class="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl" :class="nft.activated ? 'bg-blue-500/10' : 'bg-pink-500/10'"></div>
                     <div class="flex gap-3 items-center relative z-10">
                         <!-- 左侧图片 -->
-                        <div class="w-14 h-14 rounded-lg border border-pink-500/30 overflow-hidden shrink-0 bg-black/40 p-1 flex items-center justify-center">
+                        <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-black/40 p-1 flex items-center justify-center"
+                             :class="nft.activated ? 'border border-blue-500/50' : 'border border-pink-500/30'">
                             <img src="/asset/images/logo/Node.png" class="max-w-full max-h-full object-contain" />
                         </div>
                         
@@ -142,15 +153,15 @@
                             <div class="flex justify-between items-start mb-1.5">
                                 <div class="text-[15px] font-bold text-white truncate">{{ nft.name }}</div>
                                 <!-- 状态标签 -->
-                                <span v-if="nft.activated" class="text-[9px] text-pink-300 border border-pink-500/30 px-1.5 py-0.5 rounded tech-font">{{ t('nft.card.activated') }}</span>
-                                <span v-else class="text-[9px] text-gray-400 border border-gray-500/30 px-1.5 py-0.5 rounded tech-font">{{ t('nft.card.notActivated') }}</span>
+                                <span v-if="nft.activated" class="text-[10px] text-blue-300 border border-blue-500/50 px-2 py-0.5 rounded tech-font font-bold">{{ t('nft.card.activated') }}</span>
+                                <span v-else class="text-[10px] text-gray-200 border border-gray-400/40 px-2 py-0.5 rounded tech-font font-bold">{{ t('nft.card.notActivated') }}</span>
                             </div>
 
-                            <div class="flex flex-wrap gap-2 text-[11px] tech-font mb-1.5">
+                            <div class="flex flex-wrap gap-2 text-[12px] tech-font mb-1.5">
                                 <div class="bg-black/20 rounded px-2 py-1 border border-white/5">
-                                    <span class="text-gray-400">{{ t('nft.card.claimable') }} </span>
-                                    <span :class="nft.activated ? 'text-white font-bold' : 'text-gray-500'">
-                                        {{ nft.activated ? getAnimatedClaimableDisplay(nft) : '0.00' }} <span class="text-[10px]">AFI</span>
+                                    <span class="text-gray-300">{{ t('nft.card.claimable') }} </span>
+                                    <span :class="nft.activated ? 'text-white font-bold' : 'text-gray-300 font-semibold'">
+                                        {{ nft.activated ? getAnimatedClaimableDisplay(nft) : '0.00' }} <span class="text-[11px] text-gray-200">AFI</span>
                                     </span>
                                 </div>
                             </div>
@@ -176,7 +187,7 @@
                         </template>
                         <template v-else>
                             <!-- 激活后显示领取收益按钮 -->
-                            <button @click="claimYield(nft)" :disabled="isNftActionLoading(nft.id, 'claim')" class="flex-1 tech-font text-[13px] font-bold bg-app-pink text-white border border-pink-300 py-2 rounded-lg hover:bg-pink-600 transition shadow-[0_0_8px_rgba(255,77,141,0.3)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <button @click="claimYield(nft)" :disabled="isNftActionLoading(nft.id, 'claim')" class="flex-1 tech-font text-[13px] font-bold bg-app-blue text-[#0b0914] border border-blue-200 py-2 rounded-lg hover:bg-blue-400 transition shadow-[0_0_8px_rgba(59,130,246,0.3)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
                                 {{ isNftActionLoading(nft.id, 'claim') ? t('nft.card.claimLoading') : t('nft.card.claimYield') }}
                             </button>
                         </template>

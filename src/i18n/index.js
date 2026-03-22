@@ -3,7 +3,7 @@ import { reactive, computed } from 'vue';
 
 // Language state management
 export const i18nState = reactive({
-  currentLanguage: 'en', // Default to English
+  currentLanguage: 'zh-cn', // Default to Simplified Chinese
   languages: {
     'en': { name: 'English', code: 'en', label: 'EN' },
     'zh-cn': { name: '简体中文', code: 'zh-cn', label: '简' },
@@ -15,6 +15,9 @@ export const i18nState = reactive({
 const languagePacks = {
   'en': {
     'header.connectWallet': 'Connect Wallet',
+    'bottomNav.home': 'Home',
+    'bottomNav.nft': 'NFT',
+    'bottomNav.friends': 'Friends',
     'wallet.connectTitle': 'Connect Wallet',
     'wallet.connectSubtitle': 'Select a wallet',
     'wallet.connectedTitle': 'Connected',
@@ -65,7 +68,7 @@ const languagePacks = {
     'nft.section.assetsLoading': 'Loading NFT assets...',
     'nft.section.assetsEmpty': 'No assets yet, please subscribe first',
     'nft.section.assetsConnectWallet': 'Connect wallet to view NFT assets',
-    'nft.card.claimable': 'Claimable:',
+    'nft.card.claimable': 'Claimable: ',
     'nft.card.activated': 'Activated',
     'nft.card.notActivated': 'Not Activated',
     'nft.card.activateLoading': 'Activating...',
@@ -132,6 +135,9 @@ const languagePacks = {
   },
   'zh-cn': {
     'header.connectWallet': '连接钱包',
+    'bottomNav.home': '首页',
+    'bottomNav.nft': 'NFT',
+    'bottomNav.friends': '好友',
     'wallet.connectTitle': '连接钱包',
     'wallet.connectSubtitle': '请选择钱包',
     'wallet.connectedTitle': '已连接',
@@ -182,7 +188,7 @@ const languagePacks = {
     'nft.section.assetsLoading': 'NFT 资产加载中...',
     'nft.section.assetsEmpty': '暂无资产，请先认购',
     'nft.section.assetsConnectWallet': '连接钱包后查看 NFT 资产',
-    'nft.card.claimable': '可领取:',
+    'nft.card.claimable': '可领取: ',
     'nft.card.activated': '已激活',
     'nft.card.notActivated': '未激活',
     'nft.card.activateLoading': '激活中...',
@@ -249,6 +255,9 @@ const languagePacks = {
   },
   'zh-tw': {
     'header.connectWallet': '連接錢包',
+    'bottomNav.home': '首頁',
+    'bottomNav.nft': 'NFT',
+    'bottomNav.friends': '好友',
     'wallet.connectTitle': '連接錢包',
     'wallet.connectSubtitle': '請選擇錢包',
     'wallet.connectedTitle': '已連接',
@@ -299,7 +308,7 @@ const languagePacks = {
     'nft.section.assetsLoading': 'NFT 資產加載中...',
     'nft.section.assetsEmpty': '暫無資產，請先認購',
     'nft.section.assetsConnectWallet': '連接錢包後查看 NFT 資產',
-    'nft.card.claimable': '可領取:',
+    'nft.card.claimable': '可領取: ',
     'nft.card.activated': '已激活',
     'nft.card.notActivated': '未激活',
     'nft.card.activateLoading': '激活中...',
