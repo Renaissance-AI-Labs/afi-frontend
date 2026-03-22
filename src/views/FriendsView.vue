@@ -1,6 +1,14 @@
 <template>
   <div class="nft-view relative pb-20 min-h-[calc(100vh-140px)]">
-    <div class="bg-gradient-to-b from-[#1a153a] to-[#0b0914]">
+    <!-- Fixed Background Glows -->
+    <div class="fixed inset-0 z-0 pointer-events-none">
+      <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-pink-500/80 rounded-full blur-[80px] mix-blend-screen animate-glow-float-slow"></div>
+      <div class="absolute bottom-[10%] right-[-10%] w-[60%] h-[60%] bg-purple-500/80 rounded-full blur-[100px] mix-blend-screen animate-glow-float-delayed"></div>
+    </div>
+
+    <div class="fixed inset-0 bg-gradient-to-b from-[#1a153a]/20 to-[#0b0914]/40 z-10 backdrop-blur-sm pointer-events-none"></div>
+
+    <div class="relative z-20">
       <Header @open-get-started-modal="$emit('open-get-started-modal')" @open-language-modal="$emit('open-language-modal')" />
     </div>
 
@@ -9,7 +17,7 @@
       <div class="flex gap-4 mb-6 border-b border-white/10 pb-2">
         <button 
           class="text-[15px] font-bold tracking-wider transition-all relative font-display tech-font"
-          :class="activeTab === 'friends' ? 'text-app-pink' : 'text-gray-500'"
+          :class="activeTab === 'friends' ? 'text-app-pink' : 'text-gray-300 hover:text-white'"
           @click="activeTab = 'friends'"
         >
           {{ t('friends.tabs.myFriends') }}
@@ -17,7 +25,7 @@
         </button>
         <button 
           class="text-[15px] font-bold tracking-wider transition-all relative font-display tech-font"
-          :class="activeTab === 'team' ? 'text-app-pink' : 'text-gray-500'"
+          :class="activeTab === 'team' ? 'text-app-pink' : 'text-gray-300 hover:text-white'"
           @click="activeTab = 'team'"
         >
           {{ t('friends.tabs.inviteReferral') }}
@@ -28,31 +36,39 @@
       <!-- Tab Content: Friends -->
       <div v-if="activeTab === 'friends'" class="animate-fade-in">
         <!-- Stats Card -->
-        <div class="bg-[#1a153a]/80 backdrop-blur-md rounded-xl border border-white/10 p-4 mb-5 shadow-lg relative overflow-hidden">
+        <div class="bg-[#1a153a]/80 backdrop-blur-md rounded-xl border-2 border-white/10 p-4 mb-5 shadow-lg relative overflow-hidden">
           <div class="absolute -right-10 -top-10 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl"></div>
           
-          <div class="flex justify-between items-center relative z-10">
-            <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">{{ t('friends.stats.myLevel') }}</span>
-              <div class="flex items-center gap-1">
-                <i class="ph-fill ph-star text-app-pink text-sm"></i>
-                <span class="text-[16px] font-bold text-white font-display">A{{ myLevel }}</span>
+          <div class="relative z-10 flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+              <div class="flex flex-col items-center flex-1">
+                <span class="text-[12px] text-gray-300 tech-font mb-1">{{ t('friends.stats.friendCount') }}</span>
+                <span class="text-[17px] font-bold text-white font-display">{{ referralCount }} <span class="text-[11px] text-gray-400 font-normal tech-font">{{ t('common.people') }}</span></span>
+              </div>
+              <div class="h-8 w-px bg-white/10"></div>
+              <div class="flex flex-col items-center flex-1">
+                <span class="text-[12px] text-gray-300 tech-font mb-1">{{ t('friends.stats.activeFriends') }}</span>
+                <span class="text-[17px] font-bold text-app-pink font-display">{{ activatedDirects }} <span class="text-[11px] text-gray-400 font-normal tech-font">{{ t('common.people') }}</span></span>
+              </div>
+              <div class="h-8 w-px bg-white/10"></div>
+              <div class="flex flex-col items-center flex-1">
+                <span class="text-[12px] text-gray-300 tech-font mb-1">{{ t('friends.stats.teamCount') }}</span>
+                <span class="text-[17px] font-bold text-white font-display">{{ teamCount }} <span class="text-[11px] text-gray-400 font-normal tech-font">{{ t('common.people') }}</span></span>
               </div>
             </div>
-            <div class="h-8 w-px bg-white/10"></div>
-            <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">{{ t('friends.stats.friendCount') }}</span>
-              <span class="text-[16px] font-bold text-white font-display">{{ referralCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">{{ t('common.people') }}</span></span>
-            </div>
-            <div class="h-8 w-px bg-white/10"></div>
-            <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">{{ t('friends.stats.activeFriends') }}</span>
-              <span class="text-[16px] font-bold text-app-pink font-display">{{ activatedDirects }} <span class="text-[10px] text-gray-500 font-normal tech-font">{{ t('common.people') }}</span></span>
-            </div>
-            <div class="h-8 w-px bg-white/10"></div>
-            <div class="flex flex-col items-center flex-1">
-              <span class="text-[11px] text-gray-400 tech-font mb-1">{{ t('friends.stats.teamCount') }}</span>
-              <span class="text-[16px] font-bold text-white font-display">{{ teamCount }} <span class="text-[10px] text-gray-500 font-normal tech-font">{{ t('common.people') }}</span></span>
+
+            <div class="h-px w-full bg-white/10"></div>
+
+            <div class="flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2.5">
+              <span class="text-[12px] text-gray-300 tech-font">{{ t('friends.stats.myLevel') }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-[17px] font-bold text-white font-display">A{{ myLevel }}</span>
+                <div
+                  v-if="myLevelIconSvg"
+                  class="level-icon-badge"
+                  v-html="myLevelIconSvg"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
@@ -63,19 +79,19 @@
             {{ t('friends.list.title') }}
         </h3>
         
-        <div v-if="!walletState.isConnected" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
+        <div v-if="!walletState.isConnected" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border-2 border-white/10">
           {{ t('common.connectWalletFirst') }}
         </div>
         <div v-else-if="loadingChildren && childrenList.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px]">
           {{ t('common.loading') }}
         </div>
-        <div v-else-if="childrenList.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border border-white/5">
+        <div v-else-if="childrenList.length === 0" class="text-center py-8 text-gray-500 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border-2 border-white/10">
           {{ t('friends.list.empty') }}
         </div>
         <div v-else-if="currentChild" class="flex flex-col gap-3">
           <!-- Carousel Card -->
           <transition name="fade" mode="out-in">
-            <div :key="currentCardIndex" class="bg-[#1a153a] p-4 rounded-xl border border-white/5 shadow-md relative overflow-hidden">
+            <div :key="currentCardIndex" class="bg-[#1a153a] p-4 rounded-xl border-2 border-white/10 shadow-md relative overflow-hidden">
               <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
               <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
@@ -88,25 +104,24 @@
                 </div>
               </div>
               
-              <div class="flex justify-between items-center bg-black/20 rounded-lg p-3 border border-white/5">
+              <div class="flex justify-between items-center bg-black/20 rounded-lg p-3 border border-white/10">
                 <div class="flex flex-col items-center flex-1">
-                  <span class="text-[10px] text-gray-400 tech-font mb-1">{{ t('friends.list.friendLevel') }}</span>
+                  <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.friendLevel') }}</span>
                   <div class="flex items-center gap-1">
-                    <i class="ph-fill ph-star text-pink-400 text-xs"></i>
-                    <span class="text-[14px] font-bold text-white font-display">A{{ currentChild.level !== null ? currentChild.level : '...' }}</span>
+                    <span class="text-[15px] font-bold text-white font-display">A{{ currentChild.level !== null ? currentChild.level : '...' }}</span>
                   </div>
                 </div>
                 <div class="h-8 w-px bg-white/10"></div>
                 <div class="flex flex-col items-center flex-1">
-                  <span class="text-[10px] text-gray-400 tech-font mb-1">{{ t('friends.list.isActivated') }}</span>
-                  <span class="text-[14px] font-bold tech-font" :class="currentChild.userHasActivated ? 'text-green-400' : 'text-gray-500'">
+                  <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.isActivated') }}</span>
+                  <span class="text-[15px] font-bold tech-font" :class="currentChild.userHasActivated ? 'text-green-400' : 'text-gray-300'">
                     {{ currentChild.userHasActivated ? t('friends.list.activated') : t('friends.list.notActivated') }}
                   </span>
                 </div>
                 <div class="h-8 w-px bg-white/10"></div>
                 <div class="flex flex-col items-center flex-1">
-                  <span class="text-[10px] text-gray-400 tech-font mb-1">{{ t('friends.list.teamCount') }}</span>
-                  <span class="text-[14px] font-bold text-white font-display">{{ currentChild.teamCount }}</span>
+                  <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.teamCount') }}</span>
+                  <span class="text-[15px] font-bold text-white font-display">{{ currentChild.teamCount }}</span>
                 </div>
               </div>
             </div>
@@ -141,13 +156,13 @@
       <div v-if="activeTab === 'team'" class="animate-fade-in">
         
         <!-- My Referral Link -->
-        <div class="bg-[#1a153a] rounded-xl p-4 border border-white/10 relative overflow-hidden shadow-lg mb-5">
+        <div class="bg-[#1a153a] rounded-xl p-4 border-2 border-white/10 relative overflow-hidden shadow-lg mb-5">
           <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
           <h3 class="text-[13px] font-display text-white tracking-wider mb-1.5 relative z-10 flex items-center gap-2 tech-font font-bold">
             <i class="ph-fill ph-share-network text-app-pink"></i>
             {{ t('friends.referral.myLink') }}
           </h3>
-          <p class="text-[11px] text-gray-400 mb-3 relative z-10 tech-font">{{ t('friends.referral.shareDesc') }}</p>
+          <p class="text-[12px] text-gray-300 mb-3 relative z-10 tech-font">{{ t('friends.referral.shareDesc') }}</p>
           
           <div class="flex flex-col gap-3 relative z-10">
             <div class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 break-all text-[13px] text-white text-center min-h-[60px] flex items-center justify-center tech-font leading-5" :class="{ 'opacity-60': !isBound || !hasPurchasedNFT }">
@@ -166,14 +181,14 @@
             </button>
           </div>
           
-          <div class="mt-4 flex items-start gap-1.5 text-[10px] text-gray-500 bg-black/20 p-2.5 rounded-lg border border-white/5 tech-font leading-relaxed">
+          <div class="mt-4 flex items-start gap-1.5 text-[11px] text-gray-300 bg-black/20 p-2.5 rounded-lg border border-white/5 tech-font leading-relaxed">
             <i class="ph-fill ph-info text-app-pink mt-0.5 shrink-0"></i>
             <span>{{ t('friends.referral.tip') }}</span>
           </div>
         </div>
 
         <!-- Bind Referrer -->
-        <div class="bg-[#1a153a] rounded-xl p-4 border border-white/10 relative overflow-hidden shadow-lg">
+        <div class="bg-[#1a153a] rounded-xl p-4 border-2 border-white/10 relative overflow-hidden shadow-lg">
           <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
           <h3 class="text-[13px] font-display text-white tracking-wider mb-1.5 relative z-10 flex items-center gap-2 tech-font font-bold">
             <i class="ph-fill ph-link text-app-pink"></i>
@@ -280,6 +295,135 @@ export default {
       if (childrenList.value.length === 0) return null;
       return childrenList.value[currentCardIndex.value];
     });
+
+    const polarToCartesian = (cx, cy, radius, angle) => {
+      const radians = (angle - 90) * (Math.PI / 180);
+      return {
+        x: cx + radius * Math.cos(radians),
+        y: cy + radius * Math.sin(radians),
+      };
+    };
+
+    const buildPolygonPoints = (cx, cy, radius, sides, rotation = 0) => {
+      return Array.from({ length: sides }, (_, i) => {
+        const pt = polarToCartesian(cx, cy, radius, rotation + (360 / sides) * i);
+        return `${pt.x.toFixed(2)},${pt.y.toFixed(2)}`;
+      }).join(' ');
+    };
+
+    const buildStarPoints = (cx, cy, outerRadius, innerRadius, points, rotation = 0) => {
+      return Array.from({ length: points * 2 }, (_, i) => {
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const pt = polarToCartesian(cx, cy, radius, rotation + (360 / (points * 2)) * i);
+        return `${pt.x.toFixed(2)},${pt.y.toFixed(2)}`;
+      }).join(' ');
+    };
+
+    const getLevelBadgeSvg = (level) => {
+      const l = Math.max(1, Math.min(Number(level) || 1, 7));
+      const cx = 24, cy = 24;
+
+      // Palette matching UI: Gray -> Emerald -> Blue -> Purple -> Pink -> Orange -> Red/Gold
+      const palettes = [
+        { main: '#64748b', accent: '#e2e8f0', dark: '#0f172a', glow: '#94a3b8' }, // 1
+        { main: '#10b981', accent: '#a7f3d0', dark: '#022c22', glow: '#34d399' }, // 2
+        { main: '#3b82f6', accent: '#bfdbfe', dark: '#172554', glow: '#60a5fa' }, // 3
+        { main: '#8b5cf6', accent: '#ddd6fe', dark: '#2e1065', glow: '#a78bfa' }, // 4
+        { main: '#ec4899', accent: '#fbcfe8', dark: '#500724', glow: '#f472b6' }, // 5
+        { main: '#f59e0b', accent: '#fef08a', dark: '#451a03', glow: '#fbbf24' }, // 6
+        { main: '#ef4444', accent: '#fef08a', dark: '#450a0a', glow: '#facc15' }, // 7
+      ];
+      const p = palettes[l - 1];
+
+      let svg = `<svg viewBox="0 0 48 48" width="36" height="36" xmlns="http://www.w3.org/2000/svg">`;
+      svg += `<defs>
+        <linearGradient id="grad-main-${l}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${p.accent}" />
+          <stop offset="100%" stop-color="${p.main}" />
+        </linearGradient>
+        <linearGradient id="grad-dark-${l}" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="${p.main}" />
+          <stop offset="100%" stop-color="${p.dark}" />
+        </linearGradient>
+        <filter id="glow-${l}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="0" stdDeviation="${1.5 + l * 0.5}" flood-color="${p.glow}" flood-opacity="${0.4 + l * 0.1}"/>
+        </filter>
+      </defs>`;
+
+      // Background wings/ribbons
+      if (l >= 5) {
+        svg += `<path d="M24 24 L4 14 L10 24 L4 34 Z" fill="url(#grad-dark-${l})" stroke="${p.main}" stroke-width="0.5" opacity="0.9"/>`;
+        svg += `<path d="M24 24 L44 14 L38 24 L44 34 Z" fill="url(#grad-dark-${l})" stroke="${p.main}" stroke-width="0.5" opacity="0.9"/>`;
+      } else if (l >= 3) {
+        svg += `<path d="M24 24 L10 18 L14 24 L10 30 Z" fill="url(#grad-dark-${l})" stroke="${p.main}" stroke-width="0.5" opacity="0.8"/>`;
+        svg += `<path d="M24 24 L38 18 L34 24 L38 30 Z" fill="url(#grad-dark-${l})" stroke="${p.main}" stroke-width="0.5" opacity="0.8"/>`;
+      }
+
+      if (l >= 6) {
+        svg += `<path d="M18 30 L14 46 L20 42 L24 48 L24 30 Z" fill="${p.dark}" stroke="url(#grad-main-${l})" stroke-width="1.5"/>`;
+        svg += `<path d="M30 30 L34 46 L28 42 L24 48 L24 30 Z" fill="${p.dark}" stroke="url(#grad-main-${l})" stroke-width="1.5"/>`;
+      }
+
+      // Main Body
+      if (l === 1) {
+        svg += `<circle cx="24" cy="24" r="14" fill="${p.dark}" stroke="url(#grad-main-${l})" stroke-width="3" filter="url(#glow-${l})"/>`;
+        svg += `<circle cx="24" cy="24" r="10" fill="none" stroke="${p.accent}" stroke-width="1" opacity="0.5"/>`;
+      } else if (l === 2) {
+        const poly = buildPolygonPoints(24, 24, 15, 6, 30);
+        svg += `<polygon points="${poly}" fill="${p.dark}" stroke="url(#grad-main-${l})" stroke-width="3" filter="url(#glow-${l})"/>`;
+        const inner = buildPolygonPoints(24, 24, 11, 6, 30);
+        svg += `<polygon points="${inner}" fill="none" stroke="${p.accent}" stroke-width="1" opacity="0.5"/>`;
+      } else if (l === 3) {
+        svg += `<path d="M24 8 L38 12 L36 28 C36 36 24 42 24 42 C24 42 12 36 12 28 L10 12 Z" fill="${p.dark}" stroke="url(#grad-main-${l})" stroke-width="3" filter="url(#glow-${l})"/>`;
+        svg += `<path d="M24 12 L34 15 L32 27 C32 33 24 38 24 38 C24 38 16 33 16 27 L14 15 Z" fill="none" stroke="${p.accent}" stroke-width="1" opacity="0.5"/>`;
+      } else if (l === 4) {
+        const poly = buildPolygonPoints(24, 24, 16, 8, 22.5);
+        svg += `<polygon points="${poly}" fill="${p.dark}" stroke="url(#grad-main-${l})" stroke-width="3.5" filter="url(#glow-${l})"/>`;
+        const inner = buildPolygonPoints(24, 24, 12, 8, 22.5);
+        svg += `<polygon points="${inner}" fill="none" stroke="${p.accent}" stroke-width="1" opacity="0.6"/>`;
+      } else if (l === 5) {
+        svg += `<path d="M24 6 L36 10 L40 24 L34 36 L24 44 L14 36 L8 24 L12 10 Z" fill="${p.dark}" stroke="url(#grad-main-${l})" stroke-width="3.5" filter="url(#glow-${l})"/>`;
+        svg += `<path d="M24 11 L32 14 L35 24 L30 33 L24 39 L18 33 L13 24 L16 14 Z" fill="none" stroke="${p.accent}" stroke-width="1.5" opacity="0.6"/>`;
+      } else if (l === 6) {
+        const poly = buildPolygonPoints(24, 24, 17, 10, 18);
+        svg += `<polygon points="${poly}" fill="${p.dark}" stroke="url(#grad-main-${l})" stroke-width="4" filter="url(#glow-${l})"/>`;
+        const star = buildStarPoints(24, 24, 18, 14, 10);
+        svg += `<polygon points="${star}" fill="none" stroke="${p.accent}" stroke-width="1.5"/>`;
+      } else if (l === 7) {
+        const starBg = buildStarPoints(24, 24, 22, 16, 12);
+        svg += `<polygon points="${starBg}" fill="${p.dark}" stroke="url(#grad-main-${l})" stroke-width="4" filter="url(#glow-${l})"/>`;
+        const innerPoly = buildPolygonPoints(24, 24, 14, 12, 15);
+        svg += `<polygon points="${innerPoly}" fill="none" stroke="${p.accent}" stroke-width="2"/>`;
+      }
+
+      // Center Emblem
+      if (l <= 2) {
+        svg += `<circle cx="24" cy="24" r="5" fill="url(#grad-main-${l})"/>`;
+      } else if (l <= 4) {
+        const star = buildStarPoints(24, 24, 8, 4, 5);
+        svg += `<polygon points="${star}" fill="url(#grad-main-${l})"/>`;
+      } else if (l <= 6) {
+        const star = buildStarPoints(24, 24, 10, 5, 6);
+        svg += `<polygon points="${star}" fill="url(#grad-main-${l})"/>`;
+        svg += `<circle cx="24" cy="24" r="3" fill="${p.dark}"/>`;
+      } else {
+        const star = buildStarPoints(24, 24, 12, 6, 8);
+        svg += `<polygon points="${star}" fill="url(#grad-main-${l})"/>`;
+        const innerStar = buildStarPoints(24, 24, 6, 3, 4);
+        svg += `<polygon points="${innerStar}" fill="${p.dark}"/>`;
+        svg += `<circle cx="24" cy="24" r="2" fill="${p.accent}"/>`;
+      }
+
+      // Top Crown
+      if (l >= 5) {
+        svg += `<path d="M18 10 L24 2 L30 10 L26 12 L24 8 L22 12 Z" fill="url(#grad-main-${l})" filter="url(#glow-${l})"/>`;
+      }
+
+      svg += `</svg>`;
+      return svg;
+    };
+
+    const myLevelIconSvg = computed(() => getLevelBadgeSvg(myLevel.value));
     
     // Referral State
     const referrerInput = ref('');
@@ -641,7 +785,9 @@ export default {
       activeTab,
       walletState,
       formatAddress,
+      getLevelBadgeSvg,
       myLevel,
+      myLevelIconSvg,
       referralCount,
       teamCount,
       activatedDirects,
@@ -698,5 +844,19 @@ export default {
 .fade-leave-to {
   opacity: 0;
   transform: translateX(-10px);
+}
+
+.level-icon-badge {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.level-icon-badge :deep(svg) {
+  width: 36px;
+  height: 36px;
+  display: block;
 }
 </style>
