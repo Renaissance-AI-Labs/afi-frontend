@@ -21,6 +21,7 @@
 
 <script>
 import { ref, computed } from 'vue';
+import { t } from '@/i18n';
 
 // Simple v-click-outside directive
 const clickOutside = {
@@ -57,7 +58,7 @@ export default {
 
     const selectedOptionText = computed(() => {
       const selected = props.options.find(opt => opt.value === props.modelValue);
-      return selected ? selected.text : 'Select an option';
+      return selected ? selected.text : t('select.placeholder');
     });
 
     const toggle = () => {

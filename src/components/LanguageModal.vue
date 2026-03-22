@@ -1,36 +1,30 @@
 <template>
   <div class="modal-overlay" @click.self="close">
-    <div class="modal-content cool-modal">
-      <!-- Tech corners -->
-      <div class="tech-corner top-left"></div>
-      <div class="tech-corner top-right"></div>
-      <div class="tech-corner bottom-left"></div>
-      <div class="tech-corner bottom-right"></div>
-
-      <div class="modal-body">
-        <button @click="close" class="close-button">
-            <i class="icon icon-close"></i>
+    <div class="modal-content bg-[#1a153a] rounded-xl p-5 panel-border relative overflow-hidden text-white w-[90%] max-w-[320px]">
+      <div class="absolute -top-10 -right-10 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl"></div>
+      
+      <div class="modal-header flex justify-between items-center mb-6 relative z-10">
+        <h3 class="tech-font font-bold text-lg tracking-wider text-app-purple drop-shadow-md">
+          {{ t('language.title') }}
+        </h3>
+        <button @click="close" class="text-gray-400 hover:text-white transition">
+          <i class="ph ph-x text-xl"></i>
         </button>
-        
-        <div class="title_holder">
-          <h3>{{ t('language.switchTitle') }}</h3>
-          <div class="cyber-line"></div>
-        </div>
-        
-        <div class="language-grid">
+      </div>
+
+      <div class="modal-body relative z-10">
+        <div class="flex flex-col gap-3">
           <button 
             v-for="language in languages" 
             :key="language.code"
-            class="lang-card"
-            :class="{ active: currentLang === language.code }"
+            class="w-full flex items-center justify-between p-4 bg-[#221b44] rounded-lg border transition-all group"
+            :class="currentLang === language.code ? 'border-app-purple bg-[#2a2255] shadow-[0_0_10px_rgba(168,85,247,0.3)]' : 'border-purple-500/30 hover:border-app-purple/60 hover:bg-[#2a2255]'"
             @click="selectLanguage(language.code)"
           >
-            <div class="card-bg-glow"></div>
-            <span class="lang-name">{{ language.name }}</span>
-            <div class="corner-mark tl"></div>
-            <div class="corner-mark tr"></div>
-            <div class="corner-mark bl"></div>
-            <div class="corner-mark br"></div>
+            <span class="tech-font font-bold text-sm tracking-wide transition-colors" :class="currentLang === language.code ? 'text-app-purple' : 'text-gray-300 group-hover:text-white'">
+              {{ language.name }}
+            </span>
+            <i v-if="currentLang === language.code" class="ph-fill ph-check-circle text-app-purple text-xl"></i>
           </button>
         </div>
       </div>
@@ -65,152 +59,28 @@ export default {
 };
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1050;
 }
 
-.modal-content {
-  position: relative;
-  width: 90%;
-  max-width: 400px;
-  padding: 32px;
-  background: rgba(20, 20, 20, 0.95);
-  border: 2px solid var(--border-light);
-  /* Hand-drawn Box */
-  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  overflow: visible;
-  
-  /* Scientific Corner Marks */
-  &::after {
-      content: '';
-      position: absolute;
-      top: 10px; left: 10px; right: 10px; bottom: 10px;
-      border: 1px dashed var(--text-muted);
-      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-      pointer-events: none;
-      opacity: 0.3;
-  }
+.panel-border {
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 0 30px rgba(0,0,0,0.8);
 }
 
-/* Remove old tech corners */
-.tech-corner { display: none; }
-
-.close-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 10;
-
-  &:hover {
-    color: var(--primary-gold);
-    transform: scale(1.1) rotate(90deg);
-  }
-}
-
-.title_holder {
-  text-align: center;
-  margin-bottom: 32px;
-
-  h3 {
-    font-family: var(--font-heading);
-    font-size: 2rem;
-    margin-bottom: 16px;
-    color: #fff;
-    font-weight: 400;
-    letter-spacing: 1px;
-    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
-  }
-  
-  .cyber-line {
-      width: 60px;
-      height: 2px;
-      background: var(--primary-gold);
-      margin: 0 auto;
-      /* Scribble */
-      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-      transform: rotate(-1deg);
-      
-      &::before, &::after {
-          display: none;
-      }
-  }
-}
-
-.language-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-}
-
-.lang-card {
-    position: relative;
-    background: transparent;
-    border: 2px solid var(--border-light);
-    /* Hand drawn card */
-    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-    padding: 20px;
-    cursor: pointer;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 60px;
-    
-    /* Remove old corner marks */
-    .corner-mark { display: none; }
-    
-    .lang-name {
-        color: var(--text-secondary);
-        font-size: 1.1rem;
-        font-weight: 500;
-        z-index: 2;
-        transition: all 0.3s ease;
-        font-family: var(--font-body);
-    }
-    
-    .card-bg-glow {
-        display: none; /* Remove digital glow */
-    }
-
-    &:hover {
-        border-color: var(--primary-gold);
-        background: rgba(212, 175, 55, 0.05);
-        transform: translateY(-2px) rotate(1deg);
-        
-        .lang-name {
-            color: #fff;
-        }
-    }
-    
-    &.active {
-        border-color: var(--primary-gold);
-        background: rgba(212, 175, 55, 0.1);
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
-        transform: rotate(-1deg);
-        
-        .lang-name {
-            color: var(--primary-gold);
-            font-weight: 700;
-        }
-    }
+.tech-font {
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.05em;
 }
 </style>

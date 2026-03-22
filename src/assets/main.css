@@ -1,1 +1,177 @@
-/* Empty main css */
+html,
+body,
+#app {
+    width: 100%;
+    min-height: 100%;
+}
+
+:root {
+    --bottom-nav-height: 56px;
+    --bottom-safe-area: env(safe-area-inset-bottom, 0px);
+}
+
+body {
+    background-color: #1a153a;
+    color: #f8fafc;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+#app {
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.app-container {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-color: #1a153a;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 隐藏滚动条 */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* 背景光晕呼吸动画 */
+@keyframes glow-float {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.8;
+    }
+    33% {
+        transform: translate(5%, 8%) scale(1.1);
+        opacity: 1;
+    }
+    66% {
+        transform: translate(-3%, 3%) scale(0.9);
+        opacity: 0.7;
+    }
+}
+
+.animate-glow-float-slow {
+    animation: glow-float 15s ease-in-out infinite;
+}
+
+.animate-glow-float-delayed {
+    animation: glow-float 18s ease-in-out infinite;
+    animation-delay: -7s;
+}
+
+/* 英雄区域背景 — image only, no blend/filter to preserve original colors */
+.hero-bg {
+    background-image: url('/asset/images/logo/bg.png');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+/* 莫比斯风格标题文字描边和发光效果 */
+.title-moebius {
+    font-family: 'Rye', serif;
+    color: #fffae6;
+    -webkit-text-stroke: 1.5px #111;
+    text-shadow: 
+        0 0 15px rgba(255, 255, 255, 0.8),
+        3px 3px 0px #000,
+        -1px -1px 0px #000,
+        1px -1px 0px #000,
+        -1px 1px 0px #000;
+    letter-spacing: 0.05em;
+}
+
+@keyframes pulse-glow {
+    0% {
+        text-shadow: 
+            0 0 10px rgba(255, 77, 141, 0.5),
+            3px 3px 0px #000,
+            -1px -1px 0px #000,
+            1px -1px 0px #000,
+            -1px 1px 0px #000;
+    }
+    50% {
+        text-shadow: 
+            0 0 25px rgba(168, 85, 247, 0.9),
+            3px 3px 0px #000,
+            -1px -1px 0px #000,
+            1px -1px 0px #000,
+            -1px 1px 0px #000;
+    }
+    100% {
+        text-shadow: 
+            0 0 10px rgba(77, 184, 255, 0.5),
+            3px 3px 0px #000,
+            -1px -1px 0px #000,
+            1px -1px 0px #000,
+            -1px 1px 0px #000;
+    }
+}
+
+.subtitle-moebius {
+    position: relative;
+    display: inline-block;
+    margin-top: 0.25rem;
+    padding: 0.45rem 1.15rem 0.4rem;
+    border-radius: 9999px;
+    color: #120b22;
+    font-weight: 800;
+    -webkit-text-stroke: 0;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+    background: radial-gradient(
+        ellipse 110% 160% at 50% 50%,
+        rgba(255, 255, 255, 0.98) 0%,
+        rgba(255, 255, 255, 0.72) 38%,
+        rgba(255, 255, 255, 0.28) 62%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    box-shadow:
+        0 0 20px rgba(255, 255, 255, 0.75),
+        0 0 42px rgba(255, 255, 255, 0.35),
+        inset 0 0 14px rgba(255, 255, 255, 0.5);
+}
+
+/* 霓虹边框发光效果 - 高度还原线条 */
+.glow-border-pink {
+    border: 2px solid #ff4d8d;
+    box-shadow: 0 0 10px rgba(255, 77, 141, 0.5), inset 0 0 10px rgba(255, 77, 141, 0.3);
+}
+.glow-border-blue {
+    border: 2px solid #4db8ff;
+    box-shadow: 0 0 10px rgba(77, 184, 255, 0.5), inset 0 0 10px rgba(77, 184, 255, 0.3);
+}
+.glow-border-purple {
+    border: 2px solid #a855f7;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.5), inset 0 0 10px rgba(168, 85, 247, 0.3);
+}
+
+/* 面板通用边框 */
+.panel-border {
+    border: 1px solid rgba(255, 77, 141, 0.4);
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+.scroll-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: calc(var(--bottom-nav-height) + var(--bottom-safe-area));
+}
+
+/* 按钮悬浮特效 */
+.action-btn {
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+}
+.action-btn:active {
+    transform: scale(0.95);
+}
