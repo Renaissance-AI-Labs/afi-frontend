@@ -5,6 +5,9 @@
                 <div class="font-display text-lg tracking-widest text-white shadow-black drop-shadow-md">AGENT.FI</div>
                 
                 <div class="flex items-center gap-3">
+                    <a href="https://agentfi-offical.gitbook.io/agentfi-docs" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-full bg-[#221b44] border border-purple-500/30 flex items-center justify-center text-gray-400 hover:text-app-pink hover:border-app-pink/60 transition-all shadow-lg" title="Whitepaper" aria-label="Whitepaper">
+                        <i class="ph ph-book-open-text text-lg"></i>
+                    </a>
                     <a href="https://x.com/Agentfiafi0" target="_blank" class="w-8 h-8 rounded-full bg-[#221b44] border border-purple-500/30 flex items-center justify-center text-gray-400 hover:text-app-pink hover:border-app-pink/60 transition-all shadow-lg">
                         <i class="ph ph-twitter-logo text-lg"></i>
                     </a>
