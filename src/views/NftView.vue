@@ -306,7 +306,7 @@ export default {
       transferTargetByNftId: {},
       editingTransferNftId: null,
       transferConfirmModalVisible: false,
-      transferConfirmCountdown: 5,
+      transferConfirmCountdown: 3,
       transferConfirmTimer: null,
       transferConfirmAddress: '',
       transferConfirmNftId: null,
@@ -540,7 +540,7 @@ export default {
       this.transferConfirmNftId = nft.id;
       this.transferConfirmNftName = nft.name;
       this.transferConfirmModalVisible = true;
-      this.transferConfirmCountdown = 5;
+      this.transferConfirmCountdown = 3;
 
       if (this.transferConfirmTimer) {
         clearInterval(this.transferConfirmTimer);
@@ -558,7 +558,7 @@ export default {
     },
     closeTransferConfirmModal() {
       this.transferConfirmModalVisible = false;
-      this.transferConfirmCountdown = 5;
+      this.transferConfirmCountdown = 3;
       this.transferConfirmAddress = '';
       this.transferConfirmNftId = null;
       this.transferConfirmNftName = '';

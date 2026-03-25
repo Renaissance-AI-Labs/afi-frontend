@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import NftView from '../views/NftView.vue';
 import FriendsView from '../views/FriendsView.vue';
+import CooperationView from '../views/CooperationView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 import { walletState } from '../services/wallet';
 
@@ -20,6 +21,11 @@ const routes = [
     path: '/friends',
     name: 'Friends',
     component: FriendsView,
+  },
+  {
+    path: '/cooperation',
+    name: 'Cooperation',
+    component: CooperationView,
   },
   {
     path: '/:pathMatch(.*)*',
