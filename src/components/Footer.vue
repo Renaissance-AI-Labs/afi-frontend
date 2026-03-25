@@ -33,7 +33,7 @@ import { APP_ENV } from '@/services/environment';
 export default {
     name: 'Footer',
     setup() {
-        const versionLabel = computed(() => (APP_ENV === 'PROD' ? 'M-1.0.0' : 'T-1.0.0'));
+        const versionLabel = computed(() => (APP_ENV === 'PROD' ? 'M-1.0.1' : 'T-1.0.1'));
 
         return {
             t,
