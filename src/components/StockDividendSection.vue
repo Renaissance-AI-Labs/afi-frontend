@@ -27,7 +27,7 @@
       </div>
 
       <!-- Orders List -->
-      <div v-if="orders.length > 0" class="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+      <div v-if="orders.length > 0" class="flex flex-col gap-2 overflow-y-auto pr-1 custom-scrollbar" :class="expanded ? 'max-h-[28rem]' : 'max-h-48'">
         <div v-for="order in orders" :key="order.index" class="bg-black/20 border border-white/5 rounded-lg p-2.5 flex flex-col gap-1.5">
           <div class="flex justify-between items-center">
             <span class="text-sm text-white font-bold tech-font">#{{ order.index }} <span class="text-xs text-gray-300 font-normal">({{ formatUnits(order.amount) }}U)</span></span>
@@ -63,7 +63,13 @@ import { t } from '@/i18n';
 
 export default {
   name: 'StockDividendSection',
-  setup() {
+  props: {
+    expanded: {
+      type: Boolean,
+      default: false
+    }
+  },
+  setup(props) {
     const balance = ref(0n);
     const orders = ref([]);
     const isClaiming = ref(false);
