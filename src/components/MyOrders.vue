@@ -32,39 +32,48 @@
             </div>
           </div>
 
-          <!-- Progress Bars -->
-          <div class="flex flex-col gap-3 mb-4">
+          <!-- Queued Info -->
+          <div v-if="order.isQueued && status === 0" class="flex flex-col gap-3 mb-4">
+            <div class="flex items-center justify-between bg-white/5 rounded-lg p-3 border border-white/5">
+              <div class="flex flex-col items-center flex-1">
+                <span class="text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('orders.queuePosition') }}</span>
+                <span class="text-white font-display font-bold">{{ order.queuePosition !== undefined ? order.queuePosition : '-' }}</span>
+              </div>
+              <div class="w-px h-8 bg-gradient-to-b from-transparent via-white/15 to-transparent"></div>
+              <div class="flex flex-col items-center flex-1">
+                <span class="text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('orders.queueAmountAhead') }}</span>
+                <span class="text-cyan-400 font-display font-bold" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));">{{ order.queueAmountAhead || '-' }}</span>
+              </div>
+              <div class="w-px h-8 bg-gradient-to-b from-transparent via-white/15 to-transparent"></div>
+              <div class="flex flex-col items-center flex-1">
+                <span class="text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('orders.queueWait') }}</span>
+                <span class="text-cyan-400 font-display font-bold" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));">{{ order.queueWait !== undefined ? order.queueWait : '-' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Details -->
+          <div class="flex flex-col gap-3 mb-4" v-if="!order.isQueued && status !== 3">
             
-            <!-- Time Progress (Only if not queued) -->
-            <div v-if="!order.isQueued && status !== 3">
-              <div class="flex justify-between text-[11px] text-gray-400 tech-font mb-1">
-                <span>{{ t('orders.timeProgress') }}</span>
-                <span>{{ getTimePercent(order) }}%</span>
+            <!-- Times -->
+            <div class="flex justify-between items-center text-[11px] text-gray-400 tech-font bg-white/5 rounded-lg p-3 border border-white/5">
+              <div class="flex flex-col">
+                <span class="uppercase tracking-wider mb-0.5">{{ t('orders.startTime') }}</span>
+                <span class="text-white font-display">{{ formatDateTime(order.stakeTime) }}</span>
               </div>
-              <div class="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
-                <div class="bg-blue-500 h-full rounded-full" :style="{ width: `${getTimePercent(order)}%` }"></div>
-              </div>
-            </div>
-
-            <!-- Out Progress -->
-            <div v-if="status !== 3">
-              <div class="flex justify-between text-[11px] text-gray-400 tech-font mb-1">
-                <span>{{ t('orders.maxRewardProgress') }}</span>
-                <span>{{ getOutPercent(order) }}%</span>
-              </div>
-              <div class="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
-                <div class="bg-pink-500 h-full rounded-full" :style="{ width: `${getOutPercent(order)}%` }"></div>
+              <div class="w-px h-6 bg-white/10"></div>
+              <div class="flex flex-col text-right">
+                <span class="uppercase tracking-wider mb-0.5">{{ t('orders.endTime') }}</span>
+                <span class="text-white font-display">{{ formatDateTime(Number(order.stakeTime) + Number(order.stakeDays)) }}</span>
               </div>
             </div>
 
-            <!-- Principal Refund Progress -->
-            <div v-if="status !== 3">
-              <div class="flex justify-between text-[11px] text-gray-400 tech-font mb-1">
-                <span>{{ t('orders.principalRefundTarget') }}</span>
-                <span>{{ getPrincipalPercent(order) }}%</span>
-              </div>
-              <div class="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
-                <div class="bg-purple-500 h-full rounded-full" :style="{ width: `${getPrincipalTargetPercent(order)}%` }"></div>
+            <!-- Current Reward -->
+            <div class="flex justify-between items-center bg-white/5 rounded-lg p-3 border border-white/5">
+              <span class="text-[11px] text-gray-400 tech-font uppercase tracking-wider">{{ t('orders.currentReward') }}</span>
+              <div class="text-right">
+                <span :key="order.currentReward" class="text-lg font-display font-bold text-app-pink animate-number-jump inline-block">{{ formatUnits(order.currentReward) }}</span>
+                <span class="text-xs text-pink-400/70 ml-1">AFI</span>
               </div>
             </div>
 
@@ -95,11 +104,11 @@
             
             <template v-if="status === 2">
               <button 
-                @click="handleHarvest(order.id)"
+                @click="handleRedeem(order)"
                 :disabled="actionLoading === order.id"
                 class="flex-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
               >
-                {{ actionLoading === order.id ? t('orders.processingAction') : t('orders.claimUsdt') }}
+                {{ actionLoading === order.id ? t('orders.processingAction') : t('orders.redeem') }}
               </button>
               <button 
                 @click="handleCompound(order.id)"
@@ -127,7 +136,25 @@
     <div v-if="confirmModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div class="bg-[#1a153a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <h3 class="text-xl font-display text-white mb-3 tech-font">{{ confirmModal.title }}</h3>
-        <p class="text-sm text-gray-300 tech-font mb-6 leading-relaxed">{{ confirmModal.message }}</p>
+        <div v-if="confirmModal.modalType === 'redeem' && confirmModal.redeemMeta" class="space-y-3 mb-6">
+          <p class="text-sm text-gray-300 tech-font leading-relaxed">
+            {{ t('orders.redeemCompoundLine', { count: confirmModal.redeemMeta.compoundCount }) }}
+          </p>
+          <div class="rounded-lg border border-cyan-500/25 bg-cyan-500/10 p-3">
+            <p class="text-[10px] text-cyan-200/80 tech-font uppercase tracking-wider mb-1">{{ t('orders.redeemPrincipalLead') }}</p>
+            <p class="text-base font-display font-bold text-cyan-300 leading-snug">
+              {{ t('orders.redeemPrincipalDetail', { pct: confirmModal.redeemMeta.principalPct, amount: confirmModal.redeemMeta.principalUsdt }) }}
+            </p>
+          </div>
+          <div class="rounded-lg border border-pink-500/25 bg-pink-500/10 p-3">
+            <p class="text-[10px] text-pink-200/80 tech-font uppercase tracking-wider mb-1">{{ t('orders.redeemInterestLead') }}</p>
+            <p class="text-base font-display font-bold text-app-pink leading-snug">
+              {{ t('orders.redeemInterestDetail', { amount: confirmModal.redeemMeta.interestAfi }) }}
+            </p>
+          </div>
+          <p class="text-[11px] text-gray-500 tech-font">{{ t('orders.redeemNote') }}</p>
+        </div>
+        <p v-else class="text-sm text-gray-300 tech-font mb-6 leading-relaxed">{{ confirmModal.message }}</p>
         
         <div class="flex gap-3">
           <button 
@@ -161,6 +188,7 @@ import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
 import { showToast } from '@/services/notification';
 import StakingABI from '@/abis/Staking.json';
+import StakingViewABI from '@/abis/StakingView.json';
 import { t } from '@/i18n';
 
 export default {
@@ -185,28 +213,49 @@ export default {
       action: null,
       countdown: 0,
       loading: false,
-      isDestructive: false
+      isDestructive: false,
+      modalType: null,
+      redeemMeta: null
     });
     let countdownInterval = null;
     
     let refreshInterval = null;
+    let rewardInterval = null;
     let stakingContract = null;
     let stakeDaysMap = {};
 
-    const fetchOrders = async (isLoadMore = false) => {
+    const formatDateTime = (timestamp) => {
+      if (!timestamp) return '-';
+      const date = new Date(Number(timestamp) * 1000);
+      const y = date.getFullYear();
+      const m = (date.getMonth() + 1).toString().padStart(2, '0');
+      const d = date.getDate().toString().padStart(2, '0');
+      const h = date.getHours().toString().padStart(2, '0');
+      const min = date.getMinutes().toString().padStart(2, '0');
+      return `${y}/${m}/${d} ${h}:${min}`;
+    };
+
+    const fetchOrders = async (isLoadMore = false, isSilent = false) => {
       if (!walletState.isConnected || !walletState.address) return;
       
-      if (!isLoadMore) {
+      if (!isLoadMore && !isSilent) {
         loading.value = true;
         orders.value = [];
         nextCursor.value = 0n;
       }
 
+      if (isSilent && nextCursor.value > 0n) {
+        // If we are paginating, don't silent refresh the whole list to avoid jumping
+        return;
+      }
+
       try {
         const stakingAddress = getContractAddress('Staking');
-        if (!stakingAddress) return;
+        const stakingViewAddress = getContractAddress('StakingView');
+        if (!stakingAddress || !stakingViewAddress) return;
 
         stakingContract = new ethers.Contract(stakingAddress, StakingABI, walletState.provider);
+        const stakingViewContract = new ethers.Contract(stakingViewAddress, StakingViewABI, walletState.provider);
         
         const result = await stakingContract.getUserRecords(
           walletState.address, 
@@ -224,6 +273,27 @@ export default {
           let principalRefundPercent = 0n;
           let stakeDays = 0n;
           let finalReward = rec.finalReward || 0n;
+          let queuePosition = undefined;
+          let queueAmountAhead = undefined;
+          let queueWait = undefined;
+
+          const isQueued = rec.isQueued !== undefined ? rec.isQueued : (rec[5] !== undefined ? rec[5] : false);
+
+          if (props.status === 0 && isQueued) {
+            try {
+              const orderId = rec.id !== undefined ? rec.id : (rec[7] !== undefined ? rec[7] : undefined);
+              if (orderId !== undefined) {
+                const qInfo = await stakingViewContract.getQueuePositionInfo(walletState.address, orderId);
+                if (qInfo[0]) {
+                  queuePosition = Number(qInfo[1]);
+                  queueAmountAhead = formatUnits(qInfo[2]);
+                  queueWait = Number(qInfo[3]);
+                }
+              }
+            } catch (e) {
+              console.warn("Failed to get queue info for order", rec.id, e);
+            }
+          }
 
           if (props.status !== 3) {
             try {
@@ -253,12 +323,15 @@ export default {
             id: rec.id !== undefined ? rec.id : (rec[7] !== undefined ? rec[7] : undefined),
             amount: rec.amount || rec[1] || 0n,
             compoundCount: rec.compoundCount !== undefined ? rec.compoundCount : (rec[4] !== undefined ? rec[4] : 0),
-            isQueued: rec.isQueued !== undefined ? rec.isQueued : (rec[5] !== undefined ? rec[5] : false),
+            isQueued,
             stakeTime: rec.stakeTime !== undefined ? rec.stakeTime : (rec[0] !== undefined ? rec[0] : 0n),
             currentReward,
             principalRefundPercent,
             stakeDays,
-            finalReward
+            finalReward,
+            queuePosition,
+            queueAmountAhead,
+            queueWait
           };
         }));
 
@@ -271,17 +344,38 @@ export default {
       } catch (error) {
         console.error("Failed to fetch orders:", error);
       } finally {
-        loading.value = false;
+        if (!isSilent) loading.value = false;
+      }
+    };
+
+    const updateRewards = async () => {
+      if (!walletState.isConnected || !walletState.address || !stakingContract) return;
+      if (props.status === 3 || props.status === 0) return; // Only active/claimable have changing rewards
+
+      for (let i = 0; i < orders.value.length; i++) {
+        const order = orders.value[i];
+        if (!order.isQueued) {
+          try {
+            const newReward = await stakingContract.rewardOfSlot(walletState.address, order.id);
+            if (newReward !== order.currentReward) {
+              order.currentReward = newReward;
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
       }
     };
 
     onMounted(() => {
       fetchOrders();
-      refreshInterval = setInterval(() => fetchOrders(false), 15000);
+      refreshInterval = setInterval(() => fetchOrders(false, true), 15000);
+      rewardInterval = setInterval(updateRewards, 6000);
     });
 
     onUnmounted(() => {
       if (refreshInterval) clearInterval(refreshInterval);
+      if (rewardInterval) clearInterval(rewardInterval);
     });
 
     watch(() => props.status, () => {
@@ -327,36 +421,6 @@ export default {
       }
     };
 
-    const getTimePercent = (order) => {
-      if (order.isQueued || order.stakeDays === 0n || !order.stakeDays) return 0;
-      const now = Math.floor(Date.now() / 1000);
-      const start = Number(order.stakeTime);
-      const duration = Number(order.stakeDays);
-      const elapsed = now - start;
-      if (elapsed >= duration) return 100;
-      if (elapsed <= 0) return 0;
-      return Math.max(0, Math.min(100, Math.round((elapsed / duration) * 100)));
-    };
-
-    const getOutPercent = (order) => {
-      if (order.amount === 0n) return 0;
-      const current = Number(ethers.formatEther(order.currentReward));
-      const target = Number(ethers.formatEther(order.amount)) * 3;
-      return Math.min(100, Math.round((current / target) * 100));
-    };
-
-    const getPrincipalPercent = (order) => {
-      return Number(order.principalRefundPercent);
-    };
-
-    const getPrincipalTargetPercent = (order) => {
-      if (order.amount === 0n) return 0;
-      const current = Number(ethers.formatEther(order.currentReward));
-      const target = Number(ethers.formatEther(order.amount)) * (Number(order.principalRefundPercent) / 100);
-      if (target === 0) return 0;
-      return Math.min(100, Math.round((current / target) * 100));
-    };
-
     const isCancelledQueue = (order) => {
       if (order.amount === undefined || order.finalReward === undefined) return false;
       try {
@@ -373,15 +437,29 @@ export default {
       return new ethers.Contract(stakingAddress, StakingABI, walletState.signer);
     };
 
-    const openConfirmModal = (title, message, actionFn, requireCountdown = false, isDestructive = false) => {
+    const openConfirmModal = ({
+      title,
+      message = '',
+      action,
+      requireCountdown = false,
+      isDestructive = false,
+      modalType = null,
+      redeemMeta = null
+    }) => {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
       confirmModal.value = {
         show: true,
         title,
         message,
-        action: actionFn,
+        action,
         countdown: requireCountdown ? 5 : 0,
         loading: false,
-        isDestructive
+        isDestructive,
+        modalType,
+        redeemMeta
       };
 
       if (requireCountdown) {
@@ -412,10 +490,10 @@ export default {
 
     const handleCancelQueue = (id, amount) => {
       const refund = (BigInt(amount) * 50n) / 100n;
-      openConfirmModal(
-        t('orders.cancelConfirmTitle'),
-        t('orders.cancelConfirm', { amount: ethers.formatEther(refund) }),
-        async () => {
+      openConfirmModal({
+        title: t('orders.cancelConfirmTitle'),
+        message: t('orders.cancelConfirm', { amount: ethers.formatEther(refund) }),
+        action: async () => {
           actionLoading.value = id;
           try {
             const contract = getSignerContract();
@@ -432,40 +510,72 @@ export default {
             actionLoading.value = null;
           }
         },
-        true, // require 5s countdown
-        true  // destructive action (red button)
-      );
+        requireCountdown: true,
+        isDestructive: true
+      });
     };
 
-    const handleHarvest = (id) => {
-      openConfirmModal(
-        t('orders.claimConfirmTitle'),
-        t('orders.claimConfirmDesc'),
-        async () => {
-          actionLoading.value = id;
-          try {
-            const contract = getSignerContract();
-            const tx = await contract.unstake(id, 1);
-            await tx.wait();
-            showToast(t('orders.claimSuccess'), 'success');
-            fetchOrders();
-          } catch (error) {
-            console.error(error);
-            if (error.code !== 4001 && error.code !== 'ACTION_REJECTED') {
-              showToast(error.reason || t('orders.claimFailed'), 'error');
-            }
-          } finally {
-            actionLoading.value = null;
-          }
+    const handleRedeem = async (order) => {
+      const id = order.id;
+      let rewardWei = order.currentReward ?? 0n;
+      let pctBn = order.principalRefundPercent ?? 0n;
+      try {
+        if (stakingContract && id !== undefined) {
+          const [r, p] = await Promise.all([
+            stakingContract.rewardOfSlot(walletState.address, id),
+            stakingContract.principalRefundPercent(order.compoundCount ?? 0)
+          ]);
+          rewardWei = r;
+          pctBn = p;
         }
-      );
+      } catch (e) {
+        console.warn('Failed to refresh redeem preview', e);
+      }
+      try {
+        const amt = BigInt(order.amount ?? 0n);
+        const pct = BigInt(pctBn);
+        const principalWei = (amt * pct) / 100n;
+        const principalPct = Number(pct);
+        const redeemMeta = {
+          compoundCount: Number(order.compoundCount ?? 0),
+          principalPct: Number.isFinite(principalPct) ? principalPct : 0,
+          principalUsdt: formatUnits(principalWei),
+          interestAfi: formatUnits(rewardWei)
+        };
+        openConfirmModal({
+          title: t('orders.redeemConfirmTitle'),
+          message: '',
+          modalType: 'redeem',
+          redeemMeta,
+          action: async () => {
+            actionLoading.value = id;
+            try {
+              const contract = getSignerContract();
+              const tx = await contract.unstake(id, 1);
+              await tx.wait();
+              showToast(t('orders.redeemSuccess'), 'success');
+              fetchOrders();
+            } catch (error) {
+              console.error(error);
+              if (error.code !== 4001 && error.code !== 'ACTION_REJECTED') {
+                showToast(error.reason || t('orders.redeemFailed'), 'error');
+              }
+            } finally {
+              actionLoading.value = null;
+            }
+          }
+        });
+      } catch (e) {
+        console.error(e);
+        showToast(t('orders.redeemFailed'), 'error');
+      }
     };
 
     const handleCompound = (id) => {
-      openConfirmModal(
-        t('orders.compoundConfirmTitle'),
-        t('orders.compoundConfirmDesc'),
-        async () => {
+      openConfirmModal({
+        title: t('orders.compoundConfirmTitle'),
+        message: t('orders.compoundConfirmDesc'),
+        action: async () => {
           actionLoading.value = id;
           try {
             const contract = getSignerContract();
@@ -482,7 +592,7 @@ export default {
             actionLoading.value = null;
           }
         }
-      );
+      });
     };
 
     return {
@@ -493,15 +603,12 @@ export default {
       walletState,
       loadMore,
       formatUnits,
+      formatDateTime,
       getStatusClass,
       getStatusText,
-      getTimePercent,
-      getOutPercent,
-      getPrincipalPercent,
-      getPrincipalTargetPercent,
       isCancelledQueue,
       handleCancelQueue,
-      handleHarvest,
+      handleRedeem,
       handleCompound,
       confirmModal,
       closeConfirmModal,
@@ -525,5 +632,15 @@ export default {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-number-jump {
+  animation: numberJump 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes numberJump {
+  0% { transform: translateY(0) scale(1); color: #ec4899; }
+  50% { transform: translateY(-3px) scale(1.1); color: #fdf2f8; text-shadow: 0 0 8px rgba(236, 72, 153, 0.8); }
+  100% { transform: translateY(0) scale(1); color: #ec4899; }
 }
 </style>

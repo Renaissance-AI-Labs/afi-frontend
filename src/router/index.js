@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
+import AchievementsView from '../views/AchievementsView.vue';
 import OrdersView from '../views/OrdersView.vue';
 import NftView from '../views/NftView.vue';
 import FriendsView from '../views/FriendsView.vue';
@@ -12,6 +13,11 @@ const routes = [
     path: '/',
     name: 'Home',
     component: HomeView,
+  },
+  {
+    path: '/achievements',
+    name: 'Achievements',
+    component: AchievementsView,
   },
   {
     path: '/orders',

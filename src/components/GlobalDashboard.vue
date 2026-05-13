@@ -6,7 +6,7 @@
         <i class="ph-fill ph-chart-line-up text-app-pink"></i> {{ t('home.dashboard.title') }}
       </h2>
       
-      <div class="bg-black/30 border border-white/5 rounded-lg p-3 mb-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-black/30 border border-white/5 rounded-lg p-3 mb-3 grid grid-cols-3 gap-3">
         <div class="text-center">
           <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysQuota') }}</p>
           <p class="text-base font-display font-bold text-white truncate" :title="formattedQuota">{{ formattedQuota }}</p>
@@ -16,34 +16,39 @@
           <p class="text-base font-display font-bold text-app-pink truncate" :title="formattedUsed">{{ formattedUsed }}</p>
         </div>
         <div class="text-center">
-          <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.queuedOrders') }}</p>
-          <p class="text-base font-display font-bold text-white truncate" :title="queuedOrders">{{ queuedOrders }}</p>
-        </div>
-        <div class="text-center">
-          <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.reservedUsdt') }}</p>
-          <p class="text-base font-display font-bold text-app-pink truncate" :title="formattedReserved">{{ formattedReserved }}</p>
+          <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysPending') }}</p>
+          <p class="text-base font-display font-bold text-blue-400 truncate" :title="formattedPending">{{ formattedPending }}</p>
         </div>
       </div>
 
       <!-- Progress Bars -->
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-3">
         <div>
           <div class="flex justify-between text-[11px] text-gray-300 tech-font mb-1">
             <span>{{ t('home.dashboard.quotaUsage') }}</span>
-            <span>{{ quotaPercent }}%</span>
+            <span>{{ isUnlimited ? t('home.dashboard.unlimited') : `${formattedUsed} / ${formattedQuota} U` }} ({{ quotaPercent }}%)</span>
           </div>
           <div class="w-full bg-black/40 rounded-full h-1.5 overflow-hidden border border-white/5">
             <div class="bg-gradient-to-r from-pink-500 to-purple-500 h-full rounded-full transition-all duration-500" :style="{ width: `${quotaPercent}%` }"></div>
           </div>
         </div>
         <div>
-          <div class="flex justify-between text-[11px] text-gray-300 tech-font mb-1">
+          <div class="flex justify-between items-center text-[11px] text-gray-300 tech-font mb-1.5">
             <span>{{ t('home.dashboard.queueProgress') }}</span>
-            <span>{{ queuePercent }}%</span>
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1.5 text-gray-300">
+                <div class="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.6)]"></div>
+                {{ t('home.dashboard.processed') }}: <span class="font-display text-white">{{ queueInfo.headIndex }}</span>
+              </span>
+              <span class="flex items-center gap-1.5 text-gray-300">
+                <div class="w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_6px_rgba(236,72,153,0.6)]"></div>
+                {{ t('home.dashboard.waiting') }}: <span class="font-display text-white">{{ queuedOrders }}</span>
+              </span>
+            </div>
           </div>
-          <div class="w-full bg-black/40 rounded-full h-1.5 overflow-hidden border border-white/5 flex">
-            <div class="bg-purple-500 h-full transition-all duration-500" :style="{ width: `${queuePercent}%` }" title="Processed"></div>
-            <div class="bg-pink-500/50 h-full transition-all duration-500" :style="{ width: `${100 - queuePercent}%` }" title="Waiting"></div>
+          <div class="w-full h-1.5 flex gap-0.5 bg-transparent overflow-visible">
+            <div class="bg-gradient-to-r from-purple-600 to-purple-400 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]" :style="{ width: `${queueProcessedPct}%` }" :title="t('home.dashboard.processed')"></div>
+            <div class="bg-gradient-to-r from-pink-500 to-pink-400 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(236,72,153,0.4)]" :style="{ width: `${queueWaitingPct}%` }" :title="t('home.dashboard.waiting')"></div>
           </div>
         </div>
       </div>
@@ -128,6 +133,13 @@ export default {
       return parseFloat(ethers.formatEther(queueInfo.value.todayUsedQuota)).toFixed(2);
     });
 
+    const formattedPending = computed(() => {
+      if (isUnlimited.value) return t('home.dashboard.unlimited');
+      if (queueInfo.value.currentDailyQuota === 0n) return '0.00';
+      const pending = queueInfo.value.currentDailyQuota - queueInfo.value.todayUsedQuota;
+      return parseFloat(ethers.formatEther(pending > 0n ? pending : 0n)).toFixed(2);
+    });
+
     const queuedOrders = computed(() => {
       const diff = Number(queueInfo.value.tailIndex - queueInfo.value.headIndex);
       return diff > 0 ? diff : 0;
@@ -144,21 +156,34 @@ export default {
       return Math.min(100, Math.round((used / total) * 100));
     });
 
-    const queuePercent = computed(() => {
+    const queueProcessedPct = computed(() => {
       const tail = Number(queueInfo.value.tailIndex);
       const head = Number(queueInfo.value.headIndex);
       if (tail === 0) return 0;
+      if (head >= tail) return 100;
       return Math.min(100, Math.round((head / tail) * 100));
+    });
+
+    const queueWaitingPct = computed(() => {
+      const tail = Number(queueInfo.value.tailIndex);
+      const head = Number(queueInfo.value.headIndex);
+      if (tail === 0) return 0;
+      const waiting = tail - head;
+      if (waiting <= 0) return 0;
+      return Math.min(100, Math.round((waiting / tail) * 100));
     });
 
     return {
       queueInfo,
+      isUnlimited,
       formattedQuota,
       formattedUsed,
+      formattedPending,
       queuedOrders,
       formattedReserved,
       quotaPercent,
-      queuePercent,
+      queueProcessedPct,
+      queueWaitingPct,
       t
     };
   }
