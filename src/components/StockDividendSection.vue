@@ -81,9 +81,8 @@ export default {
         // Fetch balance
         balance.value = await stock.balanceOf(walletState.address);
 
-        // Fetch orders (minCompoundCount = 1 to show progress, or 5 to show only releasing)
-        // Let's show min 1 so they see progress
-        const result = await stock.getUserOrderInfos(walletState.address, 1, 0, 100);
+        // Fetch orders (minCompoundCount = 5 to show only eligible orders)
+        const result = await stock.getUserOrderInfos(walletState.address, 5, 0, 100);
         orders.value = result[0].filter(o => o.amount > 0n);
       } catch (error) {
         console.error("Failed to fetch stock data:", error);

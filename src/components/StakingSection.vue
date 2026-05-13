@@ -64,7 +64,7 @@ import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
 import { showToast } from '@/services/notification';
 import StakingABI from '@/abis/Staking.json';
-import ReferralABI from '@/abis/Referral.json';
+import ReferralABI from '@/abis/referral.json';
 import ERC20ABI from '@/abis/usdt.json';
 import { t } from '@/i18n';
 
