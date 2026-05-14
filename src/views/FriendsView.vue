@@ -477,13 +477,15 @@ export default {
     };
 
     const getLevelFromKpi = (kpi) => {
+      const isProd = import.meta.env.VITE_APP_ENV === 'PROD';
+      
       const A1_THRESHOLD = ethers.parseEther("3000");
-      const A2_THRESHOLD = ethers.parseEther("30000");
-      const A3_THRESHOLD = ethers.parseEther("100000");
-      const A4_THRESHOLD = ethers.parseEther("500000");
-      const A5_THRESHOLD = ethers.parseEther("1000000");
-      const A6_THRESHOLD = ethers.parseEther("3000000");
-      const A7_THRESHOLD = ethers.parseEther("5000000");
+      const A2_THRESHOLD = ethers.parseEther(isProd ? "30000" : "6000");
+      const A3_THRESHOLD = ethers.parseEther(isProd ? "100000" : "9000");
+      const A4_THRESHOLD = ethers.parseEther(isProd ? "500000" : "12000");
+      const A5_THRESHOLD = ethers.parseEther(isProd ? "1000000" : "15000");
+      const A6_THRESHOLD = ethers.parseEther(isProd ? "3000000" : "18000");
+      const A7_THRESHOLD = ethers.parseEther(isProd ? "5000000" : "21000");
 
       if (kpi >= A7_THRESHOLD) return 7;
       if (kpi >= A6_THRESHOLD) return 6;
