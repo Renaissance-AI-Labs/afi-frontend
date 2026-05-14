@@ -82,7 +82,7 @@ import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
 import { showToast } from '@/services/notification';
 import A5PoolABI from '@/abis/A5Pool.json';
-import ReferralABI from '@/abis/Referral.json';
+import ReferralABI from '@/abis/referral.json';
 import { t } from '@/i18n';
 
 const ERC20_SYMBOL = ['function symbol() view returns (string)'];
