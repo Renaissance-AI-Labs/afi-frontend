@@ -30,7 +30,7 @@
       <div v-if="orders.length > 0" class="flex flex-col gap-2 overflow-y-auto pr-1 custom-scrollbar" :class="expanded ? 'max-h-[28rem]' : 'max-h-48'">
         <div v-for="order in orders" :key="order.index" class="bg-black/20 border border-white/5 rounded-lg p-2.5 flex flex-col gap-1.5">
           <div class="flex justify-between items-center">
-            <span class="text-sm text-white font-bold tech-font">#{{ order.index }} <span class="text-xs text-gray-300 font-normal">({{ formatUnits(order.amount) }}U)</span></span>
+            <span class="text-sm text-white font-bold tech-font">#{{ Number(order.index) + 1 }} <span class="text-xs text-gray-300 font-normal">({{ formatUnits(order.amount) }}U)</span></span>
             <span class="text-xs text-blue-400">{{ t('home.stock.pending', { amount: formatUnits(order.pending) }) }}</span>
           </div>
           
