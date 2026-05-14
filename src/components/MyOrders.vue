@@ -223,7 +223,6 @@ export default {
     });
     let countdownInterval = null;
     
-    let refreshInterval = null;
     let rewardInterval = null;
     let stakingContract = null;
     let stakeDaysMap = {};
@@ -239,18 +238,13 @@ export default {
       return `${y}/${m}/${d} ${h}:${min}`;
     };
 
-    const fetchOrders = async (isLoadMore = false, isSilent = false) => {
+    const fetchOrders = async (isLoadMore = false) => {
       if (!walletState.isConnected || !walletState.address) return;
-      
-      if (!isLoadMore && !isSilent) {
+
+      if (!isLoadMore) {
         loading.value = true;
         orders.value = [];
         nextCursor.value = 0n;
-      }
-
-      if (isSilent && nextCursor.value > 0n) {
-        // If we are paginating, don't silent refresh the whole list to avoid jumping
-        return;
       }
 
       try {
@@ -270,7 +264,7 @@ export default {
 
         const fetchedRecords = result[0];
         nextCursor.value = result[1];
-        hasMore.value = fetchedRecords.length === 10 && nextCursor.value > 0n;
+        hasMore.value = nextCursor.value > 0n;
 
         const enrichedRecords = await Promise.all(fetchedRecords.map(async (rec) => {
           let currentReward = 0n;
@@ -348,13 +342,13 @@ export default {
       } catch (error) {
         console.error("Failed to fetch orders:", error);
       } finally {
-        if (!isSilent) loading.value = false;
+        loading.value = false;
       }
     };
 
     const updateRewards = async () => {
       if (!walletState.isConnected || !walletState.address || !stakingContract) return;
-      if (props.status === 3 || props.status === 0) return; // Only active/claimable have changing rewards
+      if (props.status !== 1) return; // Only active orders have changing rewards
 
       for (let i = 0; i < orders.value.length; i++) {
         const order = orders.value[i];
@@ -373,12 +367,10 @@ export default {
 
     onMounted(() => {
       fetchOrders();
-      refreshInterval = setInterval(() => fetchOrders(false, true), 15000);
       rewardInterval = setInterval(updateRewards, 6000);
     });
 
     onUnmounted(() => {
-      if (refreshInterval) clearInterval(refreshInterval);
       if (rewardInterval) clearInterval(rewardInterval);
     });
 
