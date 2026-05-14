@@ -19,15 +19,21 @@
         <div
           v-for="pool in pools"
           :key="pool.key"
-          class="bg-black/20 border border-white/5 rounded-lg p-2.5 flex flex-col gap-1.5 min-w-0"
+          class="rounded-lg p-2.5 flex flex-col gap-1.5 min-w-0 relative overflow-hidden transition-all duration-300"
+          :class="pool.isActive ? pool.cardClass : 'bg-black/30 border border-white/5 opacity-75 grayscale-[20%]'"
         >
-          <div class="flex justify-between items-center gap-1 min-w-0">
-            <span class="text-sm text-white font-bold tech-font truncate">{{ pool.shortLabel }}</span>
-            <span
-              v-if="pool.hasReward"
-              class="h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0 shadow-[0_0_6px_rgba(96,165,250,0.7)]"
-              aria-hidden="true"
-            ></span>
+          <!-- Glory Glows -->
+          <div v-if="pool.shortLabel === 'A5' && pool.isActive" class="absolute -top-8 -right-8 w-16 h-16 bg-[#0ea5e9]/10 rounded-full blur-xl pointer-events-none"></div>
+          <div v-if="pool.shortLabel === 'A6' && pool.isActive" class="absolute -top-8 -right-8 w-20 h-20 bg-[#c084fc]/25 rounded-full blur-xl pointer-events-none"></div>
+          <div v-if="pool.shortLabel === 'A7' && pool.isActive" class="absolute -top-8 -right-8 w-24 h-24 bg-[#fde047]/25 rounded-full blur-xl pointer-events-none"></div>
+
+          <div class="flex justify-between items-center gap-1 min-w-0 relative z-10">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-sm font-bold tech-font truncate" :class="pool.isActive ? pool.titleClass : 'text-gray-400'">{{ pool.shortLabel }}</span>
+              <span v-if="pool.isActive" class="px-1.5 py-0.5 rounded text-[8px] bg-white/10 text-gray-300 border border-white/10 whitespace-nowrap">
+                {{ t('equity.currentLevel') }}
+              </span>
+            </div>
           </div>
 
           <div class="w-full min-h-[2.5rem] flex flex-col gap-1 min-w-0">
@@ -35,20 +41,24 @@
               <template v-for="r in pool.rewards" :key="r.token">
                 <div
                   v-if="r.amount > 0n"
-                  class="flex justify-between items-center gap-1 text-[11px] text-gray-400 tech-font min-w-0"
+                  class="flex flex-col gap-0.5 text-[11px] text-gray-400 tech-font min-w-0 bg-black/20 p-1.5 rounded"
                 >
-                  <span class="truncate min-w-0">{{ r.symbol }}</span>
-                  <span class="text-blue-400 font-mono shrink-0 tabular-nums font-semibold">{{ formatTokenAmount(r.amount) }}</span>
+                  <span class="text-blue-400 font-mono tabular-nums font-semibold text-[11px] truncate">{{ formatTokenAmount(r.amount) }}</span>
+                  <span class="truncate text-[10px] text-gray-500 min-w-0">{{ r.symbol }}</span>
                 </div>
               </template>
-              <p v-if="!pool.hasReward" class="text-[11px] text-gray-400 tech-font leading-snug line-clamp-2">
-                {{ t('equity.noPoolReward') }}
-              </p>
+              <div v-if="!pool.hasReward" class="flex flex-col justify-center gap-0.5 text-[11px] text-gray-400 tech-font min-w-0 bg-black/20 p-1.5 rounded min-h-[44px]">
+                <p class="leading-snug line-clamp-2 text-center">
+                  {{ t('equity.noPoolReward') }}
+                </p>
+              </div>
             </template>
-            <p v-else class="text-[11px] text-gray-400 tech-font leading-snug line-clamp-2 flex items-start gap-1">
-              <i class="ph ph-warning-circle text-sm shrink-0 mt-0.5"></i>
-              <span>{{ t('equity.poolNotAvailable') }}</span>
-            </p>
+            <div v-else class="flex flex-col justify-center gap-0.5 text-[11px] text-gray-400 tech-font min-w-0 bg-black/20 p-1.5 rounded min-h-[44px]">
+              <p class="leading-snug line-clamp-2 flex items-center justify-center gap-1">
+                <i class="ph ph-warning-circle text-sm shrink-0"></i>
+                <span>{{ t('equity.poolNotAvailable') }}</span>
+              </p>
+            </div>
           </div>
 
           <button
@@ -72,24 +82,43 @@ import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
 import { showToast } from '@/services/notification';
 import A5PoolABI from '@/abis/A5Pool.json';
+import ReferralABI from '@/abis/Referral.json';
 import { t } from '@/i18n';
 
 const ERC20_SYMBOL = ['function symbol() view returns (string)'];
 
 const POOL_DEFS = [
-  { key: 'A5Pool', shortLabel: 'A5' },
-  { key: 'A6Pool', shortLabel: 'A6' },
-  { key: 'A7Pool', shortLabel: 'A7' }
+  { 
+    key: 'A5Pool', 
+    shortLabel: 'A5',
+    cardClass: 'bg-gradient-to-br from-[#0c4a6e]/30 to-black/30 border border-[#0ea5e9]/20 shadow-[inset_0_0_8px_rgba(14,165,233,0.1)]',
+    titleClass: 'text-[#7dd3fc] drop-shadow-[0_0_6px_rgba(14,165,233,0.4)]'
+  },
+  { 
+    key: 'A6Pool', 
+    shortLabel: 'A6',
+    cardClass: 'bg-gradient-to-br from-[#2e1065]/50 to-black/40 border border-[#c084fc]/40 shadow-[inset_0_0_16px_rgba(192,132,252,0.2)]',
+    titleClass: 'text-[#e9d5ff] drop-shadow-[0_0_10px_rgba(192,132,252,0.7)]'
+  },
+  { 
+    key: 'A7Pool', 
+    shortLabel: 'A7',
+    cardClass: 'bg-gradient-to-br from-[#422006]/50 to-black/50 border border-[#fde047]/40 shadow-[inset_0_0_24px_rgba(253,224,71,0.2)]',
+    titleClass: 'text-[#fef08a] drop-shadow-[0_0_12px_rgba(253,224,71,0.7)] tracking-widest font-black'
+  }
 ];
 
 function emptyPoolState(def) {
   return {
     key: def.key,
     shortLabel: def.shortLabel,
+    cardClass: def.cardClass,
+    titleClass: def.titleClass,
     address: '',
     rewards: [],
     hasReward: false,
-    claiming: false
+    claiming: false,
+    isActive: false
   };
 }
 
@@ -117,7 +146,7 @@ export default {
       }
     };
 
-    const loadPool = async (provider, def) => {
+    const loadPool = async (provider, def, userLevel) => {
       const addr = getContractAddress(def.key);
       if (!addr) {
         return { ...emptyPoolState(def), address: '' };
@@ -142,14 +171,22 @@ export default {
           return { token, symbol, amount };
         })
       );
+      
       const hasReward = rewards.some((r) => r.amount > 0n);
+      
+      const poolLevel = parseInt(def.shortLabel.replace('A', ''));
+      const isActive = poolLevel === userLevel;
+
       return {
         key: def.key,
         shortLabel: def.shortLabel,
+        cardClass: def.cardClass,
+        titleClass: def.titleClass,
         address: addr,
         rewards,
         hasReward,
-        claiming: false
+        claiming: false,
+        isActive
       };
     };
 
@@ -164,7 +201,19 @@ export default {
       }
       loading.value = true;
       try {
-        const next = await Promise.all(POOL_DEFS.map((d) => loadPool(provider, d)));
+        let userLevel = 0;
+        if (walletState.isConnected && walletState.address) {
+          const referralAddress = getContractAddress('Referral');
+          if (referralAddress) {
+            const referralContract = new ethers.Contract(referralAddress, ReferralABI, provider);
+            try {
+              userLevel = Number(await referralContract.levelOf(walletState.address));
+            } catch (e) {
+              console.warn('Failed to fetch user level', e);
+            }
+          }
+        }
+        const next = await Promise.all(POOL_DEFS.map((d) => loadPool(provider, d, userLevel)));
         pools.value = next.map((p) => ({ ...p, claiming: false }));
       } catch (e) {
         console.error('LpPoolGlorySection fetch', e);
