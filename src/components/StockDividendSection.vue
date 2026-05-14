@@ -27,20 +27,43 @@
       </div>
 
       <!-- Orders List -->
-      <div v-if="orders.length > 0" class="flex flex-col gap-2 overflow-y-auto pr-1 custom-scrollbar" :class="expanded ? 'max-h-[28rem]' : 'max-h-48'">
-        <div v-for="order in orders" :key="order.index" class="bg-black/20 border border-white/5 rounded-lg p-2.5 flex flex-col gap-1.5">
+      <div v-if="orders.length > 0" class="flex flex-col gap-3 overflow-y-auto pr-1 custom-scrollbar" :class="expanded ? 'max-h-[32rem]' : 'max-h-64'">
+        <div v-for="order in orders" :key="order.index" class="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-col gap-3">
+          <!-- Header: order number + principal -->
           <div class="flex justify-between items-center">
-            <span class="text-sm text-white font-bold tech-font">#{{ Number(order.index) + 1 }} <span class="text-xs text-gray-300 font-normal">({{ formatUnits(order.amount) }}U)</span></span>
-            <span class="text-xs text-blue-400">{{ t('home.stock.pending', { amount: formatUnits(order.pending) }) }}</span>
-          </div>
-          
-          <div class="w-full bg-black/40 rounded-full h-1.5 overflow-hidden mt-0.5">
-            <div class="bg-blue-500 h-full rounded-full" :style="{ width: `${getProgressPercent(order)}%` }"></div>
+            <span class="text-white tech-font font-bold text-base">#{{ Number(order.index) + 1 }}</span>
+            <span class="text-xs text-gray-300 tech-font">{{ formatUnits(order.amount) }} U</span>
           </div>
 
-          <div class="flex justify-between text-[11px] text-gray-400 tech-font">
-            <span>{{ getProgressPercent(order) }}% ({{ formatUnits(order.vested) }}/{{ formatUnits(order.totalShare) }})</span>
-            <span>{{ formatRate(order.ratePerSecond) }}/{{ t('home.stock.day') }}</span>
+          <!-- Times -->
+          <div class="flex justify-between items-center text-[11px] text-gray-400 tech-font bg-white/5 rounded-lg p-3 border border-white/5">
+            <div class="flex flex-col">
+              <span class="uppercase tracking-wider mb-0.5">{{ t('orders.startTime') }}</span>
+              <span class="text-white font-display">{{ formatDateTime(order.vestStart) }}</span>
+            </div>
+            <div class="w-px h-6 bg-white/10"></div>
+            <div class="flex flex-col text-right">
+              <span class="uppercase tracking-wider mb-0.5">{{ t('orders.endTime') }}</span>
+              <span class="text-white font-display">{{ formatDateTime(order.vestEnd) }}</span>
+            </div>
+          </div>
+
+          <!-- Stats: pending / claimed / per-day -->
+          <div class="flex items-center justify-between bg-white/5 rounded-lg p-3 border border-white/5">
+            <div class="flex flex-col items-center flex-1">
+              <span class="text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('home.stock.pendingShort') }}</span>
+              <span class="text-blue-400 font-display font-bold text-sm">{{ formatUnits(order.pending) }}</span>
+            </div>
+            <div class="w-px h-8 bg-gradient-to-b from-transparent via-white/15 to-transparent"></div>
+            <div class="flex flex-col items-center flex-1">
+              <span class="text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('home.stock.claimed') }}</span>
+              <span class="text-white font-display font-bold text-sm">{{ formatUnits(order.claimed) }}</span>
+            </div>
+            <div class="w-px h-8 bg-gradient-to-b from-transparent via-white/15 to-transparent"></div>
+            <div class="flex flex-col items-center flex-1">
+              <span class="text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('home.stock.perDay') }}</span>
+              <span class="text-app-pink font-display font-bold text-sm">{{ formatRate(order.ratePerSecond) }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -138,11 +161,15 @@ export default {
       return parseFloat(ethers.formatEther(ratePerDay)).toFixed(4);
     };
 
-    const getProgressPercent = (order) => {
-      if (order.totalShare === 0n) return 0;
-      const vested = Number(ethers.formatEther(order.vested));
-      const total = Number(ethers.formatEther(order.totalShare));
-      return Math.min(100, Math.round((vested / total) * 100));
+    const formatDateTime = (timestamp) => {
+      if (!timestamp) return '-';
+      const date = new Date(Number(timestamp) * 1000);
+      const y = date.getFullYear();
+      const m = (date.getMonth() + 1).toString().padStart(2, '0');
+      const d = date.getDate().toString().padStart(2, '0');
+      const h = date.getHours().toString().padStart(2, '0');
+      const min = date.getMinutes().toString().padStart(2, '0');
+      return `${y}/${m}/${d} ${h}:${min}`;
     };
 
     const handleClaimAll = async () => {
@@ -179,7 +206,7 @@ export default {
       claimableIds,
       formatUnits,
       formatRate,
-      getProgressPercent,
+      formatDateTime,
       handleClaimAll,
       t
     };
