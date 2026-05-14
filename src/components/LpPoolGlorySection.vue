@@ -82,7 +82,7 @@ import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
 import { showToast } from '@/services/notification';
 import A5PoolABI from '@/abis/A5Pool.json';
-import ReferralABI from '@/abis/referral.json';
+import StakingABI from '@/abis/Staking.json';
 import { t } from '@/i18n';
 
 const ERC20_SYMBOL = ['function symbol() view returns (string)'];
@@ -146,6 +146,28 @@ export default {
       }
     };
 
+    // Mirrors FriendsView.vue logic: thresholds differ between prod and test
+    const getLevelFromKpi = (kpi) => {
+      const isProd = import.meta.env.VITE_APP_ENV === 'PROD';
+
+      const A1_THRESHOLD = ethers.parseEther('3000');
+      const A2_THRESHOLD = ethers.parseEther(isProd ? '30000' : '6000');
+      const A3_THRESHOLD = ethers.parseEther(isProd ? '100000' : '9000');
+      const A4_THRESHOLD = ethers.parseEther(isProd ? '500000' : '12000');
+      const A5_THRESHOLD = ethers.parseEther(isProd ? '1000000' : '15000');
+      const A6_THRESHOLD = ethers.parseEther(isProd ? '3000000' : '18000');
+      const A7_THRESHOLD = ethers.parseEther(isProd ? '5000000' : '21000');
+
+      if (kpi >= A7_THRESHOLD) return 7;
+      if (kpi >= A6_THRESHOLD) return 6;
+      if (kpi >= A5_THRESHOLD) return 5;
+      if (kpi >= A4_THRESHOLD) return 4;
+      if (kpi >= A3_THRESHOLD) return 3;
+      if (kpi >= A2_THRESHOLD) return 2;
+      if (kpi >= A1_THRESHOLD) return 1;
+      return 0;
+    };
+
     const loadPool = async (provider, def, userLevel) => {
       const addr = getContractAddress(def.key);
       if (!addr) {
@@ -203,13 +225,14 @@ export default {
       try {
         let userLevel = 0;
         if (walletState.isConnected && walletState.address) {
-          const referralAddress = getContractAddress('Referral');
-          if (referralAddress) {
-            const referralContract = new ethers.Contract(referralAddress, ReferralABI, provider);
+          const stakingAddress = getContractAddress('Staking');
+          if (stakingAddress) {
+            const stakingContract = new ethers.Contract(stakingAddress, StakingABI, provider);
             try {
-              userLevel = Number(await referralContract.levelOf(walletState.address));
+              const kpi = await stakingContract.getTeamKpi(walletState.address);
+              userLevel = getLevelFromKpi(kpi);
             } catch (e) {
-              console.warn('Failed to fetch user level', e);
+              console.warn('Failed to fetch user level from staking kpi', e);
             }
           }
         }
