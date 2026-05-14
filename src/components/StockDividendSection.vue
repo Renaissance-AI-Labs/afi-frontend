@@ -48,7 +48,7 @@
             </div>
           </div>
 
-          <!-- Stats: pending / claimed / per-day -->
+          <!-- Stats: pending / claimed -->
           <div class="flex items-center justify-between bg-white/5 rounded-lg p-3 border border-white/5">
             <div class="flex flex-col items-center flex-1">
               <span class="text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('home.stock.pendingShort') }}</span>
@@ -58,11 +58,6 @@
             <div class="flex flex-col items-center flex-1">
               <span class="text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('home.stock.claimed') }}</span>
               <span class="text-white font-display font-bold text-sm">{{ formatUnits(order.claimed) }}</span>
-            </div>
-            <div class="w-px h-8 bg-gradient-to-b from-transparent via-white/15 to-transparent"></div>
-            <div class="flex flex-col items-center flex-1">
-              <span class="text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('home.stock.perDay') }}</span>
-              <span class="text-app-pink font-display font-bold text-sm">{{ formatRate(order.ratePerSecond) }}</span>
             </div>
           </div>
         </div>
@@ -155,12 +150,6 @@ export default {
       return parseFloat(ethers.formatEther(val)).toFixed(2);
     };
 
-    const formatRate = (ratePerSec) => {
-      // rate per day = ratePerSec * 86400
-      const ratePerDay = ratePerSec * 86400n;
-      return parseFloat(ethers.formatEther(ratePerDay)).toFixed(4);
-    };
-
     const formatDateTime = (timestamp) => {
       if (!timestamp) return '-';
       const date = new Date(Number(timestamp) * 1000);
@@ -205,7 +194,6 @@ export default {
       formattedTotalPending,
       claimableIds,
       formatUnits,
-      formatRate,
       formatDateTime,
       handleClaimAll,
       t
