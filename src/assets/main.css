@@ -79,7 +79,7 @@ body {
 
 /* 莫比斯风格标题文字描边和发光效果 */
 .title-moebius {
-    font-family: 'Rye', serif;
+    font-family: 'Rye', 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     color: #fffae6;
     -webkit-text-stroke: 1.5px #111;
     text-shadow: 

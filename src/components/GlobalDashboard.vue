@@ -9,15 +9,15 @@
       <div class="bg-black/30 border border-white/5 rounded-lg p-3 mb-3 grid grid-cols-3 gap-3">
         <div class="text-center">
           <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysQuota') }}</p>
-          <p class="text-base font-display font-bold text-white truncate" :title="formattedQuota">{{ formattedQuota }}</p>
+          <p class="text-base tech-font font-bold text-white truncate" :title="formattedQuota">{{ formattedQuota }}</p>
         </div>
         <div class="text-center">
           <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysUsed') }}</p>
-          <p class="text-base font-display font-bold text-app-pink truncate" :title="formattedUsed">{{ formattedUsed }}</p>
+          <p class="text-base tech-font font-bold text-app-pink truncate" :title="formattedUsed">{{ formattedUsed }}</p>
         </div>
         <div class="text-center">
           <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysPending') }}</p>
-          <p class="text-base font-display font-bold text-blue-400 truncate" :title="formattedPending">{{ formattedPending }}</p>
+          <p class="text-base tech-font font-bold text-blue-400 truncate" :title="formattedPending">{{ formattedPending }}</p>
         </div>
       </div>
 
@@ -28,8 +28,8 @@
             <span>{{ t('home.dashboard.quotaUsage') }}</span>
             <span>{{ isUnlimited ? t('home.dashboard.unlimited') : `${formattedUsed} / ${formattedQuota} U` }} ({{ quotaPercent }}%)</span>
           </div>
-          <div class="w-full bg-black/40 rounded-full h-1.5 overflow-hidden border border-white/5">
-            <div class="bg-gradient-to-r from-pink-500 to-purple-500 h-full rounded-full transition-all duration-500" :style="{ width: `${quotaPercent}%` }"></div>
+          <div class="w-full bg-black/40 rounded-full h-1.5 flex gap-0.5 overflow-visible">
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(236,72,153,0.4)]" :style="{ width: `${quotaPercent}%` }"></div>
           </div>
         </div>
         <div>
@@ -46,9 +46,9 @@
               </span>
             </div>
           </div>
-          <div class="w-full h-1.5 flex gap-0.5 bg-transparent overflow-visible">
-            <div class="bg-gradient-to-r from-purple-600 to-purple-400 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]" :style="{ width: `${queueProcessedPct}%` }" :title="t('home.dashboard.processed')"></div>
-            <div class="bg-gradient-to-r from-pink-500 to-pink-400 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(236,72,153,0.4)]" :style="{ width: `${queueWaitingPct}%` }" :title="t('home.dashboard.waiting')"></div>
+          <div class="w-full bg-black/40 rounded-full h-1.5 flex gap-0.5 overflow-visible">
+            <div class="bg-gradient-to-r from-purple-500 to-purple-400 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]" :style="{ width: `${queueProcessedPct}%` }" :title="t('home.dashboard.processed')"></div>
+            <div class="bg-gradient-to-r from-pink-600 to-pink-400 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(236,72,153,0.4)]" :style="{ width: `${queueWaitingPct}%` }" :title="t('home.dashboard.waiting')"></div>
           </div>
         </div>
       </div>

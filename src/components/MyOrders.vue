@@ -72,8 +72,8 @@
             <div class="flex justify-between items-center bg-white/5 rounded-lg p-3 border border-white/5">
               <span class="text-[11px] text-gray-400 tech-font uppercase tracking-wider">{{ t('orders.currentReward') }}</span>
               <div class="text-right">
-                <span :key="order.currentReward" class="text-lg font-display font-bold text-app-pink animate-number-jump inline-block">{{ formatUnits(order.currentReward) }}</span>
-                <span class="text-xs text-pink-400/70 ml-1">AFI</span>
+                <span :key="order.currentReward" class="text-lg tech-font font-bold text-app-pink animate-number-jump inline-block">{{ formatUnits(order.currentReward) }}</span>
+                <span class="text-xs text-pink-400/70 ml-1">USDT</span>
               </div>
             </div>
 
@@ -82,7 +82,7 @@
           <!-- Final Reward for Completed -->
           <div v-if="status === 3 && !isCancelledQueue(order)" class="bg-white/5 rounded-lg p-3 mb-4 text-center">
             <p class="text-[11px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('orders.finalReward') }}</p>
-            <p class="text-lg font-display font-bold text-app-pink">{{ formatUnits(order.finalReward) }} AFI</p>
+            <p class="text-lg tech-font font-bold text-app-pink">{{ formatUnits(order.finalReward) }} USDT</p>
           </div>
 
           <!-- Cancelled Queue Info -->
@@ -111,7 +111,7 @@
                 {{ actionLoading === order.id ? t('orders.processingAction') : t('orders.redeem') }}
               </button>
               <button 
-                @click="handleCompound(order.id)"
+                @click="handleCompound(order)"
                 :disabled="actionLoading === order.id"
                 class="flex-1 bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 border border-pink-500/30 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
               >
@@ -124,9 +124,9 @@
       </div>
 
       <!-- Load More -->
-      <div v-if="hasMore" class="flex justify-center mt-4">
-        <button @click="loadMore" class="text-sm text-gray-400 hover:text-white transition tech-font">
-          {{ t('orders.loadMore') }}
+      <div v-if="hasMore" class="flex justify-center mt-2 mb-6">
+        <button @click="loadMore" class="bg-white/5 border border-white/10 px-8 py-2.5 rounded-full text-sm text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition tech-font font-bold flex items-center gap-2">
+          {{ t('orders.loadMore') }} <i class="ph ph-caret-down"></i>
         </button>
       </div>
 
@@ -135,24 +135,27 @@
     <!-- Confirmation Modal -->
     <div v-if="confirmModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div class="bg-[#1a153a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-        <h3 class="text-xl font-display text-white mb-3 tech-font">{{ confirmModal.title }}</h3>
+        <h3 class="text-xl tech-font font-bold text-white mb-3">{{ confirmModal.title }}</h3>
         <div v-if="confirmModal.modalType === 'redeem' && confirmModal.redeemMeta" class="space-y-3 mb-6">
           <p class="text-sm text-gray-300 tech-font leading-relaxed">
             {{ t('orders.redeemCompoundLine', { count: confirmModal.redeemMeta.compoundCount }) }}
           </p>
           <div class="rounded-lg border border-cyan-500/25 bg-cyan-500/10 p-3">
             <p class="text-[10px] text-cyan-200/80 tech-font uppercase tracking-wider mb-1">{{ t('orders.redeemPrincipalLead') }}</p>
-            <p class="text-base font-display font-bold text-cyan-300 leading-snug">
+            <p class="text-base tech-font font-bold text-cyan-300 leading-snug">
               {{ t('orders.redeemPrincipalDetail', { pct: confirmModal.redeemMeta.principalPct, amount: confirmModal.redeemMeta.principalUsdt }) }}
             </p>
           </div>
           <div class="rounded-lg border border-pink-500/25 bg-pink-500/10 p-3">
             <p class="text-[10px] text-pink-200/80 tech-font uppercase tracking-wider mb-1">{{ t('orders.redeemInterestLead') }}</p>
-            <p class="text-base font-display font-bold text-app-pink leading-snug">
+            <p class="text-base tech-font font-bold text-app-pink leading-snug">
               {{ t('orders.redeemInterestDetail', { amount: confirmModal.redeemMeta.interestAfi }) }}
             </p>
           </div>
           <p class="text-[11px] text-gray-500 tech-font">{{ t('orders.redeemNote') }}</p>
+        </div>
+        <div v-else-if="confirmModal.modalType === 'compound' && confirmModal.compoundMeta" class="mb-6">
+          <p class="text-sm text-gray-300 tech-font leading-relaxed mb-2" v-html="t('orders.compoundConfirmDesc', { amount: `<span class='text-cyan-300 font-bold'>${confirmModal.compoundMeta.interestUsdt} USDT</span>` })"></p>
         </div>
         <p v-else class="text-sm text-gray-300 tech-font mb-6 leading-relaxed">{{ confirmModal.message }}</p>
         
@@ -215,7 +218,8 @@ export default {
       loading: false,
       isDestructive: false,
       modalType: null,
-      redeemMeta: null
+      redeemMeta: null,
+      compoundMeta: null
     });
     let countdownInterval = null;
     
@@ -266,7 +270,7 @@ export default {
 
         const fetchedRecords = result[0];
         nextCursor.value = result[1];
-        hasMore.value = nextCursor.value > 0n;
+        hasMore.value = fetchedRecords.length === 10 && nextCursor.value > 0n;
 
         const enrichedRecords = await Promise.all(fetchedRecords.map(async (rec) => {
           let currentReward = 0n;
@@ -444,7 +448,8 @@ export default {
       requireCountdown = false,
       isDestructive = false,
       modalType = null,
-      redeemMeta = null
+      redeemMeta = null,
+      compoundMeta = null
     }) => {
       if (countdownInterval) {
         clearInterval(countdownInterval);
@@ -459,7 +464,8 @@ export default {
         loading: false,
         isDestructive,
         modalType,
-        redeemMeta
+        redeemMeta,
+        compoundMeta
       };
 
       if (requireCountdown) {
@@ -536,11 +542,12 @@ export default {
         const pct = BigInt(pctBn);
         const principalWei = (amt * pct) / 100n;
         const principalPct = Number(pct);
+        const interestWei = rewardWei > amt ? rewardWei - amt : 0n;
         const redeemMeta = {
           compoundCount: Number(order.compoundCount ?? 0),
           principalPct: Number.isFinite(principalPct) ? principalPct : 0,
           principalUsdt: formatUnits(principalWei),
-          interestAfi: formatUnits(rewardWei)
+          interestAfi: formatUnits(interestWei)
         };
         openConfirmModal({
           title: t('orders.redeemConfirmTitle'),
@@ -571,10 +578,20 @@ export default {
       }
     };
 
-    const handleCompound = (id) => {
+    const handleCompound = (order) => {
+      const id = order.id;
+      const amt = BigInt(order.amount ?? 0n);
+      const totalReward = BigInt(order.currentReward ?? 0n);
+      const interestWei = totalReward > amt ? totalReward - amt : 0n;
+      const interestUsdt = formatUnits(interestWei);
+
       openConfirmModal({
         title: t('orders.compoundConfirmTitle'),
         message: t('orders.compoundConfirmDesc'),
+        modalType: 'compound',
+        compoundMeta: {
+          interestUsdt
+        },
         action: async () => {
           actionLoading.value = id;
           try {
