@@ -23,9 +23,37 @@ export const CONTRACT_ADDRESSES = {
     testnet: '0x13ccDdd74b3D29D6Fe07391885d465d380942BF6',
     mainnet: '0xd10f6abA776974D3aA107838802894e0Fb113424',
   },
-  IStaking: {
-    testnet: '', // Placeholder: ABI/address not provided yet
-    mainnet: '', // Placeholder: ABI/address not provided yet
+  A5Pool: {
+    testnet: '0x8e46eFEd268aEEA9F268339601b51BaC18B6c31A',
+    mainnet: '0xA853A77E60D1c525D07b9223e330e7aEc8c600FD',
+  },
+  A6Pool: {
+    testnet: '0x56f116510d1F48dD275804163eAE20646da3bAe8',
+    mainnet: '0x4656E9634adf4EE7C1CE352347ec34713e8cb62a',
+  },
+  A7Pool: {
+    testnet: '0xDed835BCc0c81eeb729BAD0885d6d5F5a18d69f9',
+    mainnet: '0x62726C353d45843185EbB8943379B093e6fea7F4',
+  },
+  Staking: {
+    testnet: '0xf118cEE105FEb74aB34fbC1B5b00A0D6Dce74C41',
+    mainnet: '0x2f34aEEEA3D0fe9dF68101b52ee24eFBc5B45544',
+  },
+  AFI: {
+    testnet: '0x62726C353d45843185EbB8943379B093e6fea7F4',
+    mainnet: '0x0974F19b850eBA2801D988046194415e5BB748cA',
+  },
+  AFI_USDT_LP: {
+    testnet: '0x64a8B0F8b3A3448Dc77E81C2331b49207B0d84d5',
+    mainnet: '0x12E420d8B19BBFc628CE2CFA1f1BAE12D65792B2',
+  },
+  Stock: {
+    testnet: '0x2f34aEEEA3D0fe9dF68101b52ee24eFBc5B45544',
+    mainnet: '0x5E5d612b52c4c0fDE7a719B218c2e178396f569a',
+  },
+  StakingView: {
+    testnet: '0x0941890665bC76C4dF1D83cdf49cC2294359BdE8', 
+    mainnet: '0x74a4Bd0f030bA5f9F0a5aC84441C5e12233D28A0',
   }
 };
 

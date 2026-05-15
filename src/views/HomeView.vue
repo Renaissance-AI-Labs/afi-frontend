@@ -1,32 +1,46 @@
 <template>
-  <div class="home-view flex flex-col min-h-[calc(100vh-140px)]">
-    <!-- 头部区域 (背景图) -->
-    <div class="hero-bg flex-1 w-full flex flex-col relative pb-10">
-        <Header @open-get-started-modal="$emit('open-get-started-modal')" @open-language-modal="$emit('open-language-modal')" />
+  <div class="home-view relative min-h-[calc(100vh-140px)] flex flex-col pb-20">
+    <!-- Fixed Background Image and Glows -->
+    <div class="fixed inset-0 z-0 pointer-events-none">
+      <img src="/asset/images/logo/bg.png" alt="background" class="absolute inset-0 w-full h-full object-cover" />
+      <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-pink-500/50 rounded-full blur-[80px] mix-blend-screen animate-glow-float-slow"></div>
+      <div class="absolute bottom-[10%] right-[-10%] w-[60%] h-[60%] bg-purple-500/50 rounded-full blur-[100px] mix-blend-screen animate-glow-float-delayed"></div>
+    </div>
 
+    <!-- Header -->
+    <div class="relative z-20">
+      <Header @open-get-started-modal="$emit('open-get-started-modal')" @open-language-modal="$emit('open-language-modal')" />
+    </div>
+
+    <!-- Hero Section -->
+    <section class="w-full flex flex-col relative z-20 pt-10 items-center justify-center">
         <!-- 大标题 -->
-        <div class="flex-1 flex flex-col items-center justify-center z-10 px-4 text-center">
+        <div class="flex flex-col items-center justify-center px-4 text-center">
             <h1 class="title-moebius text-5xl mb-2">AGENT.FI</h1>
             <p class="subtitle-moebius font-bold text-[11px] tracking-widest">{{ t('home.heroSubtitle') }}</p>
         </div>
+    </section>
 
-        <!-- Fade hero image into app container background -->
-        <div
-            class="hero-bottom-fade pointer-events-none absolute bottom-0 left-0 z-[1] w-full"
-            aria-hidden="true"
-        />
+    <!-- Content Sections -->
+    <div class="home-content-wrapper relative z-20 w-full max-w-4xl mx-auto px-4 flex flex-col gap-4 mt-[40px]">
+      <GlobalDashboard />
+      <StakingSection />
     </div>
   </div>
 </template>
 
 <script>
 import Header from '@/components/Header.vue';
+import GlobalDashboard from '@/components/GlobalDashboard.vue';
+import StakingSection from '@/components/StakingSection.vue';
 import { t } from '@/i18n';
 
 export default {
   name: 'HomeView',
   components: {
-    Header
+    Header,
+    GlobalDashboard,
+    StakingSection
   },
   setup() {
     return {
@@ -37,17 +51,17 @@ export default {
 </script>
 
 <style scoped>
-/* Match .app-container background (#1a153a); long ease so the image meets footer area cleanly */
-.hero-bottom-fade {
-    height: min(42vh, 280px);
-    bottom: -2px !important;
-    background: linear-gradient(
-        to top,
-        #1a153a 0%,
-        rgba(26, 21, 58, 0.92) 12%,
-        rgba(26, 21, 58, 0.65) 38%,
-        rgba(26, 21, 58, 0.28) 68%,
-        transparent 100%
-    );
+.tech-font {
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out backwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

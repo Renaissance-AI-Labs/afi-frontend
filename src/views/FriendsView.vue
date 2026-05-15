@@ -263,10 +263,12 @@ import Header from '@/components/Header.vue';
 import { walletState, formatAddress } from '@/services/wallet.js';
 import { showToast } from '@/services/notification.js';
 import { getContractAddress } from '@/services/contracts.js';
+import { IS_PROD } from '@/services/environment.js';
 import { t } from '@/i18n';
 import { ethers } from 'ethers';
 import referralAbi from '@/abis/referral.json';
 import nodeAbi from '@/abis/node.json';
+import stakingAbi from '@/abis/Staking.json';
 
 export default {
   name: 'FriendsView',
@@ -467,6 +469,33 @@ export default {
       return new ethers.Contract(address, nodeAbi, provider);
     };
 
+    const getStakingContract = () => {
+      const address = getContractAddress('Staking');
+      if (!address) return null;
+      const provider = getProvider();
+      if (!provider) return null;
+      return new ethers.Contract(address, stakingAbi, provider);
+    };
+
+    const getLevelFromKpi = (kpi) => {
+      const A1_THRESHOLD = ethers.parseEther("3000");
+      const A2_THRESHOLD = ethers.parseEther(IS_PROD ? "30000" : "6000");
+      const A3_THRESHOLD = ethers.parseEther(IS_PROD ? "100000" : "9000");
+      const A4_THRESHOLD = ethers.parseEther(IS_PROD ? "500000" : "12000");
+      const A5_THRESHOLD = ethers.parseEther(IS_PROD ? "1000000" : "15000");
+      const A6_THRESHOLD = ethers.parseEther(IS_PROD ? "3000000" : "18000");
+      const A7_THRESHOLD = ethers.parseEther(IS_PROD ? "5000000" : "21000");
+
+      if (kpi >= A7_THRESHOLD) return 7;
+      if (kpi >= A6_THRESHOLD) return 6;
+      if (kpi >= A5_THRESHOLD) return 5;
+      if (kpi >= A4_THRESHOLD) return 4;
+      if (kpi >= A3_THRESHOLD) return 3;
+      if (kpi >= A2_THRESHOLD) return 2;
+      if (kpi >= A1_THRESHOLD) return 1;
+      return 0;
+    };
+
     const fetchReferralData = async () => {
       if (!walletState.isConnected || !walletState.address) return;
       
@@ -500,9 +529,16 @@ export default {
           
           const directs = await nodeContract.activatedDirects(walletState.address);
           activatedDirects.value = Number(directs);
-          
-          const level = await nodeContract.userLevel(walletState.address);
-          myLevel.value = Number(level);
+        }
+        
+        const stakingContract = getStakingContract();
+        if (stakingContract) {
+          try {
+            const kpi = await stakingContract.getTeamKpi(walletState.address);
+            myLevel.value = getLevelFromKpi(kpi);
+          } catch (e) {
+            console.error("Error fetching my staking kpi", e);
+          }
         }
         
         loadChildren(true);
@@ -556,6 +592,8 @@ export default {
         if (newChildren && newChildren.length > 0) {
           const validChildren = newChildren.filter(addr => addr !== ethers.ZeroAddress);
           
+          const stakingContract = getStakingContract();
+          
           const childObjects = await Promise.all(validChildren.map(async (addr) => {
             let level = 0;
             let userHasActivated = false;
@@ -563,10 +601,18 @@ export default {
             
             if (nodeContract) {
               try {
-                level = await nodeContract.userLevel(addr);
                 userHasActivated = await nodeContract.userHasActivated(addr);
               } catch (e) {
                 console.error("Error fetching child node data", e);
+              }
+            }
+
+            if (stakingContract) {
+              try {
+                const kpi = await stakingContract.getTeamKpi(addr);
+                level = getLevelFromKpi(kpi);
+              } catch (e) {
+                console.error("Error fetching child staking kpi", e);
               }
             }
 
