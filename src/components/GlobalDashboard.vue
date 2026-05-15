@@ -6,27 +6,31 @@
         <i class="ph-fill ph-chart-line-up text-app-pink"></i> {{ t('home.dashboard.title') }}
       </h2>
       
-      <div class="bg-black/30 border border-white/5 rounded-lg p-3 mb-3 grid grid-cols-3 gap-3">
+      <div class="bg-black/30 border border-white/5 rounded-lg p-3 mb-3 grid gap-3" :class="isWhitelisted ? 'grid-cols-3' : 'grid-cols-2'">
         <div class="text-center">
           <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysQuota') }}</p>
           <p class="text-base tech-font font-bold text-white truncate" :title="formattedQuota">{{ formattedQuota }}</p>
         </div>
-        <div class="text-center">
+        <div class="text-center" v-if="isWhitelisted">
           <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysUsed') }}</p>
           <p class="text-base tech-font font-bold text-app-pink truncate" :title="formattedUsed">{{ formattedUsed }}</p>
         </div>
-        <div class="text-center">
+        <div class="text-center" v-if="isWhitelisted">
           <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysPending') }}</p>
           <p class="text-base tech-font font-bold text-blue-400 truncate" :title="formattedPending">{{ formattedPending }}</p>
+        </div>
+        <div class="text-center" v-if="!isWhitelisted">
+          <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.processed') }}</p>
+          <p class="text-base tech-font font-bold text-purple-400 truncate" :title="queueInfo.headIndex">{{ queueInfo.headIndex }}</p>
         </div>
       </div>
 
       <!-- Progress Bars -->
-      <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-3" v-if="isWhitelisted">
         <div>
           <div class="flex justify-between text-[11px] text-gray-300 tech-font mb-1">
             <span>{{ t('home.dashboard.quotaUsage') }}</span>
-            <span>{{ isUnlimited ? t('home.dashboard.unlimited') : `${formattedUsed} / ${formattedQuota} U` }} ({{ quotaPercent }}%)</span>
+            <span>{{ isUnlimited ? t('home.dashboard.unlimited') : `${formattedUsed} / ${formattedQuota} U` }}</span>
           </div>
           <div class="w-full bg-black/40 rounded-full h-1.5 flex gap-0.5 overflow-visible">
             <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(236,72,153,0.4)]" :style="{ width: `${quotaPercent}%` }"></div>
@@ -61,6 +65,7 @@ import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { ethers } from 'ethers';
 import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
+import { GLOBAL_DASHBOARD_WHITELIST, getDefaultRpcUrl } from '@/services/environment';
 import StakingViewABI from '@/abis/StakingView.json';
 import { t } from '@/i18n';
 
@@ -84,10 +89,7 @@ export default {
         let provider = walletState.provider;
         if (!provider) {
           // Use public RPC if wallet not connected
-          const rpcUrl = import.meta.env.VITE_APP_ENV === 'PROD' 
-            ? 'https://bsc-rpc.publicnode.com' 
-            : 'https://bsc-testnet-rpc.publicnode.com';
-          provider = new ethers.JsonRpcProvider(rpcUrl);
+          provider = new ethers.JsonRpcProvider(getDefaultRpcUrl());
         }
         
         const stakingViewAddress = getContractAddress('StakingView');
@@ -117,6 +119,12 @@ export default {
 
     onUnmounted(() => {
       if (refreshInterval) clearInterval(refreshInterval);
+    });
+
+    const isWhitelisted = computed(() => {
+      const address = walletState.address;
+      if (!address) return false;
+      return GLOBAL_DASHBOARD_WHITELIST.includes(address.toLowerCase());
     });
 
     const isUnlimited = computed(() => {
@@ -175,6 +183,7 @@ export default {
 
     return {
       queueInfo,
+      isWhitelisted,
       isUnlimited,
       formattedQuota,
       formattedUsed,

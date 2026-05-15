@@ -35,7 +35,7 @@
               v-model="stakeAmount" 
               type="number" 
               class="w-full bg-black/40 border border-white/10 rounded-lg py-2 px-3 text-white font-display text-lg focus:outline-none focus:border-purple-500 transition-colors"
-              :placeholder="t('home.staking.minMax', { min: minAmount, max: maxAmount })"
+              :placeholder="maxAmount > 0 ? t('home.staking.minMax', { min: minAmount, max: maxAmount }) : t('common.loading')"
             />
             <button @click="setMaxAmount" class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] bg-white/10 hover:bg-white/20 text-white px-2 py-1 rounded transition-colors tech-font">
               {{ t('home.staking.max') }}
@@ -62,6 +62,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { ethers } from 'ethers';
 import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
+import { getDefaultRpcUrl, IS_PROD } from '@/services/environment';
 import { showToast } from '@/services/notification';
 import StakingABI from '@/abis/Staking.json';
 import ReferralABI from '@/abis/referral.json';
@@ -71,23 +72,20 @@ import { t } from '@/i18n';
 export default {
   name: 'StakingSection',
   setup() {
-    const stakeAmount = ref('100');
+    const stakeAmount = ref('');
     const selectedProductIndex = ref(0);
     const products = ref([]);
     const isStaking = ref(false);
     
-    const minAmount = ref(10);
-    const maxAmount = ref(1000);
+    const minAmount = ref(0);
+    const maxAmount = ref(0);
     const usdtBalance = ref(0n);
 
     const fetchStakingData = async () => {
       try {
         let provider = walletState.provider;
         if (!provider) {
-          const rpcUrl = import.meta.env.VITE_APP_ENV === 'PROD' 
-            ? 'https://bsc-rpc.publicnode.com' 
-            : 'https://bsc-testnet-rpc.publicnode.com';
-          provider = new ethers.JsonRpcProvider(rpcUrl);
+          provider = new ethers.JsonRpcProvider(getDefaultRpcUrl());
         }
         
         const stakingAddress = getContractAddress('Staking');
@@ -231,8 +229,7 @@ export default {
         let amountOutMin = 0n;
         try {
           const out = await router.getAmountsOut(stakeRaw / 2n, [usdtAddress, afiAddress]);
-          const isProd = import.meta.env.VITE_APP_ENV === 'PROD';
-          const slippageMultiplier = isProd ? 9n : 7n; // 10% slippage for PROD, 30% for Testnet
+          const slippageMultiplier = IS_PROD ? 9n : 7n; // 10% slippage for PROD, 30% for Testnet
           amountOutMin = (out[1] * slippageMultiplier) / 10n;
         } catch (e) {
           console.warn("Failed to estimate amountOutMin, defaulting to 0", e);
@@ -245,7 +242,7 @@ export default {
         
         showToast(t('home.staking.success'), 'success');
         fetchUserBalance();
-        stakeAmount.value = '100';
+        stakeAmount.value = '';
       } catch (error) {
         console.error(error);
         if (error.code === 4001 || error.code === 'ACTION_REJECTED') {
