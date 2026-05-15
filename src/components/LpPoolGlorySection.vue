@@ -80,6 +80,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { ethers } from 'ethers';
 import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
+import { getDefaultRpcUrl, IS_PROD } from '@/services/environment';
 import { showToast } from '@/services/notification';
 import A5PoolABI from '@/abis/A5Pool.json';
 import StakingABI from '@/abis/Staking.json';
@@ -148,15 +149,13 @@ export default {
 
     // Mirrors FriendsView.vue logic: thresholds differ between prod and test
     const getLevelFromKpi = (kpi) => {
-      const isProd = import.meta.env.VITE_APP_ENV === 'PROD';
-
       const A1_THRESHOLD = ethers.parseEther('3000');
-      const A2_THRESHOLD = ethers.parseEther(isProd ? '30000' : '6000');
-      const A3_THRESHOLD = ethers.parseEther(isProd ? '100000' : '9000');
-      const A4_THRESHOLD = ethers.parseEther(isProd ? '500000' : '12000');
-      const A5_THRESHOLD = ethers.parseEther(isProd ? '1000000' : '15000');
-      const A6_THRESHOLD = ethers.parseEther(isProd ? '3000000' : '18000');
-      const A7_THRESHOLD = ethers.parseEther(isProd ? '5000000' : '21000');
+      const A2_THRESHOLD = ethers.parseEther(IS_PROD ? '30000' : '6000');
+      const A3_THRESHOLD = ethers.parseEther(IS_PROD ? '100000' : '9000');
+      const A4_THRESHOLD = ethers.parseEther(IS_PROD ? '500000' : '12000');
+      const A5_THRESHOLD = ethers.parseEther(IS_PROD ? '1000000' : '15000');
+      const A6_THRESHOLD = ethers.parseEther(IS_PROD ? '3000000' : '18000');
+      const A7_THRESHOLD = ethers.parseEther(IS_PROD ? '5000000' : '21000');
 
       if (kpi >= A7_THRESHOLD) return 7;
       if (kpi >= A6_THRESHOLD) return 6;
@@ -215,11 +214,7 @@ export default {
     const fetchAll = async () => {
       let provider = walletState.provider;
       if (!provider) {
-        const rpcUrl =
-          import.meta.env.VITE_APP_ENV === 'PROD'
-            ? 'https://bsc-rpc.publicnode.com'
-            : 'https://bsc-testnet-rpc.publicnode.com';
-        provider = new ethers.JsonRpcProvider(rpcUrl);
+        provider = new ethers.JsonRpcProvider(getDefaultRpcUrl());
       }
       loading.value = true;
       try {
