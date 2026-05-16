@@ -229,7 +229,10 @@ export default {
         let amountOutMin = 0n;
         try {
           const out = await router.getAmountsOut(stakeRaw / 2n, [usdtAddress, afiAddress]);
-          const slippageMultiplier = IS_PROD ? 9n : 7n; // 10% slippage for PROD, 30% for Testnet
+          // Keep PROD and Testnet multipliers separate so they can be tuned independently.
+          const slippageMultiplier = IS_PROD
+            ? 7n  // PROD: 30% slippage
+            : 7n; // Testnet: 30% slippage
           amountOutMin = (out[1] * slippageMultiplier) / 10n;
         } catch (e) {
           console.warn("Failed to estimate amountOutMin, defaulting to 0", e);
