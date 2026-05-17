@@ -52,8 +52,20 @@
               </div>
               <div class="h-8 w-px bg-white/10"></div>
               <div class="flex flex-col items-center flex-1">
+                <span class="text-[12px] text-gray-300 tech-font mb-1">{{ t('friends.stats.myStaked') }}</span>
+                <span class="text-[17px] font-bold text-white font-display">{{ myStakedBalanceText }}</span>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <div class="flex flex-col items-center flex-1">
                 <span class="text-[12px] text-gray-300 tech-font mb-1">{{ t('friends.stats.teamCount') }}</span>
                 <span class="text-[17px] font-bold text-white font-display">{{ teamCount }} <span class="text-[11px] text-gray-400 font-normal tech-font">{{ t('common.people') }}</span></span>
+              </div>
+              <div class="h-8 w-px bg-white/10"></div>
+              <div class="flex flex-col items-center flex-1">
+                <span class="text-[12px] text-gray-300 tech-font mb-1">{{ t('friends.stats.teamKpi') }}</span>
+                <span class="text-[17px] font-bold text-white font-display">{{ myTeamKpiText }}</span>
               </div>
             </div>
 
@@ -104,24 +116,40 @@
                 </div>
               </div>
               
-              <div class="flex justify-between items-center bg-black/20 rounded-lg p-3 border border-white/10">
-                <div class="flex flex-col items-center flex-1">
-                  <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.friendLevel') }}</span>
-                  <div class="flex items-center gap-1">
-                    <span class="text-[15px] font-bold text-white font-display">A{{ currentChild.level !== null ? currentChild.level : '...' }}</span>
+              <div class="flex flex-col gap-3 bg-black/20 rounded-lg p-3 border border-white/10">
+                <div class="flex justify-between items-center">
+                  <div class="flex flex-col items-center flex-1">
+                    <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.friendLevel') }}</span>
+                    <div class="flex items-center gap-1">
+                      <span class="text-[15px] font-bold text-white font-display">A{{ currentChild.level !== null ? currentChild.level : '...' }}</span>
+                    </div>
+                  </div>
+                  <div class="h-8 w-px bg-white/10"></div>
+                  <div class="flex flex-col items-center flex-1">
+                    <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.isActivated') }}</span>
+                    <span class="text-[15px] font-bold tech-font" :class="currentChild.userHasActivated ? 'text-green-400' : 'text-gray-300'">
+                      {{ currentChild.userHasActivated ? t('friends.list.activated') : t('friends.list.notActivated') }}
+                    </span>
+                  </div>
+                  <div class="h-8 w-px bg-white/10"></div>
+                  <div class="flex flex-col items-center flex-1">
+                    <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.staked') }}</span>
+                    <span class="text-[15px] font-bold text-white font-display">{{ formatTokenAmount(currentChild.stakedBalanceRaw) }}</span>
                   </div>
                 </div>
-                <div class="h-8 w-px bg-white/10"></div>
-                <div class="flex flex-col items-center flex-1">
-                  <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.isActivated') }}</span>
-                  <span class="text-[15px] font-bold tech-font" :class="currentChild.userHasActivated ? 'text-green-400' : 'text-gray-300'">
-                    {{ currentChild.userHasActivated ? t('friends.list.activated') : t('friends.list.notActivated') }}
-                  </span>
-                </div>
-                <div class="h-8 w-px bg-white/10"></div>
-                <div class="flex flex-col items-center flex-1">
-                  <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.teamCount') }}</span>
-                  <span class="text-[15px] font-bold text-white font-display">{{ currentChild.teamCount }}</span>
+
+                <div class="h-px w-full bg-white/10"></div>
+
+                <div class="flex justify-between items-center">
+                  <div class="flex flex-col items-center flex-1">
+                    <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.teamCount') }}</span>
+                    <span class="text-[15px] font-bold text-white font-display">{{ currentChild.teamCount }}</span>
+                  </div>
+                  <div class="h-8 w-px bg-white/10"></div>
+                  <div class="flex flex-col items-center flex-1">
+                    <span class="text-[11px] text-gray-300 tech-font mb-1">{{ t('friends.list.teamKpi') }}</span>
+                    <span class="text-[15px] font-bold text-white font-display">{{ formatTokenAmount(currentChild.teamKpiRaw) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -165,15 +193,15 @@
           <p class="text-[12px] text-gray-300 mb-3 relative z-10 tech-font">{{ t('friends.referral.shareDesc') }}</p>
           
           <div class="flex flex-col gap-3 relative z-10">
-            <div class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 break-all text-[13px] text-white text-center min-h-[60px] flex items-center justify-center tech-font leading-5" :class="{ 'opacity-60': !isBound || !hasPurchasedNFT }">
+            <div class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 break-all text-[13px] text-white text-center min-h-[60px] flex items-center justify-center tech-font leading-5" :class="{ 'opacity-60': !isBound || !hasStakedEnough }">
               <span v-if="!walletState.isConnected">{{ t('common.connectWalletFirst') }}</span>
               <span v-else-if="!isBound">{{ t('nft.messages.bindReferrerFirst') }}</span>
-              <span v-else-if="!hasPurchasedNFT" class="text-app-pink">{{ t('friends.referral.buyNftFirst') }}</span>
+              <span v-else-if="!hasStakedEnough" class="text-app-pink">{{ t('friends.referral.stakeFirst') }}</span>
               <span v-else>{{ myReferralLink }}</span>
             </div>
             <button 
               @click="copyText(myReferralLink)"
-              :disabled="!walletState.isConnected || !isBound || !hasPurchasedNFT"
+              :disabled="!walletState.isConnected || !isBound || !hasStakedEnough"
               class="w-full bg-white/5 text-white border border-white/10 text-[13px] font-bold py-3 rounded-lg hover:bg-white/10 hover:border-pink-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 tech-font active:scale-95"
             >
               <i class="ph ph-copy text-lg"></i>
@@ -283,7 +311,14 @@ export default {
     const referralCount = ref(0);
     const teamCount = ref(0);
     const activatedDirects = ref(0);
-    const hasPurchasedNFT = ref(false);
+    const hasStakedEnough = ref(false);
+    // Minimum stake required to unlock the invite link feature (10 USDT, 18-decimals).
+    const MIN_STAKE_FOR_INVITE = ethers.parseEther('10');
+
+    // Raw on-chain values for the current user (BigInt, 18-decimals). Used both for display
+    // and (for KPI) to derive the user's level via getLevelFromKpi().
+    const myStakedBalanceRaw = ref(0n);
+    const myTeamKpiRaw = ref(0n);
     
     // Carousel & List State
     const childrenList = ref([]);
@@ -426,6 +461,23 @@ export default {
     };
 
     const myLevelIconSvg = computed(() => getLevelBadgeSvg(myLevel.value));
+
+    // Format an 18-decimals BigInt into a short, human readable token amount (e.g. 1.23K / 4.56M).
+    const formatTokenAmount = (raw) => {
+      if (raw === null || raw === undefined) return '--';
+      try {
+        const num = parseFloat(ethers.formatEther(raw));
+        if (!isFinite(num)) return '--';
+        if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'M';
+        if (num >= 1_000) return (num / 1_000).toFixed(2) + 'K';
+        return num.toFixed(2);
+      } catch (e) {
+        return '--';
+      }
+    };
+
+    const myStakedBalanceText = computed(() => formatTokenAmount(myStakedBalanceRaw.value));
+    const myTeamKpiText = computed(() => formatTokenAmount(myTeamKpiRaw.value));
     
     // Referral State
     const referrerInput = ref('');
@@ -439,7 +491,7 @@ export default {
     const confirmAddress = ref('');
 
     const myReferralLink = computed(() => {
-      if (!walletState.isConnected || !isBound.value || !hasPurchasedNFT.value) return '';
+      if (!walletState.isConnected || !isBound.value || !hasStakedEnough.value) return '';
       const baseUrl = window.location.origin + window.location.pathname;
       return `${baseUrl}?ref=${walletState.address}`;
     });
@@ -524,9 +576,6 @@ export default {
         }
 
         if (nodeContract) {
-          const balance = await nodeContract.balanceOf(walletState.address);
-          hasPurchasedNFT.value = Number(balance) > 0;
-          
           const directs = await nodeContract.activatedDirects(walletState.address);
           activatedDirects.value = Number(directs);
         }
@@ -535,9 +584,29 @@ export default {
         if (stakingContract) {
           try {
             const kpi = await stakingContract.getTeamKpi(walletState.address);
+            myTeamKpiRaw.value = kpi;
             myLevel.value = getLevelFromKpi(kpi);
           } catch (e) {
             console.error("Error fetching my staking kpi", e);
+            myTeamKpiRaw.value = 0n;
+          }
+
+          try {
+            // The invite link is unlocked once the user has staked the minimum required amount.
+            const stakedBalance = await stakingContract.balances(walletState.address);
+            hasStakedEnough.value = stakedBalance >= MIN_STAKE_FOR_INVITE;
+          } catch (e) {
+            console.error("Error fetching my staking balance check", e);
+            hasStakedEnough.value = false;
+          }
+
+          try {
+            // Total staked value (principal + accrued interest) used for display.
+            const balance = await stakingContract.balanceOf(walletState.address);
+            myStakedBalanceRaw.value = balance;
+          } catch (e) {
+            console.error("Error fetching my staked balance", e);
+            myStakedBalanceRaw.value = 0n;
           }
         }
         
@@ -598,6 +667,8 @@ export default {
             let level = 0;
             let userHasActivated = false;
             let teamCount = 0;
+            let teamKpiRaw = 0n;
+            let stakedBalanceRaw = 0n;
             
             if (nodeContract) {
               try {
@@ -609,10 +680,17 @@ export default {
 
             if (stakingContract) {
               try {
-                const kpi = await stakingContract.getTeamKpi(addr);
-                level = getLevelFromKpi(kpi);
+                teamKpiRaw = await stakingContract.getTeamKpi(addr);
+                level = getLevelFromKpi(teamKpiRaw);
               } catch (e) {
                 console.error("Error fetching child staking kpi", e);
+              }
+
+              try {
+                // Friend's total staked value (principal + accrued interest).
+                stakedBalanceRaw = await stakingContract.balanceOf(addr);
+              } catch (e) {
+                console.error("Error fetching child staked balance", e);
               }
             }
 
@@ -626,7 +704,9 @@ export default {
               address: addr,
               level: Number(level),
               userHasActivated,
-              teamCount: Number(teamCount)
+              teamCount: Number(teamCount),
+              stakedBalanceRaw,
+              teamKpiRaw
             };
           }));
           
@@ -805,7 +885,9 @@ export default {
         referralCount.value = 0;
         teamCount.value = 0;
         activatedDirects.value = 0;
-        hasPurchasedNFT.value = false;
+        hasStakedEnough.value = false;
+        myStakedBalanceRaw.value = 0n;
+        myTeamKpiRaw.value = 0n;
         childrenList.value = [];
         currentCardIndex.value = 0;
         isBound.value = false;
@@ -837,7 +919,10 @@ export default {
       referralCount,
       teamCount,
       activatedDirects,
-      hasPurchasedNFT,
+      hasStakedEnough,
+      myStakedBalanceText,
+      myTeamKpiText,
+      formatTokenAmount,
       childrenList,
       loadingChildren,
       hasMoreChildren,
