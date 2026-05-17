@@ -169,7 +169,7 @@
                             <div v-if="!nft.activated && getActivateDisabledReason() && getActivateDisabledReason() !== t('nft.messages.oneActiveNft')" class="text-[10px] tech-font text-amber-300/80 mt-1">
                                 {{ getActivateDisabledReason() }}
                             </div>
-                            <div v-if="false && nft.activated && getClaimRequirementHint(nft)" class="text-[10px] tech-font text-amber-300/80 mt-1">
+                            <div v-if="nft.activated && getClaimRequirementHint(nft)" class="text-[10px] tech-font text-amber-300/80 mt-1">
                                 {{ getClaimRequirementHint(nft) }}
                             </div>
                         </div>
@@ -187,7 +187,7 @@
                         </template>
                         <template v-else>
                             <!-- 激活后显示领取收益按钮 -->
-                            <button @click="claimYield(nft)" :disabled="isNftActionLoading(nft.id, 'claim')" class="flex-1 tech-font text-[13px] font-bold bg-app-blue text-[#0b0914] border border-blue-200 py-2 rounded-lg hover:bg-blue-400 transition shadow-[0_0_8px_rgba(59,130,246,0.3)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <button @click="claimYield(nft)" :disabled="isNftActionLoading(nft.id, 'claim') || isClaimDisabled(nft)" class="flex-1 tech-font text-[13px] font-bold bg-app-blue text-[#0b0914] border border-blue-200 py-2 rounded-lg hover:bg-blue-400 transition shadow-[0_0_8px_rgba(59,130,246,0.3)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
                                 {{ isNftActionLoading(nft.id, 'claim') ? t('nft.card.claimLoading') : t('nft.card.claimYield') }}
                             </button>
                         </template>
@@ -262,6 +262,7 @@ import { ethers } from 'ethers';
 import nodeAbi from '@/abis/node.json';
 import referralAbi from '@/abis/referral.json';
 import usdtAbi from '@/abis/usdt.json';
+import stakingAbi from '@/abis/Staking.json';
 
 export default {
   name: 'NftView',
@@ -303,6 +304,7 @@ export default {
       isReferralBound: false,
       sAfiClaimThresholdRaw: '0',
       sAfiTokenAddress: '',
+      userStakingBalanceRaw: '0',
       transferTargetByNftId: {},
       editingTransferNftId: null,
       transferConfirmModalVisible: false,
@@ -631,8 +633,12 @@ export default {
         return t('nft.messages.noClaimableReward');
       }
 
-      if (BigInt(this.sAfiClaimThresholdRaw || '0') > 0n) {
-        return t('nft.messages.stakingCheckPending');
+      const thresholdRaw = BigInt(this.sAfiClaimThresholdRaw || '0');
+      if (thresholdRaw > 0n) {
+        const stakingBalanceRaw = BigInt(this.userStakingBalanceRaw || '0');
+        if (stakingBalanceRaw < thresholdRaw) {
+          return t('nft.messages.claimRequirement', { amount: this.formatRewardAmount(thresholdRaw) });
+        }
       }
 
       return '';
@@ -645,10 +651,16 @@ export default {
       if (thresholdRaw <= 0n) {
         return '';
       }
-      if (this.isClaimDisabled(nft)) {
-        return t('nft.messages.claimRequirement', { amount: this.formatRewardAmount(thresholdRaw) });
+      const stakingBalanceRaw = BigInt(this.userStakingBalanceRaw || '0');
+      if (stakingBalanceRaw >= thresholdRaw) {
+        return '';
       }
-      return '';
+      // Only surface the staking-threshold hint when there is actually something to claim;
+      // otherwise the "no claimable rewards" reason is the relevant message.
+      if (this.calculateAnimatedClaimableRaw(nft) <= 0n) {
+        return '';
+      }
+      return t('nft.messages.claimRequirement', { amount: this.formatRewardAmount(thresholdRaw) });
     },
     syncRewardDisplayValues(force = false) {
       const activatedNfts = this.myNfts.filter(nft => nft.activated);
@@ -872,6 +884,20 @@ export default {
       }
       return new ethers.Contract(address, usdtAbi, provider);
     },
+    getStakingContract(withSigner = false) {
+      const address = getContractAddress('Staking');
+      if (!address) {
+        return null;
+      }
+      if (withSigner && this.walletState.signer) {
+        return new ethers.Contract(address, stakingAbi, this.walletState.signer);
+      }
+      const provider = this.getProvider();
+      if (!provider) {
+        return null;
+      }
+      return new ethers.Contract(address, stakingAbi, provider);
+    },
     resetPurchaseData() {
       this.nftTotalBalance = 0;
       this.nftActivatedCount = 0;
@@ -902,6 +928,7 @@ export default {
       this.isReferralBound = false;
       this.sAfiClaimThresholdRaw = '0';
       this.sAfiTokenAddress = '';
+      this.userStakingBalanceRaw = '0';
       this.transferTargetByNftId = {};
       this.editingTransferNftId = null;
       this.closeTransferConfirmModal();
@@ -1078,6 +1105,21 @@ export default {
         this.isReferralBound = Boolean(isReferralBound);
         this.sAfiClaimThresholdRaw = sAfiClaimThreshold.toString();
         this.sAfiTokenAddress = sAfiToken;
+
+        // Pull user's sAFI staked balance so the claim button can gate against sAfiClaimThreshold.
+        const stakingContract = this.getStakingContract();
+        if (stakingContract && this.walletState.address) {
+          try {
+            const stakingBalance = await stakingContract.balances(this.walletState.address);
+            this.userStakingBalanceRaw = stakingBalance.toString();
+          } catch (stakingError) {
+            console.warn('读取 Staking.balances 失败:', stakingError);
+            this.userStakingBalanceRaw = '0';
+          }
+        } else {
+          this.userStakingBalanceRaw = '0';
+        }
+
         await this.fetchAfiPrice();
 
         this.logPurchaseDataOnce('formatted', 'NFT 认购格式化后数据', {
@@ -1270,9 +1312,8 @@ export default {
       }
     },
     async claimYield(nft) {
-      const disabledReason = this.getClaimDisabledReason(nft);
-      if (disabledReason) {
-        showToast(disabledReason);
+      if (!this.walletState.isConnected || !this.walletState.address) {
+        showToast(t('common.connectWalletFirst'));
         return;
       }
 
@@ -1287,6 +1328,26 @@ export default {
       this.nftActionTokenId = nft.id;
 
       try {
+        // Live recheck: staking.balances(msg.sender) >= node.sAfiClaimThreshold().
+        // We re-read both on click to avoid stale UI state allowing an invalid tx.
+        const readOnlyNode = this.getNodeContract(false) || nodeContract;
+        const thresholdRaw = await readOnlyNode.sAfiClaimThreshold();
+        this.sAfiClaimThresholdRaw = thresholdRaw.toString();
+
+        if (thresholdRaw > 0n) {
+          const stakingContract = this.getStakingContract(false);
+          if (!stakingContract) {
+            showToast(t('nft.purchase.button.contractNotReady'));
+            return;
+          }
+          const stakedRaw = await stakingContract.balances(this.walletState.address);
+          this.userStakingBalanceRaw = stakedRaw.toString();
+          if (stakedRaw < thresholdRaw) {
+            showToast(t('nft.messages.claimRequirement', { amount: this.formatRewardAmount(thresholdRaw) }));
+            return;
+          }
+        }
+
         const tx = await nodeContract.claimReward(nft.id);
         await tx.wait();
         showToast(t('nft.messages.claimSuccess'));
