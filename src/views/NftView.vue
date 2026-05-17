@@ -1270,7 +1270,37 @@ export default {
       }
     },
     async claimYield(nft) {
-      showToast(t('nft.messages.notOpen'));
+      const disabledReason = this.getClaimDisabledReason(nft);
+      if (disabledReason) {
+        showToast(disabledReason);
+        return;
+      }
+
+      const nodeContract = this.getNodeContract(true);
+      if (!nodeContract) {
+        showToast(t('nft.purchase.button.contractNotReady'));
+        return;
+      }
+
+      this.nftActionLoading = true;
+      this.nftActionType = 'claim';
+      this.nftActionTokenId = nft.id;
+
+      try {
+        const tx = await nodeContract.claimReward(nft.id);
+        await tx.wait();
+        showToast(t('nft.messages.claimSuccess'));
+        await this.fetchPurchaseData();
+      } catch (error) {
+        console.error('领取 NFT 收益失败:', error);
+        if (error.code !== 4001 && error.code !== 'ACTION_REJECTED') {
+          showToast(error?.reason || t('nft.messages.claimFailed'));
+        }
+      } finally {
+        this.nftActionLoading = false;
+        this.nftActionType = '';
+        this.nftActionTokenId = null;
+      }
     },
     loadMore() {
       this.displayCount += 10;
