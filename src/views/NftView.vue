@@ -158,11 +158,17 @@
                             </div>
 
                             <div class="flex flex-wrap gap-2 text-[12px] tech-font mb-1.5">
-                                <div class="bg-black/20 rounded px-2 py-1 border border-white/5">
-                                    <span class="text-gray-300">{{ t('nft.card.claimable') }} </span>
+                                <div class="bg-black/20 rounded px-2 py-1 border border-white/5 flex items-center gap-2">
+                                    <span class="text-gray-300">{{ t('nft.card.claimable') }}</span>
                                     <span :class="nft.activated ? 'text-white font-bold' : 'text-gray-300 font-semibold'">
-                                        {{ nft.activated ? getAnimatedClaimableDisplay(nft) : '0.00' }} <span class="text-[11px] text-gray-200">AFI</span>
+                                        {{ nft.activated ? getAnimatedClaimableDisplay(nft) : '0.00' }}<span class="text-[11px] text-gray-200 ml-0.5">AFI</span>
                                     </span>
+                                    <template v-if="nft.activated">
+                                        <span class="text-white/20">/</span>
+                                        <span class="text-white font-bold">
+                                            {{ formatDividendUsdt(getDividendRawForNft(nft.id)) }}<span class="text-[11px] text-gray-200 ml-0.5">USDT</span>
+                                        </span>
+                                    </template>
                                 </div>
                             </div>
 
@@ -186,9 +192,12 @@
                             </button>
                         </template>
                         <template v-else>
-                            <!-- 激活后显示领取收益按钮 -->
-                            <button @click="claimYield(nft)" :disabled="isNftActionLoading(nft.id, 'claim') || isClaimDisabled(nft)" class="flex-1 tech-font text-[13px] font-bold bg-app-blue text-[#0b0914] border border-blue-200 py-2 rounded-lg hover:bg-blue-400 transition shadow-[0_0_8px_rgba(59,130,246,0.3)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <!-- Activated cards expose two claim actions: NFT yield (AFI) and NodePool dividend (USDT). -->
+                            <button @click="claimYield(nft)" :disabled="isNftActionLoading(nft.id, 'claim') || isClaimDisabled(nft)" class="flex-1 tech-font text-[12px] font-bold bg-app-blue text-[#0b0914] border border-blue-200 py-2 rounded-lg hover:bg-blue-400 transition shadow-[0_0_8px_rgba(59,130,246,0.3)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
                                 {{ isNftActionLoading(nft.id, 'claim') ? t('nft.card.claimLoading') : t('nft.card.claimYield') }}
+                            </button>
+                            <button @click="claimDividend(nft)" :disabled="isNftActionLoading(nft.id, 'claimDividend') || isClaimDividendDisabled(nft)" class="flex-1 tech-font text-[12px] font-bold bg-app-pink text-white border border-pink-300 py-2 rounded-lg hover:bg-pink-600 transition shadow-[0_0_12px_rgba(255,77,141,0.4)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                                {{ isNftActionLoading(nft.id, 'claimDividend') ? t('nft.card.claimDividendLoading') : t('nft.card.claimDividend') }}
                             </button>
                         </template>
                     </div>
@@ -260,6 +269,7 @@ import { walletState } from '@/services/wallet.js';
 import { getContractAddress } from '@/services/contracts.js';
 import { ethers } from 'ethers';
 import nodeAbi from '@/abis/node.json';
+import nodepoolAbi from '@/abis/nodepool.json';
 import referralAbi from '@/abis/referral.json';
 import usdtAbi from '@/abis/usdt.json';
 import stakingAbi from '@/abis/Staking.json';
@@ -307,6 +317,9 @@ export default {
       userStakingBalanceRaw: '0',
       transferTargetByNftId: {},
       editingTransferNftId: null,
+      // USDT dividend amounts (raw, per nftId) sourced from NodePool.getTokenRewards.
+      dividendByNftId: {},
+      dividendLoading: false,
       transferConfirmModalVisible: false,
       transferConfirmCountdown: 3,
       transferConfirmTimer: null,
@@ -662,6 +675,79 @@ export default {
       }
       return t('nft.messages.claimRequirement', { amount: this.formatRewardAmount(thresholdRaw) });
     },
+    getDividendRawForNft(nftId) {
+      const raw = this.dividendByNftId[nftId];
+      return raw ? BigInt(raw) : 0n;
+    },
+    formatDividendUsdt(rawValue) {
+      if (!rawValue || rawValue <= 0n) {
+        return '0';
+      }
+      const decimals = Number(this.purchaseData.usdtDecimals) || 18;
+      const formatted = ethers.formatUnits(rawValue, decimals);
+      const num = Number(formatted);
+      if (!Number.isFinite(num) || num <= 0) {
+        return '0';
+      }
+      if (num < 0.0001) {
+        return '<0.0001';
+      }
+      const fixed = num.toFixed(4);
+      return fixed.replace(/\.?0+$/, '') || '0';
+    },
+    isClaimDividendDisabled(nft) {
+      if (this.nftActionLoading) {
+        return true;
+      }
+      return this.getDividendRawForNft(nft.id) <= 0n;
+    },
+    async fetchNftDividends(activatedNfts, requestId = this.purchaseDataRequestId) {
+      if (!activatedNfts || activatedNfts.length === 0) {
+        this.dividendByNftId = {};
+        return;
+      }
+      const nodePoolContract = this.getNodePoolContract();
+      const usdtAddress = getContractAddress('USDT');
+      if (!nodePoolContract || !usdtAddress) {
+        this.dividendByNftId = {};
+        return;
+      }
+      this.dividendLoading = true;
+      try {
+        const nftIds = activatedNfts.map(nft => nft.id);
+        let rewards = [];
+        try {
+          // Prefer batch read when available, fallback to single calls on revert.
+          const batch = await nodePoolContract.getTokenRewardsBatch(nftIds, usdtAddress);
+          rewards = Array.isArray(batch) ? batch : [];
+        } catch (batchError) {
+          console.warn('getTokenRewardsBatch 失败，回退到逐个查询:', batchError);
+          rewards = await Promise.all(
+            nftIds.map(id => nodePoolContract.getTokenRewards(id, usdtAddress).catch(() => 0n))
+          );
+        }
+        if (requestId !== this.purchaseDataRequestId || !this.walletState.isConnected) {
+          return;
+        }
+        const next = {};
+        nftIds.forEach((id, index) => {
+          const value = rewards[index] ?? 0n;
+          next[id] = (typeof value === 'bigint' ? value : BigInt(value?.toString?.() || '0')).toString();
+        });
+        this.dividendByNftId = next;
+        console.log('NodePool USDT 分红查询', {
+          usdtAddress,
+          dividends: next
+        });
+      } catch (error) {
+        console.error('查询 NFT USDT 分红失败:', error);
+        if (requestId === this.purchaseDataRequestId) {
+          this.dividendByNftId = {};
+        }
+      } finally {
+        this.dividendLoading = false;
+      }
+    },
     syncRewardDisplayValues(force = false) {
       const activatedNfts = this.myNfts.filter(nft => nft.activated);
       if (!activatedNfts.length) {
@@ -812,6 +898,12 @@ export default {
           nextCursor: nextCursor?.toString?.() ?? '0',
           items: mappedNfts
         });
+
+        // Refresh USDT dividend balances for activated NFTs in parallel; failures are swallowed inside.
+        await this.fetchNftDividends(
+          mappedNfts.filter(nft => nft.activated),
+          requestId
+        );
       } catch (error) {
         console.error('获取 NFT 列表失败:', error);
         if (requestId === this.purchaseDataRequestId) {
@@ -898,6 +990,20 @@ export default {
       }
       return new ethers.Contract(address, stakingAbi, provider);
     },
+    getNodePoolContract(withSigner = false) {
+      const address = getContractAddress('NodePool');
+      if (!address) {
+        return null;
+      }
+      if (withSigner && this.walletState.signer) {
+        return new ethers.Contract(address, nodepoolAbi, this.walletState.signer);
+      }
+      const provider = this.getProvider();
+      if (!provider) {
+        return null;
+      }
+      return new ethers.Contract(address, nodepoolAbi, provider);
+    },
     resetPurchaseData() {
       this.nftTotalBalance = 0;
       this.nftActivatedCount = 0;
@@ -931,6 +1037,8 @@ export default {
       this.userStakingBalanceRaw = '0';
       this.transferTargetByNftId = {};
       this.editingTransferNftId = null;
+      this.dividendByNftId = {};
+      this.dividendLoading = false;
       this.closeTransferConfirmModal();
       this.myNfts = [];
       this.displayCount = 10;
@@ -1356,6 +1464,46 @@ export default {
         console.error('领取 NFT 收益失败:', error);
         if (error.code !== 4001 && error.code !== 'ACTION_REJECTED') {
           showToast(error?.reason || t('nft.messages.claimFailed'));
+        }
+      } finally {
+        this.nftActionLoading = false;
+        this.nftActionType = '';
+        this.nftActionTokenId = null;
+      }
+    },
+    async claimDividend(nft) {
+      if (!this.walletState.isConnected || !this.walletState.address) {
+        showToast(t('common.connectWalletFirst'));
+        return;
+      }
+
+      const nodePoolContract = this.getNodePoolContract(true);
+      const usdtAddress = getContractAddress('USDT');
+      if (!nodePoolContract || !usdtAddress) {
+        showToast(t('nft.purchase.button.contractNotReady'));
+        return;
+      }
+
+      if (this.getDividendRawForNft(nft.id) <= 0n) {
+        showToast(t('nft.messages.noClaimableDividend'));
+        return;
+      }
+
+      this.nftActionLoading = true;
+      this.nftActionType = 'claimDividend';
+      this.nftActionTokenId = nft.id;
+
+      try {
+        const tx = await nodePoolContract.harvest(nft.id, usdtAddress);
+        await tx.wait();
+        showToast(t('nft.messages.claimDividendSuccess'));
+        // Refresh dividends for currently-activated NFTs without reloading the full list.
+        const activatedNfts = this.myNfts.filter(item => item.activated);
+        await this.fetchNftDividends(activatedNfts);
+      } catch (error) {
+        console.error('领取 NFT USDT 分红失败:', error);
+        if (error.code !== 4001 && error.code !== 'ACTION_REJECTED') {
+          showToast(error?.reason || t('nft.messages.claimDividendFailed'));
         }
       } finally {
         this.nftActionLoading = false;
