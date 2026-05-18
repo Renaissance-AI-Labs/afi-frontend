@@ -175,9 +175,6 @@
                             <div v-if="!nft.activated && getActivateDisabledReason() && getActivateDisabledReason() !== t('nft.messages.oneActiveNft')" class="text-[10px] tech-font text-amber-300/80 mt-1">
                                 {{ getActivateDisabledReason() }}
                             </div>
-                            <div v-if="nft.activated && getClaimRequirementHint(nft)" class="text-[10px] tech-font text-amber-300/80 mt-1">
-                                {{ getClaimRequirementHint(nft) }}
-                            </div>
                         </div>
                     </div>
                     
@@ -641,39 +638,10 @@ export default {
     isActivateDisabled() {
       return Boolean(this.getActivateDisabledReason());
     },
-    getClaimDisabledReason(nft) {
-      if (this.calculateAnimatedClaimableRaw(nft) <= 0n) {
-        return t('nft.messages.noClaimableReward');
-      }
-
-      const thresholdRaw = BigInt(this.sAfiClaimThresholdRaw || '0');
-      if (thresholdRaw > 0n) {
-        const stakingBalanceRaw = BigInt(this.userStakingBalanceRaw || '0');
-        if (stakingBalanceRaw < thresholdRaw) {
-          return t('nft.messages.claimRequirement', { amount: this.formatRewardAmount(thresholdRaw) });
-        }
-      }
-
-      return '';
-    },
     isClaimDisabled(nft) {
-      return Boolean(this.getClaimDisabledReason(nft));
-    },
-    getClaimRequirementHint(nft) {
-      const thresholdRaw = BigInt(this.sAfiClaimThresholdRaw || '0');
-      if (thresholdRaw <= 0n) {
-        return '';
-      }
-      const stakingBalanceRaw = BigInt(this.userStakingBalanceRaw || '0');
-      if (stakingBalanceRaw >= thresholdRaw) {
-        return '';
-      }
-      // Only surface the staking-threshold hint when there is actually something to claim;
-      // otherwise the "no claimable rewards" reason is the relevant message.
-      if (this.calculateAnimatedClaimableRaw(nft) <= 0n) {
-        return '';
-      }
-      return t('nft.messages.claimRequirement', { amount: this.formatRewardAmount(thresholdRaw) });
+      // Keep the button clickable when staking is below threshold so the click handler can
+      // surface the requirement toast; only disable when there is genuinely nothing to claim.
+      return this.calculateAnimatedClaimableRaw(nft) <= 0n;
     },
     getDividendRawForNft(nftId) {
       const raw = this.dividendByNftId[nftId];
@@ -696,9 +664,8 @@ export default {
       return fixed.replace(/\.?0+$/, '') || '0';
     },
     isClaimDividendDisabled(nft) {
-      if (this.nftActionLoading) {
-        return true;
-      }
+      // Only disable when there is nothing to claim; staking-threshold violations are surfaced
+      // via a toast inside claimDividend() rather than blocking the button.
       return this.getDividendRawForNft(nft.id) <= 0n;
     },
     async fetchNftDividends(activatedNfts, requestId = this.purchaseDataRequestId) {
@@ -1494,6 +1461,31 @@ export default {
       this.nftActionTokenId = nft.id;
 
       try {
+        // Live recheck of the sAFI staking gate (same as claimYield) so a stale UI cannot
+        // submit an invalid tx that would revert on-chain.
+        const readOnlyNode = this.getNodeContract(false);
+        if (readOnlyNode) {
+          try {
+            const thresholdRaw = await readOnlyNode.sAfiClaimThreshold();
+            this.sAfiClaimThresholdRaw = thresholdRaw.toString();
+            if (thresholdRaw > 0n) {
+              const stakingContract = this.getStakingContract(false);
+              if (!stakingContract) {
+                showToast(t('nft.purchase.button.contractNotReady'));
+                return;
+              }
+              const stakedRaw = await stakingContract.balances(this.walletState.address);
+              this.userStakingBalanceRaw = stakedRaw.toString();
+              if (stakedRaw < thresholdRaw) {
+                showToast(t('nft.messages.claimRequirement', { amount: this.formatRewardAmount(thresholdRaw) }));
+                return;
+              }
+            }
+          } catch (gateError) {
+            console.warn('读取 sAFI 领取门槛失败，继续尝试链上调用:', gateError);
+          }
+        }
+
         const tx = await nodePoolContract.harvest(nft.id, usdtAddress);
         await tx.wait();
         showToast(t('nft.messages.claimDividendSuccess'));
