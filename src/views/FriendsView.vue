@@ -462,15 +462,18 @@ export default {
 
     const myLevelIconSvg = computed(() => getLevelBadgeSvg(myLevel.value));
 
-    // Format an 18-decimals BigInt into a short, human readable token amount (e.g. 1.23K / 4.56M).
+    // Format an 18-decimals BigInt into a full decimal string with exactly 4 fractional digits.
+    // The fractional part is truncated (not rounded) so the displayed value never overstates rewards.
     const formatTokenAmount = (raw) => {
       if (raw === null || raw === undefined) return '--';
       try {
-        const num = parseFloat(ethers.formatEther(raw));
-        if (!isFinite(num)) return '--';
-        if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'M';
-        if (num >= 1_000) return (num / 1_000).toFixed(2) + 'K';
-        return num.toFixed(2);
+        const formatted = ethers.formatEther(raw);
+        const isNegative = formatted.startsWith('-');
+        const absFormatted = isNegative ? formatted.slice(1) : formatted;
+        const [intPartRaw, decPart = ''] = absFormatted.split('.');
+        const intPart = intPartRaw || '0';
+        const truncatedDec = decPart.slice(0, 4).padEnd(4, '0');
+        return `${isNegative ? '-' : ''}${intPart}.${truncatedDec}`;
       } catch (e) {
         return '--';
       }

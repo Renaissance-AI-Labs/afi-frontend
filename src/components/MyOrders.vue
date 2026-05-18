@@ -72,7 +72,7 @@
             <div class="flex justify-between items-center bg-white/5 rounded-lg p-3 border border-white/5">
               <span class="text-[11px] text-gray-400 tech-font uppercase tracking-wider">{{ t('orders.currentReward') }}</span>
               <div class="text-right">
-                <span :key="order.currentReward" class="text-lg tech-font font-bold text-app-pink animate-number-jump inline-block">{{ formatUnits(order.currentReward) }}</span>
+                <span :key="order.currentReward" class="text-lg tech-font font-bold text-app-pink animate-number-jump inline-block">{{ formatReward(order.currentReward) }}</span>
                 <span class="text-xs text-pink-400/70 ml-1">USDT</span>
               </div>
             </div>
@@ -82,7 +82,7 @@
           <!-- Final Reward for Completed -->
           <div v-if="status === 3 && !isCancelledQueue(order)" class="bg-white/5 rounded-lg p-3 mb-4 text-center">
             <p class="text-[11px] text-gray-400 tech-font uppercase tracking-wider mb-1">{{ t('orders.finalReward') }}</p>
-            <p class="text-lg tech-font font-bold text-app-pink">{{ formatUnits(order.finalReward) }} USDT</p>
+            <p class="text-lg tech-font font-bold text-app-pink">{{ formatReward(order.finalReward) }} USDT</p>
           </div>
 
           <!-- Cancelled Queue Info -->
@@ -397,6 +397,24 @@ export default {
       }
     };
 
+    // Reward-only formatter: keeps full integer part and truncates to 4 fractional digits
+    // (no rounding) so that displayed yields never exceed actual on-chain values.
+    const formatReward = (val) => {
+      if (val === undefined || val === null) return '0.0000';
+      try {
+        const formatted = ethers.formatEther(val);
+        const isNegative = formatted.startsWith('-');
+        const absFormatted = isNegative ? formatted.slice(1) : formatted;
+        const [intPartRaw, decPart = ''] = absFormatted.split('.');
+        const intPart = intPartRaw || '0';
+        const truncatedDec = decPart.slice(0, 4).padEnd(4, '0');
+        return `${isNegative ? '-' : ''}${intPart}.${truncatedDec}`;
+      } catch (e) {
+        console.warn("formatReward error:", e, val);
+        return '0.0000';
+      }
+    };
+
     const getStatusClass = (status) => {
       switch(status) {
         case 0: return 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30';
@@ -539,7 +557,7 @@ export default {
           compoundCount: Number(order.compoundCount ?? 0),
           principalPct: Number.isFinite(principalPct) ? principalPct : 0,
           principalUsdt: formatUnits(principalWei),
-          interestAfi: formatUnits(interestWei)
+          interestAfi: formatReward(interestWei)
         };
         openConfirmModal({
           title: t('orders.redeemConfirmTitle'),
@@ -575,7 +593,7 @@ export default {
       const amt = BigInt(order.amount ?? 0n);
       const totalReward = BigInt(order.currentReward ?? 0n);
       const interestWei = totalReward > amt ? totalReward - amt : 0n;
-      const interestUsdt = formatUnits(interestWei);
+      const interestUsdt = formatReward(interestWei);
 
       openConfirmModal({
         title: t('orders.compoundConfirmTitle'),
@@ -612,6 +630,7 @@ export default {
       walletState,
       loadMore,
       formatUnits,
+      formatReward,
       formatDateTime,
       getStatusClass,
       getStatusText,
