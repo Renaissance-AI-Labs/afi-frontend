@@ -683,10 +683,18 @@ export default {
 
             if (stakingContract) {
               try {
-                teamKpiRaw = await stakingContract.getTeamKpi(addr);
-                level = getLevelFromKpi(teamKpiRaw);
+                // Level still derives from KPI thresholds; display value uses teamTotalInvestValue.
+                const kpiRaw = await stakingContract.getTeamKpi(addr);
+                level = getLevelFromKpi(kpiRaw);
               } catch (e) {
                 console.error("Error fetching child staking kpi", e);
+              }
+
+              try {
+                // Friend's team performance is the cumulative team invest value (USDT, 18 decimals).
+                teamKpiRaw = await stakingContract.teamTotalInvestValue(addr);
+              } catch (e) {
+                console.error("Error fetching child team invest value", e);
               }
 
               try {
