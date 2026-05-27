@@ -6,7 +6,7 @@
         <i class="ph-fill ph-chart-line-up text-app-pink"></i> {{ t('home.dashboard.title') }}
       </h2>
       
-      <div class="bg-black/30 border border-white/5 rounded-lg p-3 mb-3 grid gap-3" :class="isWhitelisted ? 'grid-cols-3' : 'grid-cols-2'">
+      <div class="bg-black/30 border border-white/5 rounded-lg p-3 mb-3 grid gap-3" :class="isWhitelisted ? 'grid-cols-3' : 'grid-cols-1'">
         <div class="text-center">
           <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysQuota') }}</p>
           <p class="text-base tech-font font-bold text-white truncate" :title="formattedQuota">{{ formattedQuota }}</p>
@@ -18,10 +18,6 @@
         <div class="text-center" v-if="isWhitelisted">
           <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.todaysPending') }}</p>
           <p class="text-base tech-font font-bold text-blue-400 truncate" :title="formattedPending">{{ formattedPending }}</p>
-        </div>
-        <div class="text-center" v-if="!isWhitelisted">
-          <p class="text-[11px] text-gray-300 tech-font uppercase tracking-wider mb-1">{{ t('home.dashboard.processed') }}</p>
-          <p class="text-base tech-font font-bold text-purple-400 truncate" :title="queueInfo.headIndex">{{ queueInfo.headIndex }}</p>
         </div>
       </div>
 
