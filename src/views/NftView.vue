@@ -13,10 +13,13 @@
     </div>
 
     <!-- 主要内容区域 -->
-    <main class="px-4 pt-4 relative z-20">
+    <main class="px-4 pt-6 relative z-20 max-w-2xl mx-auto flex flex-col gap-4">
         
+        <h2 class="text-2xl font-display text-white mb-1 tech-font tracking-widest text-center">{{ t('nft.title') }}</h2>
+        <p class="text-sm text-gray-400 text-center mb-2 tech-font">{{ t('nft.intro') }}</p>
+
         <!-- NFT 认购 模块 -->
-        <section class="mb-6">
+        <section class="mb-6" v-if="false">
             <div class="bg-app-card/80 backdrop-blur-sm rounded-t-xl border-t border-x border-app-pink/30 px-3 py-1.5 inline-block mb-[-1px] relative z-10">
                 <h2 class="text-[13px] font-display text-white tracking-wider tech-font font-bold">{{ t('nft.section.subscribe') }}</h2>
             </div>
