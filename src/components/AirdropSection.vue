@@ -7,7 +7,7 @@
           <h2 class="text-base font-display text-white tech-font font-bold tracking-wider flex items-center gap-2">
             <i class="ph-fill ph-gift text-purple-400"></i> {{ t('home.airdrop.title') }}
           </h2>
-          <p class="text-[11px] text-gray-400 tech-font mt-1 leading-relaxed">{{ t('home.airdrop.intro') }}</p>
+          <p class="text-[11px] text-gray-300 tech-font mt-1 leading-relaxed">{{ t('home.airdrop.intro') }}</p>
         </div>
         <div v-if="walletState.isConnected && isAdmin" class="shrink-0 flex items-center gap-2">
           <router-link
