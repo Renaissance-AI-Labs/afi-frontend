@@ -25,6 +25,7 @@
     <div class="home-content-wrapper relative z-20 w-full max-w-4xl mx-auto px-4 flex flex-col gap-4 mt-[40px]">
       <GlobalDashboard />
       <StakingSection />
+      <AirdropSection @open-get-started-modal="$emit('open-get-started-modal')" />
     </div>
   </div>
 </template>
@@ -33,6 +34,7 @@
 import Header from '@/components/Header.vue';
 import GlobalDashboard from '@/components/GlobalDashboard.vue';
 import StakingSection from '@/components/StakingSection.vue';
+import AirdropSection from '@/components/AirdropSection.vue';
 import { t } from '@/i18n';
 
 export default {
@@ -40,7 +42,8 @@ export default {
   components: {
     Header,
     GlobalDashboard,
-    StakingSection
+    StakingSection,
+    AirdropSection
   },
   setup() {
     return {

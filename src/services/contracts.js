@@ -54,6 +54,10 @@ export const CONTRACT_ADDRESSES = {
   StakingView: {
     testnet: '0x0941890665bC76C4dF1D83cdf49cC2294359BdE8', 
     mainnet: '0x74a4Bd0f030bA5f9F0a5aC84441C5e12233D28A0',
+  },
+  Airdrop: {
+    testnet: '0x4251CE6FbD930B85Dd17296a2CE8A63fA05cf020',
+    mainnet: '',
   }
 };
 
