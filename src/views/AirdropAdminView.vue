@@ -15,11 +15,11 @@
     <main class="relative z-20 w-full max-w-4xl mx-auto px-4 pt-6 flex flex-col gap-4">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <router-link to="/" class="text-[11px] text-gray-400 tech-font hover:text-white inline-flex items-center gap-1 mb-2">
+          <router-link to="/" class="text-[11px] text-gray-300 tech-font hover:text-white inline-flex items-center gap-1 mb-2">
             <i class="ph ph-caret-left"></i> 返回首页
           </router-link>
           <h1 class="text-2xl font-display text-white tech-font font-bold tracking-widest">活动空投后台</h1>
-          <p class="text-xs text-gray-400 tech-font mt-1 leading-relaxed">运营只需要发空投、充奖池、看记录。</p>
+          <p class="text-xs text-gray-300 tech-font mt-1 leading-relaxed">运营只需要发空投、充奖池、看记录。</p>
         </div>
         <button
           @click="refreshAdminData"
@@ -34,13 +34,13 @@
       <section v-if="!walletState.isConnected" class="panel p-5 text-center">
         <i class="ph ph-wallet text-4xl text-purple-300 mb-3"></i>
         <h2 class="text-lg text-white tech-font font-bold mb-2">请先连接管理员钱包</h2>
-        <p class="text-sm text-gray-400 tech-font mb-4">只有拥有 DEFAULT_ADMIN_ROLE 或 MANAGER_ROLE 的钱包才能进入后台。</p>
+        <p class="text-sm text-gray-300 tech-font mb-4">只有拥有 DEFAULT_ADMIN_ROLE 或 MANAGER_ROLE 的钱包才能进入后台。</p>
         <button @click="$emit('open-get-started-modal')" class="primary-btn w-full">
           连接钱包
         </button>
       </section>
 
-      <section v-else-if="loading && !accessChecked" class="panel p-5 text-center text-gray-400 tech-font">
+      <section v-else-if="loading && !accessChecked" class="panel p-5 text-center text-gray-300 tech-font">
         <i class="ph ph-spinner animate-spin text-xl"></i>
         <p class="mt-2">正在检查管理员权限...</p>
       </section>
@@ -48,7 +48,7 @@
       <section v-else-if="!isAdmin" class="panel p-5 text-center">
         <i class="ph ph-warning-circle text-4xl text-yellow-300 mb-3"></i>
         <h2 class="text-lg text-white tech-font font-bold mb-2">当前钱包不是空投管理员</h2>
-        <p class="text-sm text-gray-400 tech-font leading-relaxed">请切换到拥有 DEFAULT_ADMIN_ROLE 或 MANAGER_ROLE 的钱包。普通用户看不到首页后台入口，也不能在这里发放空投。</p>
+        <p class="text-sm text-gray-300 tech-font leading-relaxed">请切换到拥有 DEFAULT_ADMIN_ROLE 或 MANAGER_ROLE 的钱包。普通用户看不到首页后台入口，也不能在这里发放空投。</p>
       </section>
 
       <template v-else>
@@ -104,7 +104,7 @@
             v-model="batchText"
             class="batch-input"
             rows="6"
-            placeholder="0xAlice...,1000,30,500&#10;0xBob...,500,30,0"
+            placeholder="0x0000...,1000.5,30,500.25&#10;0x0001...,88.88,15,0"
           ></textarea>
           <div class="preview-box compact-preview">
             <p>有效 <b>{{ parsedBatch.valid.length }}</b> 条，错误 <b>{{ parsedBatch.invalid.length }}</b> 条。</p>
@@ -131,26 +131,39 @@
             <button @click="fundPool" :disabled="actionLoading === 'fund' || !afiTokenReady" class="primary-btn">
               {{ actionLoading === 'fund' ? '充值中...' : '确认充值' }}
             </button>
-            <p class="helper">失败通常是钱包 AFI 不够，或钱包网络不正确。</p>
           </div>
         </section>
 
         <section v-else class="panel p-4">
           <h2 class="section-title"><i class="ph-fill ph-clock-counter-clockwise text-purple-400"></i> 空投记录</h2>
-          <p class="section-desc">展示最近 10 条，发放成功后可在这里确认。</p>
+          <p class="section-desc">每页显示 30 条，滑到底部可加载更早记录。</p>
 
           <div v-if="recentRecords.length === 0" class="empty-box">暂无记录</div>
           <div v-else class="flex flex-col gap-2">
             <div v-for="record in recentRecords" :key="record.recordId" class="record-row">
-              <div>
-                <p class="text-sm text-white tech-font font-bold">空投 #{{ record.recordId + 1 }} · {{ shortAddress(record.user) }}</p>
-                <p class="text-[11px] text-gray-500 tech-font">释放 {{ formatDuration(record.duration) }}，门槛 {{ formatToken(record.claimThreshold) }} USDT</p>
-              </div>
-              <div class="text-right">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-sm text-white tech-font font-bold">空投 #{{ record.recordId + 1 }}</p>
                 <p class="text-sm text-app-pink tech-font font-bold">{{ formatToken(record.totalAmount) }} AFI</p>
-                <p class="text-[11px] text-gray-500 tech-font">已领 {{ formatToken(record.claimed) }}</p>
+              </div>
+              <div class="record-address-row">
+                <span class="record-address">{{ record.user }}</span>
+                <button @click="copyText(record.user)" class="record-copy-btn" aria-label="复制地址">
+                  <i class="ph ph-copy"></i>
+                </button>
+              </div>
+              <div class="record-meta-row">
+                <p class="record-meta-text">释放 {{ formatDuration(record.duration) }} · 门槛 {{ formatToken(record.claimThreshold) }} USDT</p>
+                <p class="record-meta-text text-right">已领 {{ formatToken(record.claimed) }} AFI</p>
               </div>
             </div>
+            <button
+              v-if="recordsNextCursor > 0"
+              @click="loadMoreRecords"
+              :disabled="recordsLoading"
+              class="secondary-btn w-full mt-2"
+            >
+              {{ recordsLoading ? '加载中...' : '加载更多记录' }}
+            </button>
           </div>
         </section>
       </template>
@@ -170,6 +183,7 @@ import AirdropABI from '@/abis/Airdrop.json';
 import ERC20ABI from '@/abis/usdt.json';
 
 const ZERO_ADDRESS = ethers.ZeroAddress;
+const RECORDS_PAGE_SIZE = 30;
 
 const InfoCard = defineComponent({
   name: 'InfoCard',
@@ -187,7 +201,7 @@ const InfoCard = defineComponent({
     }[props.tone] || 'text-white'));
 
     return () => h('div', { class: 'bg-white/5 rounded-lg p-3 border border-white/5 text-center' }, [
-      h('p', { class: 'text-[10px] text-gray-400 tech-font uppercase tracking-wider mb-1' }, props.label),
+      h('p', { class: 'text-[10px] text-gray-300 tech-font uppercase tracking-wider mb-1' }, props.label),
       h('p', { class: ['text-sm font-bold break-all', toneClass.value] }, props.value),
     ]);
   },
@@ -205,7 +219,7 @@ const AddressRow = defineComponent({
     const isReady = computed(() => props.value && props.value !== ZERO_ADDRESS);
     return () => h('div', { class: 'bg-black/20 border border-white/5 rounded-xl p-3 flex items-center justify-between gap-3' }, [
       h('div', { class: 'min-w-0' }, [
-        h('p', { class: 'text-[11px] text-gray-400 tech-font mb-1' }, props.label),
+        h('p', { class: 'text-[11px] text-gray-300 tech-font mb-1' }, props.label),
         h('p', { class: 'text-xs text-white tech-font truncate' }, props.value || '-'),
       ]),
       h('div', { class: 'shrink-0 flex items-center gap-2' }, [
@@ -248,6 +262,8 @@ export default {
     const totalClaimed = ref(0n);
     const recordCount = ref(0n);
     const recentRecords = ref([]);
+    const recordsNextCursor = ref(0);
+    const recordsLoading = ref(false);
     let fallbackProvider = null;
 
     const configForm = reactive({
@@ -292,6 +308,11 @@ export default {
     });
     const recordCountDisplay = computed(() => recordCount.value.toString());
 
+    // Non-negative decimal number, e.g. "0", "1000", "88.88" (rejects "", "-1", "1e3", "0x10", "12abc")
+    const isNonNegativeNumber = (value) => /^\d+(\.\d+)?$/.test(value);
+    // Positive integer without leading zeros, e.g. "1", "30" (rejects "0", "1.5", "-3")
+    const isPositiveInteger = (value) => /^[1-9]\d*$/.test(value);
+
     const parsedBatch = computed(() => {
       const rows = batchText.value
         .split('\n')
@@ -301,9 +322,19 @@ export default {
       const invalid = [];
 
       rows.forEach((line, index) => {
-        const [user, amount, days, threshold = '0'] = line.split(',').map((item) => item.trim());
         const rowNumber = index + 1;
-        if (!ethers.isAddress(user) || Number(amount) <= 0 || Number(days) <= 0 || Number(threshold) < 0) {
+        const parts = line.split(',').map((item) => item.trim());
+        // Exactly 3 English commas => exactly 4 fields: user,amount,days,threshold
+        if (parts.length !== 4) {
+          invalid.push(`第 ${rowNumber} 行`);
+          return;
+        }
+        const [user, amount, days, threshold] = parts;
+        const isValid = ethers.isAddress(user)
+          && isNonNegativeNumber(amount) && Number(amount) > 0
+          && isPositiveInteger(days)
+          && isNonNegativeNumber(threshold);
+        if (!isValid) {
           invalid.push(`第 ${rowNumber} 行`);
           return;
         }
@@ -444,7 +475,7 @@ export default {
           poolBalance.value = 0n;
         }
 
-        await fetchRecentRecords(airdrop, count);
+        await fetchRecordsPage(airdrop, count, true);
       } catch (error) {
         console.error('Failed to refresh airdrop admin data:', error);
         showToast('后台数据加载失败', 'error');
@@ -453,26 +484,51 @@ export default {
       }
     };
 
-    const fetchRecentRecords = async (airdrop, count) => {
+    const fetchRecordsPage = async (airdrop, count, reset = false) => {
       const total = Number(count);
+      if (reset) {
+        recentRecords.value = [];
+        recordsNextCursor.value = total;
+      }
+
       if (!total) {
         recentRecords.value = [];
+        recordsNextCursor.value = 0;
         return;
       }
 
-      const size = Math.min(10, total);
-      const cursor = Math.max(0, total - size);
-      const [list, ids] = await airdrop.getRecordsBySize(cursor, size);
-      recentRecords.value = list
-        .map((record, index) => ({
-          recordId: Number(ids[index]),
-          user: record.user,
-          duration: Number(record.duration),
-          totalAmount: record.totalAmount,
-          claimed: record.claimed,
-          claimThreshold: record.claimThreshold,
-        }))
-        .sort((a, b) => b.recordId - a.recordId);
+      if (recordsNextCursor.value <= 0 || recordsLoading.value) {
+        return;
+      }
+
+      recordsLoading.value = true;
+      try {
+        const nextCursor = Number(recordsNextCursor.value);
+        const size = Math.min(RECORDS_PAGE_SIZE, nextCursor);
+        const cursor = Math.max(0, nextCursor - size);
+        const [list, ids] = await airdrop.getRecordsBySize(cursor, size);
+        const rows = list
+          .map((record, index) => ({
+            recordId: Number(ids[index]),
+            user: record.user,
+            duration: Number(record.duration),
+            totalAmount: record.totalAmount,
+            claimed: record.claimed,
+            claimThreshold: record.claimThreshold,
+          }))
+          .sort((a, b) => b.recordId - a.recordId);
+
+        recentRecords.value = reset ? rows : [...recentRecords.value, ...rows];
+        recordsNextCursor.value = cursor;
+      } finally {
+        recordsLoading.value = false;
+      }
+    };
+
+    const loadMoreRecords = async () => {
+      const provider = getProvider();
+      const airdrop = getAirdrop(provider);
+      await fetchRecordsPage(airdrop, recordCount.value, false);
     };
 
     const setAfiToken = async () => {
@@ -624,12 +680,15 @@ export default {
       roleLabel,
       recordCountDisplay,
       recentRecords,
+      recordsNextCursor,
+      recordsLoading,
       configForm,
       fundAmount,
       singleForm,
       batchText,
       parsedBatch,
       refreshAdminData,
+      loadMoreRecords,
       copyText,
       formatToken,
       shortAddress,
@@ -671,7 +730,7 @@ export default {
 }
 
 .section-desc {
-  color: rgb(156 163 175);
+  color: rgb(209 213 219);
   font-size: 0.75rem;
   line-height: 1.7;
   margin-bottom: 0.75rem;
@@ -709,7 +768,7 @@ export default {
 }
 
 .helper {
-  color: rgb(107 114 128);
+  color: rgb(209 213 219);
   font-size: 0.68rem;
   line-height: 1.5;
   font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -741,7 +800,7 @@ export default {
 }
 
 .tab-btn-idle {
-  color: rgb(156 163 175);
+  color: rgb(209 213 219);
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -802,7 +861,7 @@ export default {
 
 .empty-box {
   text-align: center;
-  color: rgb(107 114 128);
+  color: rgb(209 213 219);
   padding: 1.5rem 0;
   font-size: 0.8rem;
   font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -810,11 +869,57 @@ export default {
 
 .record-row {
   display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.28rem;
   border-radius: 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.24);
-  padding: 0.75rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.record-address-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.record-address {
+  flex: 1;
+  min-width: 0;
+  color: rgb(209 213 219);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.6rem;
+  letter-spacing: -0.065em;
+  white-space: nowrap;
+}
+
+.record-copy-btn {
+  width: 1.45rem;
+  height: 1.45rem;
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgb(216 180 254);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.record-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.record-meta-text {
+  color: rgb(209 213 219);
+  font-size: 0.62rem;
+  line-height: 1.2;
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  white-space: nowrap;
 }
 </style>
