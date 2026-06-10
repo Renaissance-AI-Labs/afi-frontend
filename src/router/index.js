@@ -5,6 +5,7 @@ import OrdersView from '../views/OrdersView.vue';
 import NftView from '../views/NftView.vue';
 import FriendsView from '../views/FriendsView.vue';
 import CooperationView from '../views/CooperationView.vue';
+import AirdropAdminView from '../views/AirdropAdminView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
 import { walletState } from '../services/wallet';
 
@@ -38,6 +39,11 @@ const routes = [
     path: '/cooperation',
     name: 'Cooperation',
     component: CooperationView,
+  },
+  {
+    path: '/admin/airdrop',
+    name: 'AirdropAdmin',
+    component: AirdropAdminView,
   },
   {
     path: '/:pathMatch(.*)*',
