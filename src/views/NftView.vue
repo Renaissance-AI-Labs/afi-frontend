@@ -18,6 +18,8 @@
         <h2 class="text-2xl font-display text-white mb-1 tech-font tracking-widest text-center">{{ t('nft.title') }}</h2>
         <p class="text-sm text-gray-400 text-center mb-2 tech-font">{{ t('nft.intro') }}</p>
 
+        <AirdropSection variant="nft" @open-get-started-modal="$emit('open-get-started-modal')" />
+
         <!-- NFT 认购 模块 -->
         <section class="mb-6" v-if="false">
             <div class="bg-app-card/80 backdrop-blur-sm rounded-t-xl border-t border-x border-app-pink/30 px-3 py-1.5 inline-block mb-[-1px] relative z-10">
@@ -97,11 +99,12 @@
 
         <!-- 我的NFT 资产与列表区 (合并优化) -->
         <section class="mb-6 relative z-10">
-            <!-- 顶部统计栏 (扁平化横向排版，融入列表头部) -->
-            <div class="bg-[#1a153a]/80 backdrop-blur-md rounded-xl border-2 border-white/10 p-3 mb-4 shadow-lg flex items-center justify-between relative overflow-hidden">
+            <div class="bg-[#1a153a]/80 backdrop-blur-md rounded-xl border-2 border-white/10 shadow-lg relative overflow-hidden">
                 <div class="absolute -left-10 -top-10 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl"></div>
-                
-                <div class="flex items-center gap-2 relative z-10">
+
+                <!-- 顶部统计栏，与列表共享同一个资产面板 -->
+                <div class="relative z-10 p-3 border-b border-white/10 bg-black/10 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
                     <!-- <i class="ph-fill ph-wallet text-app-pink text-2xl drop-shadow-[0_0_5px_rgba(255,77,141,0.5)]"></i> -->
                     <div class="flex flex-col">
                         <span class="text-[13px] text-gray-300 tech-font leading-tight">{{ t('nft.section.assetsTotal') }}</span>
@@ -122,26 +125,26 @@
                     <span class="text-[12px] text-gray-300 tech-font leading-tight">{{ t('nft.section.notActivated') }}</span>
                     <span class="text-[17px] font-bold text-gray-200 leading-tight">{{ unactivatedCount }}</span>
                 </div>
-            </div>
+                </div>
 
             <!-- 列表容器 -->
-            <div class="flex flex-col gap-3">
-                <div v-if="walletState.isConnected && nftListLoading" class="text-center py-8 text-gray-400 tech-font text-[12px] bg-[#1a153a]/50 rounded-xl border-2 border-white/10">
+            <div class="relative z-10 flex flex-col gap-3 p-3">
+                <div v-if="walletState.isConnected && nftListLoading" class="text-center py-8 text-gray-400 tech-font text-[12px] bg-black/20 rounded-lg border border-white/5">
                     {{ t('nft.section.assetsLoading') }}
                 </div>
 
                 <!-- 空状态 -->
-                <div v-else-if="walletState.isConnected && myNfts.length === 0" class="text-center py-8 text-gray-300 tech-font text-[13px] bg-[#1a153a]/50 rounded-xl border-2 border-white/10">
+                <div v-else-if="walletState.isConnected && myNfts.length === 0" class="text-center py-8 text-gray-300 tech-font text-[13px] bg-black/20 rounded-lg border border-white/5">
                     {{ t('nft.section.assetsEmpty') }}
                 </div>
 
-                <div v-else-if="!walletState.isConnected" class="text-center py-8 text-gray-300 tech-font text-[13px] bg-[#1a153a]/50 rounded-xl border-2 border-white/10">
+                <div v-else-if="!walletState.isConnected" class="text-center py-8 text-gray-300 tech-font text-[13px] bg-black/20 rounded-lg border border-white/5">
                     {{ t('nft.section.assetsConnectWallet') }}
                 </div>
 
                 <!-- 列表项 -->
-                <div v-else class="flex flex-col gap-3 bg-[#1a153a] p-3.5 rounded-xl transition-all relative overflow-hidden" 
-                     :class="nft.activated ? 'glow-border-blue' : 'border-2 border-white/10 hover:border-pink-500/50 shadow-md'"
+                <div v-else class="flex flex-col gap-3 bg-black/20 p-3.5 rounded-xl transition-all relative overflow-hidden"
+                     :class="nft.activated ? 'glow-border-blue' : 'border border-white/10 hover:border-pink-500/50 shadow-md'"
                      v-for="nft in displayedNfts" :key="nft.id">
                     <div class="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl" :class="nft.activated ? 'bg-blue-500/10' : 'bg-pink-500/10'"></div>
                     <div class="flex gap-3 items-center relative z-10">
@@ -222,13 +225,14 @@
             </div>
 
             <!-- 加载更多按钮 -->
-            <div v-if="displayCount < myNfts.length" class="mt-5 flex justify-center">
+            <div v-if="displayCount < myNfts.length" class="relative z-10 pb-3 flex justify-center">
                 <button @click="loadMore" class="text-[12px] text-pink-400 tech-font border border-pink-500/30 rounded-full px-6 py-2 hover:bg-pink-500/10 transition flex items-center gap-1">
                     {{ t('nft.card.loadMore') }} <i class="ph-bold ph-caret-down"></i>
                 </button>
             </div>
-            <div v-else-if="myNfts.length > 0" class="mt-5 text-center text-[11px] text-gray-500 tech-font">
+            <div v-else-if="myNfts.length > 0" class="relative z-10 pb-3 text-center text-[11px] text-gray-500 tech-font">
                 {{ t('nft.card.loadedAll') }}
+            </div>
             </div>
         </section>
 
@@ -263,6 +267,7 @@
 
 <script>
 import Header from '@/components/Header.vue';
+import AirdropSection from '@/components/AirdropSection.vue';
 import { showToast } from '@/services/notification';
 import { t } from '@/i18n';
 import { walletState } from '@/services/wallet.js';
@@ -277,7 +282,8 @@ import stakingAbi from '@/abis/Staking.json';
 export default {
   name: 'NftView',
   components: {
-    Header
+    Header,
+    AirdropSection
   },
   data() {
     return {

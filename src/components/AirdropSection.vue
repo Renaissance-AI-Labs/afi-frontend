@@ -1,18 +1,18 @@
 <template>
-  <section class="animate-fade-in bg-[#1a153a]/40 backdrop-blur-md rounded-2xl border border-white/10 p-4 shadow-lg relative overflow-hidden" style="animation-delay: 0.18s;">
-    <div class="absolute -right-10 top-0 w-40 h-40 bg-pink-500/10 rounded-full blur-3xl"></div>
+  <section :class="sectionClass" style="animation-delay: 0.18s;">
+    <div :class="glowClass"></div>
     <div class="relative z-10">
       <div class="flex items-start justify-between gap-3 mb-3">
         <div>
           <h2 class="text-base font-display text-white tech-font font-bold tracking-wider flex items-center gap-2">
-            <i class="ph-fill ph-gift text-purple-400"></i> {{ t('home.airdrop.title') }}
+            <i :class="titleIconClass"></i> {{ t('home.airdrop.title') }}
           </h2>
           <p class="text-[11px] text-gray-300 tech-font mt-1 leading-relaxed">{{ t('home.airdrop.intro') }}</p>
         </div>
         <div v-if="walletState.isConnected && isAdmin" class="shrink-0 flex items-center gap-2">
           <router-link
             to="/admin/airdrop"
-            class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-400/30 text-purple-200 hover:text-white hover:bg-purple-500/25 transition flex items-center justify-center"
+            :class="adminLinkClass"
             :aria-label="t('home.airdrop.admin')"
           >
             <i class="ph ph-gear-six text-base"></i>
@@ -20,12 +20,12 @@
         </div>
       </div>
 
-      <div class="bg-black/20 border border-white/5 rounded-xl p-4 flex flex-col gap-3">
+      <div :class="contentClass">
         <div v-if="!walletState.isConnected" class="flex flex-col gap-3 text-center">
           <p class="text-sm text-gray-300 tech-font">{{ t('home.airdrop.connectHint') }}</p>
           <button
             @click="$emit('open-get-started-modal')"
-            class="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-2 px-8 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all tech-font w-full text-sm"
+            :class="connectButtonClass"
           >
             {{ t('header.connectWallet') }}
           </button>
@@ -65,7 +65,7 @@
                   @click="handleClaim(order)"
                   :disabled="!canClaim(order) || actionLoading === order.recordId"
                   class="shrink-0 px-3 py-1.5 rounded-lg font-bold transition tech-font text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                  :class="canClaim(order) ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500' : 'bg-white/5 text-gray-400 border border-white/10'"
+                  :class="getClaimButtonClass(order)"
                 >
                   <i v-if="actionLoading === order.recordId" class="ph ph-spinner animate-spin"></i>
                   {{ getClaimButtonText(order) }}
@@ -108,7 +108,7 @@
 </template>
 
 <script>
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { ethers } from 'ethers';
 import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
@@ -121,8 +121,14 @@ const STAKING_BALANCE_ABI = ['function balances(address) view returns (uint256)'
 
 export default {
   name: 'AirdropSection',
+  props: {
+    variant: {
+      type: String,
+      default: 'default',
+    },
+  },
   emits: ['open-get-started-modal'],
-  setup() {
+  setup(props) {
     const orders = ref([]);
     const loading = ref(false);
     const isConfigured = ref(Boolean(getContractAddress('Airdrop')));
@@ -132,6 +138,35 @@ export default {
     let fallbackProvider = null;
     let tickTimer = null;
     let refreshTimer = null;
+    const isNftVariant = computed(() => props.variant === 'nft');
+    const sectionClass = computed(() => (
+      isNftVariant.value
+        ? 'animate-fade-in bg-[#1a153a]/80 backdrop-blur-md rounded-xl border-2 border-white/10 p-3 shadow-lg relative overflow-hidden mb-2'
+        : 'animate-fade-in bg-[#1a153a]/40 backdrop-blur-md rounded-2xl border border-white/10 p-4 shadow-lg relative overflow-hidden'
+    ));
+    const glowClass = computed(() => (
+      isNftVariant.value
+        ? 'absolute -left-10 -top-10 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl'
+        : 'absolute -right-10 top-0 w-40 h-40 bg-pink-500/10 rounded-full blur-3xl'
+    ));
+    const titleIconClass = computed(() => (
+      isNftVariant.value ? 'ph-fill ph-gift text-app-pink' : 'ph-fill ph-gift text-purple-400'
+    ));
+    const adminLinkClass = computed(() => (
+      isNftVariant.value
+        ? 'w-8 h-8 rounded-lg bg-pink-500/10 border border-pink-500/30 text-pink-300 hover:text-white hover:bg-pink-500/20 transition flex items-center justify-center'
+        : 'w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-400/30 text-purple-200 hover:text-white hover:bg-purple-500/25 transition flex items-center justify-center'
+    ));
+    const contentClass = computed(() => (
+      isNftVariant.value
+        ? 'bg-black/20 border border-pink-500/20 rounded-xl p-3 flex flex-col gap-3'
+        : 'bg-black/20 border border-white/5 rounded-xl p-4 flex flex-col gap-3'
+    ));
+    const connectButtonClass = computed(() => (
+      isNftVariant.value
+        ? 'bg-app-pink text-white font-bold py-2 px-8 rounded-lg border border-pink-300 hover:bg-pink-600 transition-all tech-font w-full text-sm shadow-[0_0_12px_rgba(255,77,141,0.4)]'
+        : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-2 px-8 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all tech-font w-full text-sm'
+    ));
 
     const getReadProvider = () => {
       if (walletState.provider) return walletState.provider;
@@ -315,6 +350,13 @@ export default {
       return t('home.airdrop.locked');
     };
 
+    const getClaimButtonClass = (order) => {
+      if (!canClaim(order)) return 'bg-white/5 text-gray-400 border border-white/10';
+      return isNftVariant.value
+        ? 'bg-app-pink text-white border border-pink-300 hover:bg-pink-600 shadow-[0_0_12px_rgba(255,77,141,0.4)]'
+        : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500';
+    };
+
     const parseRevert = (error) => {
       if (error?.reason) return error.reason;
       if (error?.shortMessage) return error.shortMessage;
@@ -379,6 +421,12 @@ export default {
       isAdmin,
       actionLoading,
       walletState,
+      sectionClass,
+      glowClass,
+      titleIconClass,
+      adminLinkClass,
+      contentClass,
+      connectButtonClass,
       refreshAirdrops,
       computePending,
       canClaim,
@@ -390,6 +438,7 @@ export default {
       getHintText,
       getHintClass,
       getClaimButtonText,
+      getClaimButtonClass,
       handleClaim,
       t,
     };
