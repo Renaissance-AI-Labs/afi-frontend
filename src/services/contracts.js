@@ -57,7 +57,7 @@ export const CONTRACT_ADDRESSES = {
   },
   Airdrop: {
     testnet: '0x4251CE6FbD930B85Dd17296a2CE8A63fA05cf020',
-    mainnet: '',
+    mainnet: '0x8b8E2F9249fDa65683F9EA595Ae4Ef5eD95B0698',
   }
 };
 
