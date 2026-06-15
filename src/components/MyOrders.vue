@@ -145,6 +145,10 @@
             <p class="text-base tech-font font-bold text-cyan-300 leading-snug">
               {{ t('orders.redeemPrincipalDetail', { pct: confirmModal.redeemMeta.principalPct, amount: confirmModal.redeemMeta.principalUsdt }) }}
             </p>
+            <p v-if="confirmModal.redeemMeta.principalLossPct > 0" class="mt-2 text-xs tech-font font-bold leading-snug animate-principal-loss-shake text-[rgb(103_232_249_/_var(--tw-text-opacity,1))]">
+              <span class="mr-1 text-sm">!</span>
+              {{ t('orders.redeemPrincipalLoss', { pct: confirmModal.redeemMeta.principalLossPct, amount: confirmModal.redeemMeta.principalLossUsdt }) }}
+            </p>
           </div>
           <div class="rounded-lg border border-pink-500/25 bg-pink-500/10 p-3">
             <p class="text-[10px] text-pink-200/80 tech-font uppercase tracking-wider mb-1">{{ t('orders.redeemInterestLead') }}</p>
@@ -552,11 +556,15 @@ export default {
         const pct = BigInt(pctBn);
         const principalWei = (amt * pct) / 100n;
         const principalPct = Number(pct);
+        const principalLossWei = amt > principalWei ? amt - principalWei : 0n;
+        const principalLossPct = Number.isFinite(principalPct) ? Math.max(0, 100 - principalPct) : 0;
         const interestWei = rewardWei > amt ? rewardWei - amt : 0n;
         const redeemMeta = {
           compoundCount: Number(order.compoundCount ?? 0),
           principalPct: Number.isFinite(principalPct) ? principalPct : 0,
           principalUsdt: formatUnits(principalWei),
+          principalLossPct,
+          principalLossUsdt: formatUnits(principalLossWei),
           interestAfi: formatReward(interestWei)
         };
         openConfirmModal({
@@ -564,6 +572,7 @@ export default {
           message: '',
           modalType: 'redeem',
           redeemMeta,
+          requireCountdown: true,
           action: async () => {
             actionLoading.value = id;
             try {
@@ -670,5 +679,15 @@ export default {
   0% { transform: translateY(0) scale(1); color: #ec4899; }
   50% { transform: translateY(-3px) scale(1.1); color: #fdf2f8; text-shadow: 0 0 8px rgba(236, 72, 153, 0.8); }
   100% { transform: translateY(0) scale(1); color: #ec4899; }
+}
+
+.animate-principal-loss-shake {
+  animation: principalLossShake 0.6s ease-in-out 0.15s 2;
+}
+
+@keyframes principalLossShake {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-3px); }
+  30%, 60%, 90% { transform: translateX(3px); }
 }
 </style>
