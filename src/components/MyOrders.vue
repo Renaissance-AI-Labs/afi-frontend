@@ -104,14 +104,14 @@
             
             <template v-if="status === 2">
               <button 
-                @click="handleRedeem(order)"
+                @click="handleClaimableActionUnavailable"
                 :disabled="actionLoading === order.id"
                 class="flex-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
               >
                 {{ actionLoading === order.id ? t('orders.processingAction') : t('orders.redeem') }}
               </button>
               <button 
-                @click="handleCompound(order)"
+                @click="handleClaimableActionUnavailable"
                 :disabled="actionLoading === order.id"
                 class="flex-1 bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 border border-pink-500/30 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
               >
@@ -535,6 +535,10 @@ export default {
       });
     };
 
+    const handleClaimableActionUnavailable = () => {
+      showToast(t('orders.claimableActionUnavailable'), 'info');
+    };
+
     const handleRedeem = async (order) => {
       const id = order.id;
       let rewardWei = order.currentReward ?? 0n;
@@ -645,6 +649,7 @@ export default {
       getStatusText,
       isCancelledQueue,
       handleCancelQueue,
+      handleClaimableActionUnavailable,
       handleRedeem,
       handleCompound,
       confirmModal,
