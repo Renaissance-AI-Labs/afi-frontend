@@ -104,14 +104,14 @@
             
             <template v-if="status === 2">
               <button 
-                @click="handleClaimableActionUnavailable"
+                @click="handleClaimableRedeem(order)"
                 :disabled="actionLoading === order.id"
                 class="flex-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
               >
                 {{ actionLoading === order.id ? t('orders.processingAction') : t('orders.redeem') }}
               </button>
               <button 
-                @click="handleClaimableActionUnavailable"
+                @click="handleClaimableCompound(order)"
                 :disabled="actionLoading === order.id"
                 class="flex-1 bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 border border-pink-500/30 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
               >
@@ -193,6 +193,7 @@ import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { ethers } from 'ethers';
 import { walletState } from '@/services/wallet';
 import { getContractAddress } from '@/services/contracts';
+import { ENABLE_CLAIMABLE_ORDER_ACTIONS } from '@/services/environment';
 import { showToast } from '@/services/notification';
 import StakingABI from '@/abis/Staking.json';
 import StakingViewABI from '@/abis/StakingView.json';
@@ -539,6 +540,22 @@ export default {
       showToast(t('orders.claimableActionUnavailable'), 'info');
     };
 
+    const handleClaimableRedeem = (order) => {
+      if (!ENABLE_CLAIMABLE_ORDER_ACTIONS) {
+        handleClaimableActionUnavailable();
+        return;
+      }
+      handleRedeem(order);
+    };
+
+    const handleClaimableCompound = (order) => {
+      if (!ENABLE_CLAIMABLE_ORDER_ACTIONS) {
+        handleClaimableActionUnavailable();
+        return;
+      }
+      handleCompound(order);
+    };
+
     const handleRedeem = async (order) => {
       const id = order.id;
       let rewardWei = order.currentReward ?? 0n;
@@ -650,6 +667,8 @@ export default {
       isCancelledQueue,
       handleCancelQueue,
       handleClaimableActionUnavailable,
+      handleClaimableRedeem,
+      handleClaimableCompound,
       handleRedeem,
       handleCompound,
       confirmModal,
