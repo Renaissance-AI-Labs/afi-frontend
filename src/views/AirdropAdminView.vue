@@ -81,7 +81,7 @@
             </div>
             <div class="input-block">
               <label>释放天数</label>
-              <input v-model="singleForm.days" type="number" min="0" placeholder="例如 30" />
+              <input v-model="singleForm.days" type="number" min="1" placeholder="例如 30" />
             </div>
             <div class="input-block">
               <label>门槛 USDT</label>
@@ -93,26 +93,177 @@
           </div>
 
           <div class="preview-box compact-preview">
-            <p>单个用户直接填表发放：给 <b>{{ shortAddress(singleForm.user) || '用户地址' }}</b> 发放 <b>{{ singleForm.amount || '0' }} AFI</b>，分 <b>{{ singleForm.days || '0' }} 天</b>释放，领取门槛 <b>{{ singleForm.threshold || '0' }} USDT</b>。</p>
+            <p>单个用户直接填表发放：给 <b>{{ shortAddress(singleForm.user) || '用户地址' }}</b> 发放 <b>{{ singleForm.amount || '0' }} AFI</b>，分 <b>{{ singleForm.days || '未填' }} 天</b>释放，领取门槛 <b>{{ singleForm.threshold || '未填' }} USDT</b>。</p>
           </div>
         </section>
 
         <section v-else-if="activeAdminTab === 'batch'" class="panel p-4">
           <h2 class="section-title"><i class="ph-fill ph-files text-purple-400"></i> 批量空投</h2>
-          <p class="section-desc">一行一条：用户地址,AFI数量,释放天数,领取门槛USDT；中间必须用英文逗号 "," 分隔。</p>
-          <textarea
-            v-model="batchText"
-            class="batch-input"
-            rows="6"
-            placeholder="0x0000...,1000.5,30,500.25&#10;0x0001...,88.88,15,0"
-          ></textarea>
-          <div class="preview-box compact-preview">
-            <p>有效 <b>{{ parsedBatch.valid.length }}</b> 条，错误 <b>{{ parsedBatch.invalid.length }}</b> 条。</p>
-            <p v-if="parsedBatch.invalid.length" class="text-yellow-300 mt-1">错误行：{{ parsedBatch.invalid.slice(0, 5).join('、') }}</p>
+          <div class="batch-mode-tabs">
+            <button
+              v-for="tab in batchModeTabs"
+              :key="tab.id"
+              @click="activeBatchMode = tab.id"
+              class="batch-mode-tab"
+              :class="activeBatchMode === tab.id ? 'batch-mode-tab-active' : 'batch-mode-tab-idle'"
+            >
+              {{ tab.label }}
+            </button>
           </div>
-          <button @click="createBatchAirdrop" :disabled="actionLoading === 'batch' || !canManage || parsedBatch.valid.length === 0" class="primary-btn w-full">
-            {{ actionLoading === 'batch' ? '批量发放中...' : `批量发放 ${parsedBatch.valid.length} 条` }}
-          </button>
+
+          <template v-if="activeBatchMode === 'uniform'">
+            <p class="section-desc">按下面 3 步操作：先填本次空投的统一规则，再粘贴用户地址，最后确认发放。</p>
+
+            <div class="batch-default-card">
+              <div class="flex items-start gap-3 mb-3">
+                <span class="step-badge">1</span>
+                <div>
+                  <h3 class="text-sm text-white tech-font font-bold">填写本次空投规则</h3>
+                  <p class="helper mt-1">下面三项会统一应用到所有地址。</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="input-block">
+                  <label>每人空投 AFI 数量</label>
+                  <input
+                    :value="batchDefaults.amount"
+                    type="number"
+                    min="0"
+                    placeholder="例如 1000"
+                    @input="syncBatchDefault('amount', $event)"
+                    @change="syncBatchDefault('amount', $event)"
+                    @paste="syncBatchDefaultAfterPaste('amount', $event)"
+                  />
+                </div>
+                <div class="input-block">
+                  <label>释放天数</label>
+                  <input
+                    :value="batchDefaults.days"
+                    type="number"
+                    min="1"
+                    placeholder="例如 30"
+                    @input="syncBatchDefault('days', $event)"
+                    @change="syncBatchDefault('days', $event)"
+                    @paste="syncBatchDefaultAfterPaste('days', $event)"
+                  />
+                </div>
+                <div class="input-block">
+                  <label>领取门槛 USDT</label>
+                  <input
+                    :value="batchDefaults.threshold"
+                    type="number"
+                    min="0"
+                    placeholder="没门槛填 0"
+                    @input="syncBatchDefault('threshold', $event)"
+                    @change="syncBatchDefault('threshold', $event)"
+                    @paste="syncBatchDefaultAfterPaste('threshold', $event)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="batch-address-card">
+              <div class="flex items-start gap-3 mb-3">
+                <span class="step-badge">2</span>
+                <div>
+                  <h3 class="text-sm text-white tech-font font-bold">粘贴用户地址</h3>
+                  <p class="helper mt-1">每行只能放一个完整钱包地址，地址前后不要加备注、符号或其他字符。</p>
+                </div>
+              </div>
+              <textarea
+                :value="batchText"
+                class="batch-input"
+                rows="6"
+                placeholder="举例：&#10;0x2222...2222&#10;0x3333...3333&#10;0x6666...6666"
+                @input="syncBatchText"
+                @change="syncBatchText"
+                @paste="syncBatchTextAfterPaste"
+              ></textarea>
+            </div>
+
+            <div class="preview-box compact-preview">
+              <div class="flex items-start gap-3">
+                <span class="step-badge">3</span>
+                <div>
+                  <p class="text-white font-bold mb-1">检查后确认发放</p>
+                  <p>将给 <b>{{ parsedBatch.valid.length }}</b> 个地址发放，每人 <b>{{ batchDefaults.amount || '未填' }} AFI</b>，分 <b>{{ batchDefaults.days || '未填' }} 天</b>释放，领取门槛 <b>{{ batchDefaults.threshold || '未填' }} USDT</b>。</p>
+                </div>
+              </div>
+              <p class="mt-2">已输入 <b>{{ parsedBatch.inputCount }}</b> 行，已识别地址 <b>{{ parsedBatch.valid.length }}</b> 个，重复地址 <b>{{ parsedBatch.duplicates.length }}</b> 个，格式错误 <b>{{ parsedBatch.invalid.length }}</b> 行。</p>
+              <div v-if="parsedBatch.valid.length" class="batch-check-list">
+                <div v-for="(row, index) in parsedBatch.valid" :key="`${row.rowNumber}-${row.user}`" class="batch-check-row">
+                  <span class="batch-check-index">{{ index + 1 }}</span>
+                  <span class="batch-check-address">{{ row.user }}</span>
+                </div>
+              </div>
+              <p v-if="parsedBatch.needsDefaults" class="text-yellow-300 mt-1">请先填好第 1 步的空投规则，填好后即可确认发放。</p>
+              <div v-if="parsedBatch.duplicates.length" class="batch-error-box">
+                <p class="font-bold text-yellow-200">重复地址</p>
+                <p v-for="row in parsedBatch.duplicates.slice(0, 8)" :key="`duplicate-${row.rowNumber}`">第 {{ row.rowNumber }} 行：{{ row.user }}，与第 {{ row.firstRow }} 行重复</p>
+              </div>
+              <div v-if="parsedBatch.invalid.length" class="batch-error-box">
+                <p class="font-bold text-yellow-200">格式错误</p>
+                <p v-for="row in parsedBatch.invalid.slice(0, 8)" :key="`invalid-${row.rowNumber}`">第 {{ row.rowNumber }} 行：{{ row.value }}（{{ row.reason }}）</p>
+              </div>
+            </div>
+            <button @click="createBatchAirdrop" :disabled="actionLoading === 'batch' || !canManage || !parsedBatch.canSubmit" class="primary-btn w-full">
+              {{ actionLoading === 'batch' ? '批量发放中...' : `确认批量发放 ${parsedBatch.valid.length} 个地址` }}
+            </button>
+          </template>
+
+          <template v-else>
+            <p class="section-desc">每行一条完整规则：钱包地址,AFI数量,释放天数,领取门槛USDT。每个地址可以填写不同参数。</p>
+
+            <div class="batch-address-card">
+              <div class="flex items-start gap-3 mb-3">
+                <span class="step-badge">1</span>
+                <div>
+                  <h3 class="text-sm text-white tech-font font-bold">粘贴自由规则</h3>
+                  <p class="helper mt-1">必须使用英文逗号分隔；没有领取门槛也要填 0。</p>
+                </div>
+              </div>
+              <textarea
+                :value="customBatchText"
+                class="batch-input"
+                rows="8"
+                placeholder="举例：&#10;0x2222...2222,100,30,0&#10;0x3333...3333,200,60,500"
+                @input="syncCustomBatchText"
+                @change="syncCustomBatchText"
+                @paste="syncCustomBatchTextAfterPaste"
+              ></textarea>
+            </div>
+
+            <div class="preview-box compact-preview">
+              <div class="flex items-start gap-3">
+                <span class="step-badge">2</span>
+                <div>
+                  <p class="text-white font-bold mb-1">检查后确认发放</p>
+                  <p>将按每行填写的数量、释放天数和领取门槛分别发放。</p>
+                </div>
+              </div>
+              <p class="mt-2">已输入 <b>{{ parsedCustomBatch.inputCount }}</b> 行，已识别地址 <b>{{ parsedCustomBatch.valid.length }}</b> 个，重复地址 <b>{{ parsedCustomBatch.duplicates.length }}</b> 个，格式错误 <b>{{ parsedCustomBatch.invalid.length }}</b> 行。</p>
+              <div v-if="parsedCustomBatch.valid.length" class="batch-check-list">
+                <div v-for="(row, index) in parsedCustomBatch.valid" :key="`${row.rowNumber}-${row.user}`" class="batch-check-row">
+                  <span class="batch-check-index">{{ index + 1 }}</span>
+                  <span class="batch-check-detail">
+                    <span class="batch-check-address">{{ row.user }}</span>
+                    <span class="batch-check-meta">{{ row.amount }} AFI · {{ row.days }} 天 · 门槛 {{ row.threshold }} USDT</span>
+                  </span>
+                </div>
+              </div>
+              <div v-if="parsedCustomBatch.duplicates.length" class="batch-error-box">
+                <p class="font-bold text-yellow-200">重复地址</p>
+                <p v-for="row in parsedCustomBatch.duplicates.slice(0, 8)" :key="`custom-duplicate-${row.rowNumber}`">第 {{ row.rowNumber }} 行：{{ row.user }}，与第 {{ row.firstRow }} 行重复</p>
+              </div>
+              <div v-if="parsedCustomBatch.invalid.length" class="batch-error-box">
+                <p class="font-bold text-yellow-200">格式错误</p>
+                <p v-for="row in parsedCustomBatch.invalid.slice(0, 8)" :key="`custom-invalid-${row.rowNumber}`">第 {{ row.rowNumber }} 行：{{ row.value }}（{{ row.reason }}）</p>
+              </div>
+            </div>
+            <button @click="createBatchAirdrop" :disabled="actionLoading === 'batch' || !canManage || !parsedCustomBatch.canSubmit" class="primary-btn w-full">
+              {{ actionLoading === 'batch' ? '批量发放中...' : `确认批量发放 ${parsedCustomBatch.valid.length} 个地址` }}
+            </button>
+          </template>
         </section>
 
         <section v-else-if="activeAdminTab === 'fund'" class="panel p-4">
@@ -254,6 +405,7 @@ export default {
     const hasManagerRole = ref(false);
     const actionLoading = ref(null);
     const activeAdminTab = ref('single');
+    const activeBatchMode = ref('uniform');
     const airdropAddress = getContractAddress('Airdrop');
     const afiTokenAddress = ref('');
     const stakingAddress = ref('');
@@ -274,16 +426,27 @@ export default {
     const singleForm = reactive({
       user: '',
       amount: '',
-      days: '30',
-      threshold: '0',
+      days: '',
+      threshold: '',
     });
     const batchText = ref('');
+    const customBatchText = ref('');
+    const batchValidationTick = ref(0);
+    const batchDefaults = reactive({
+      amount: '',
+      days: '',
+      threshold: '',
+    });
 
     const adminTabs = [
       { id: 'single', label: '单地址空投', icon: 'ph-fill ph-user-plus' },
       { id: 'batch', label: '批量空投', icon: 'ph-fill ph-files' },
       { id: 'fund', label: '充值 AFI', icon: 'ph-fill ph-vault' },
       { id: 'records', label: '空投记录', icon: 'ph-fill ph-clock-counter-clockwise' },
+    ];
+    const batchModeTabs = [
+      { id: 'uniform', label: '统一规则空投' },
+      { id: 'custom', label: '自由规则空投' },
     ];
 
     const getProvider = () => {
@@ -312,36 +475,193 @@ export default {
     const isNonNegativeNumber = (value) => /^\d+(\.\d+)?$/.test(value);
     // Positive integer without leading zeros, e.g. "1", "30" (rejects "0", "1.5", "-3")
     const isPositiveInteger = (value) => /^[1-9]\d*$/.test(value);
+    // BSC uses EVM addresses: exactly 0x + 40 hex chars. Mixed-case addresses must pass checksum.
+    const isBscAddress = (value) => /^0x[a-fA-F0-9]{40}$/.test(value) && ethers.isAddress(value);
+
+    const syncBatchDefault = (field, event) => {
+      if (!Object.prototype.hasOwnProperty.call(batchDefaults, field)) return;
+      batchDefaults[field] = event?.target?.value || '';
+      batchValidationTick.value += 1;
+    };
+
+    const syncBatchDefaultAfterPaste = (field, event) => {
+      const target = event?.target;
+      window.setTimeout(() => syncBatchDefault(field, { target }), 0);
+    };
+
+    const syncBatchText = (event) => {
+      batchText.value = event?.target?.value || '';
+      batchValidationTick.value += 1;
+    };
+
+    const syncBatchTextAfterPaste = (event) => {
+      const target = event?.target;
+      window.setTimeout(() => syncBatchText({ target }), 0);
+    };
+
+    const syncCustomBatchText = (event) => {
+      customBatchText.value = event?.target?.value || '';
+      batchValidationTick.value += 1;
+    };
+
+    const syncCustomBatchTextAfterPaste = (event) => {
+      const target = event?.target;
+      window.setTimeout(() => syncCustomBatchText({ target }), 0);
+    };
 
     const parsedBatch = computed(() => {
+      batchValidationTick.value;
+      const amountDefault = batchDefaults.amount.trim();
+      const daysDefault = batchDefaults.days.trim();
+      const thresholdDefault = batchDefaults.threshold.trim();
+      const hasValidDefaults = isNonNegativeNumber(amountDefault)
+        && Number(amountDefault) > 0
+        && isPositiveInteger(daysDefault)
+        && isNonNegativeNumber(thresholdDefault);
       const rows = batchText.value
-        .split('\n')
+        .split(/\r?\n/)
         .map((line) => line.trim())
         .filter(Boolean);
       const valid = [];
       const invalid = [];
+      const duplicates = [];
+      const seenUsers = new Map();
+      let needsDefaults = false;
+
+      const addValidRow = (row) => {
+        const checksumAddress = ethers.getAddress(row.user);
+        const userKey = checksumAddress.toLowerCase();
+        const firstRow = seenUsers.get(userKey);
+        if (firstRow) {
+          duplicates.push({
+            rowNumber: row.rowNumber,
+            firstRow,
+            user: checksumAddress,
+          });
+          return;
+        }
+        seenUsers.set(userKey, row.rowNumber);
+        valid.push({
+          ...row,
+          user: checksumAddress,
+        });
+      };
 
       rows.forEach((line, index) => {
         const rowNumber = index + 1;
         const parts = line.split(',').map((item) => item.trim());
+        if (parts.length === 1) {
+          const [rawUser] = parts;
+          const user = rawUser;
+          if (!isBscAddress(user)) {
+            invalid.push({ rowNumber, value: rawUser || line, reason: '必须是完整 BSC 地址，不能带多余字符' });
+            return;
+          }
+          if (!hasValidDefaults) needsDefaults = true;
+          addValidRow({
+            rowNumber,
+            user,
+            amount: amountDefault,
+            days: daysDefault,
+            threshold: thresholdDefault,
+          });
+          return;
+        }
+
         // Exactly 3 English commas => exactly 4 fields: user,amount,days,threshold
         if (parts.length !== 4) {
-          invalid.push(`第 ${rowNumber} 行`);
+          invalid.push({ rowNumber, value: line, reason: '每行只能填一个完整地址' });
           return;
         }
         const [user, amount, days, threshold] = parts;
-        const isValid = ethers.isAddress(user)
+        const isValid = isBscAddress(user)
           && isNonNegativeNumber(amount) && Number(amount) > 0
           && isPositiveInteger(days)
           && isNonNegativeNumber(threshold);
         if (!isValid) {
-          invalid.push(`第 ${rowNumber} 行`);
+          invalid.push({ rowNumber, value: line, reason: '地址或参数格式不正确' });
           return;
         }
-        valid.push({ user, amount, days, threshold });
+        addValidRow({ rowNumber, user, amount, days, threshold });
       });
 
-      return { valid, invalid };
+      return {
+        valid,
+        invalid,
+        duplicates,
+        needsDefaults,
+        inputCount: rows.length,
+        canSubmit: valid.length > 0 && invalid.length === 0 && duplicates.length === 0 && !needsDefaults,
+      };
+    });
+
+    const parsedCustomBatch = computed(() => {
+      batchValidationTick.value;
+      const rows = customBatchText.value
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const valid = [];
+      const invalid = [];
+      const duplicates = [];
+      const seenUsers = new Map();
+
+      const addValidRow = (row) => {
+        const checksumAddress = ethers.getAddress(row.user);
+        const userKey = checksumAddress.toLowerCase();
+        const firstRow = seenUsers.get(userKey);
+        if (firstRow) {
+          duplicates.push({
+            rowNumber: row.rowNumber,
+            firstRow,
+            user: checksumAddress,
+          });
+          return;
+        }
+        seenUsers.set(userKey, row.rowNumber);
+        valid.push({
+          ...row,
+          user: checksumAddress,
+        });
+      };
+
+      rows.forEach((line, index) => {
+        const rowNumber = index + 1;
+        const parts = line.split(',').map((item) => item.trim());
+        if (parts.length !== 4) {
+          invalid.push({ rowNumber, value: line, reason: '必须按 地址,数量,释放天数,领取门槛 填写' });
+          return;
+        }
+
+        const [user, amount, days, threshold] = parts;
+        if (!isBscAddress(user)) {
+          invalid.push({ rowNumber, value: line, reason: '地址必须是完整 BSC 地址，不能带多余字符' });
+          return;
+        }
+        if (!isNonNegativeNumber(amount) || Number(amount) <= 0) {
+          invalid.push({ rowNumber, value: line, reason: 'AFI 数量必须大于 0' });
+          return;
+        }
+        if (!isPositiveInteger(days)) {
+          invalid.push({ rowNumber, value: line, reason: '释放天数必须是大于 0 的整数' });
+          return;
+        }
+        if (!isNonNegativeNumber(threshold)) {
+          invalid.push({ rowNumber, value: line, reason: '领取门槛必须是数字，没有门槛请填 0' });
+          return;
+        }
+
+        addValidRow({ rowNumber, user, amount, days, threshold });
+      });
+
+      return {
+        valid,
+        invalid,
+        duplicates,
+        needsDefaults: false,
+        inputCount: rows.length,
+        canSubmit: valid.length > 0 && invalid.length === 0 && duplicates.length === 0,
+      };
     });
 
     const formatToken = (value, precision = 2) => {
@@ -601,6 +921,10 @@ export default {
         showToast('释放天数必须大于 0', 'error');
         return;
       }
+      if (!isNonNegativeNumber(singleForm.threshold.toString().trim())) {
+        showToast('请输入正确的领取门槛，没有门槛请填 0', 'error');
+        return;
+      }
 
       actionLoading.value = 'single';
       try {
@@ -608,7 +932,7 @@ export default {
           singleForm.user,
           ethers.parseEther(singleForm.amount.toString()),
           duration,
-          ethers.parseEther((singleForm.threshold || '0').toString()),
+          ethers.parseEther(singleForm.threshold.toString()),
         );
         showToast('发放交易已提交', 'info');
         await tx.wait();
@@ -624,27 +948,41 @@ export default {
     };
 
     const createBatchAirdrop = async () => {
-      if (parsedBatch.value.invalid.length) {
-        showToast('请先修改批量文本里的错误行', 'error');
+      const currentBatch = activeBatchMode.value === 'custom' ? parsedCustomBatch.value : parsedBatch.value;
+      if (currentBatch.invalid.length) {
+        showToast('请先修改格式错误的地址', 'error');
         return;
       }
-      if (parsedBatch.value.valid.length > 100) {
+      if (currentBatch.duplicates.length) {
+        showToast('请先删除重复地址', 'error');
+        return;
+      }
+      if (currentBatch.needsDefaults) {
+        showToast('请先填好本次空投规则', 'error');
+        return;
+      }
+      if (currentBatch.valid.length > 100) {
         showToast('一次最多建议发 100 条，请拆分批次', 'error');
         return;
       }
 
       actionLoading.value = 'batch';
       try {
-        const users = parsedBatch.value.valid.map((row) => row.user);
-        const amounts = parsedBatch.value.valid.map((row) => ethers.parseEther(row.amount.toString()));
-        const durations = parsedBatch.value.valid.map((row) => toDurationSeconds(row.days));
-        const thresholds = parsedBatch.value.valid.map((row) => ethers.parseEther((row.threshold || '0').toString()));
+        const users = currentBatch.valid.map((row) => row.user);
+        const amounts = currentBatch.valid.map((row) => ethers.parseEther(row.amount.toString()));
+        const durations = currentBatch.valid.map((row) => toDurationSeconds(row.days));
+        const thresholds = currentBatch.valid.map((row) => ethers.parseEther(row.threshold.toString()));
 
         const tx = await getAirdrop(walletState.signer).addAirdropBatch(users, amounts, durations, thresholds);
         showToast('批量发放交易已提交', 'info');
         await tx.wait();
         showToast('批量空投发放成功', 'success');
-        batchText.value = '';
+        if (activeBatchMode.value === 'custom') {
+          customBatchText.value = '';
+        } else {
+          batchText.value = '';
+        }
+        batchValidationTick.value += 1;
         await refreshAdminData();
       } catch (error) {
         showToast(parseRevert(error) || '批量空投发放失败', 'error');
@@ -667,7 +1005,9 @@ export default {
       canManage,
       actionLoading,
       activeAdminTab,
+      activeBatchMode,
       adminTabs,
+      batchModeTabs,
       airdropAddress,
       afiTokenAddress,
       stakingAddress,
@@ -686,7 +1026,16 @@ export default {
       fundAmount,
       singleForm,
       batchText,
+      customBatchText,
+      batchDefaults,
+      syncBatchDefault,
+      syncBatchDefaultAfterPaste,
+      syncBatchText,
+      syncBatchTextAfterPaste,
+      syncCustomBatchText,
+      syncCustomBatchTextAfterPaste,
       parsedBatch,
+      parsedCustomBatch,
       refreshAdminData,
       loadMoreRecords,
       copyText,
@@ -848,6 +1197,135 @@ export default {
   font-size: 0.75rem;
   line-height: 1.6;
   font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.batch-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.6rem 0 0.75rem;
+  border-radius: 0.8rem;
+  padding: 0.25rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.batch-mode-tab {
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: 0.2s ease;
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.batch-mode-tab-active {
+  color: white;
+  background: linear-gradient(to right, rgba(147, 51, 234, 0.45), rgba(219, 39, 119, 0.36));
+  border: 1px solid rgba(216, 180, 254, 0.28);
+}
+
+.batch-mode-tab-idle {
+  color: rgb(209 213 219);
+  border: 1px solid transparent;
+}
+
+.batch-default-card {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(168, 85, 247, 0.22);
+  background: rgba(168, 85, 247, 0.08);
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.batch-address-card {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.75rem;
+}
+
+.step-badge {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to right, rgb(147 51 234), rgb(219 39 119));
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.batch-check-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 11rem;
+  overflow-y: auto;
+  margin-top: 0.55rem;
+  padding: 0.45rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(34, 211, 238, 0.16);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.batch-check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.batch-check-index {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34, 211, 238, 0.16);
+  color: rgb(165 243 252);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.batch-check-address {
+  min-width: 0;
+  color: white;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.batch-check-detail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.batch-check-meta {
+  color: rgb(165 243 252);
+  font-size: 0.66rem;
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.batch-error-box {
+  margin-top: 0.45rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(250, 204, 21, 0.22);
+  background: rgba(250, 204, 21, 0.08);
+  color: rgb(253 224 71);
+  padding: 0.5rem 0.6rem;
+  font-size: 0.7rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .compact-preview {
