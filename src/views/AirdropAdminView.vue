@@ -53,7 +53,7 @@
 
       <template v-else>
         <section class="panel p-2">
-          <div class="grid grid-cols-4 gap-2">
+          <div class="grid grid-cols-5 gap-1 sm:gap-2">
             <button
               v-for="tab in adminTabs"
               :key="tab.id"
@@ -285,6 +285,71 @@
           </div>
         </section>
 
+        <section v-else-if="activeAdminTab === 'blacklist'" class="panel p-4">
+          <h2 class="section-title"><i class="ph-fill ph-shield-warning text-purple-400"></i> 黑名单管理</h2>
+          <p class="section-desc">被加入黑名单的地址不能领取空投；解除后可继续按释放和门槛规则领取。</p>
+
+          <div class="batch-address-card">
+            <div class="flex items-start gap-3 mb-3">
+              <span class="step-badge">1</span>
+              <div>
+                <h3 class="text-sm text-white tech-font font-bold">粘贴钱包地址</h3>
+                <p class="helper mt-1">支持换行或空格分隔多个地址；提交时会统一设置为拉黑或解除拉黑。</p>
+              </div>
+            </div>
+            <textarea
+              :value="blacklistText"
+              class="batch-input"
+              rows="7"
+              placeholder="举例：&#10;0x2222...2222&#10;0x3333...3333 0x6666...6666"
+              @input="syncBlacklistText"
+              @change="syncBlacklistText"
+              @paste="syncBlacklistTextAfterPaste"
+            ></textarea>
+          </div>
+
+          <div class="preview-box compact-preview">
+            <div class="flex items-start gap-3">
+              <span class="step-badge">2</span>
+              <div>
+                <p class="text-white font-bold mb-1">检查后提交</p>
+                <p>已输入 <b>{{ parsedBlacklist.inputCount }}</b> 个地址项，已识别地址 <b>{{ parsedBlacklist.valid.length }}</b> 个，重复地址 <b>{{ parsedBlacklist.duplicates.length }}</b> 个，格式错误 <b>{{ parsedBlacklist.invalid.length }}</b> 个。</p>
+              </div>
+            </div>
+            <div v-if="parsedBlacklist.valid.length" class="batch-check-list">
+              <div v-for="(row, index) in parsedBlacklist.valid" :key="`${row.rowNumber}-${row.user}`" class="batch-check-row">
+                <span class="batch-check-index">{{ index + 1 }}</span>
+                <span class="batch-check-address">{{ row.user }}</span>
+              </div>
+            </div>
+            <div v-if="parsedBlacklist.duplicates.length" class="batch-error-box">
+              <p class="font-bold text-yellow-200">重复地址</p>
+              <p v-for="row in parsedBlacklist.duplicates.slice(0, 8)" :key="`blacklist-duplicate-${row.rowNumber}-${row.tokenIndex}`">{{ row.source }}：{{ row.user }}，与{{ row.firstSource }}重复</p>
+            </div>
+            <div v-if="parsedBlacklist.invalid.length" class="batch-error-box">
+              <p class="font-bold text-yellow-200">格式错误</p>
+              <p v-for="row in parsedBlacklist.invalid.slice(0, 8)" :key="`blacklist-invalid-${row.rowNumber}-${row.tokenIndex}`">{{ row.source }}：{{ row.value }}（{{ row.reason }}）</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              @click="setBlacklistStatus(true)"
+              :disabled="actionLoading === 'blacklist-add' || actionLoading === 'blacklist-remove' || !canManage || !parsedBlacklist.canSubmit"
+              class="primary-btn w-full"
+            >
+              {{ actionLoading === 'blacklist-add' ? '拉黑中...' : `加入黑名单 ${parsedBlacklist.valid.length} 个地址` }}
+            </button>
+            <button
+              @click="setBlacklistStatus(false)"
+              :disabled="actionLoading === 'blacklist-add' || actionLoading === 'blacklist-remove' || !canManage || !parsedBlacklist.canSubmit"
+              class="secondary-btn w-full"
+            >
+              {{ actionLoading === 'blacklist-remove' ? '解除中...' : `解除黑名单 ${parsedBlacklist.valid.length} 个地址` }}
+            </button>
+          </div>
+        </section>
+
         <section v-else class="panel p-4">
           <h2 class="section-title"><i class="ph-fill ph-clock-counter-clockwise text-purple-400"></i> 空投记录</h2>
           <p class="section-desc">每页显示 30 条，滑到底部可加载更早记录。</p>
@@ -431,7 +496,9 @@ export default {
     });
     const batchText = ref('');
     const customBatchText = ref('');
+    const blacklistText = ref('');
     const batchValidationTick = ref(0);
+    const blacklistValidationTick = ref(0);
     const batchDefaults = reactive({
       amount: '',
       days: '',
@@ -443,6 +510,7 @@ export default {
       { id: 'batch', label: '批量空投', icon: 'ph-fill ph-files' },
       { id: 'fund', label: '充值 AFI', icon: 'ph-fill ph-vault' },
       { id: 'records', label: '空投记录', icon: 'ph-fill ph-clock-counter-clockwise' },
+      { id: 'blacklist', label: '黑名单', icon: 'ph-fill ph-shield-warning' },
     ];
     const batchModeTabs = [
       { id: 'uniform', label: '统一规则空投' },
@@ -507,6 +575,16 @@ export default {
     const syncCustomBatchTextAfterPaste = (event) => {
       const target = event?.target;
       window.setTimeout(() => syncCustomBatchText({ target }), 0);
+    };
+
+    const syncBlacklistText = (event) => {
+      blacklistText.value = event?.target?.value || '';
+      blacklistValidationTick.value += 1;
+    };
+
+    const syncBlacklistTextAfterPaste = (event) => {
+      const target = event?.target;
+      window.setTimeout(() => syncBlacklistText({ target }), 0);
     };
 
     const parsedBatch = computed(() => {
@@ -658,6 +736,72 @@ export default {
         duplicates,
         needsDefaults: false,
         inputCount: rows.length,
+        canSubmit: valid.length > 0 && invalid.length === 0 && duplicates.length === 0,
+      };
+    });
+
+    const parsedBlacklist = computed(() => {
+      blacklistValidationTick.value;
+      const rows = blacklistText.value
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const entries = rows.flatMap((line, rowIndex) => {
+        const tokens = line.split(/\s+/).filter(Boolean);
+        return tokens.map((value, tokenIndex) => ({
+          rowNumber: rowIndex + 1,
+          tokenIndex: tokenIndex + 1,
+          source: tokens.length > 1 ? `第 ${rowIndex + 1} 行第 ${tokenIndex + 1} 个` : `第 ${rowIndex + 1} 行`,
+          value,
+        }));
+      });
+      const valid = [];
+      const invalid = [];
+      const duplicates = [];
+      const seenUsers = new Map();
+
+      entries.forEach((entry) => {
+        const user = entry.value;
+        if (!isBscAddress(user)) {
+          invalid.push({
+            rowNumber: entry.rowNumber,
+            tokenIndex: entry.tokenIndex,
+            source: entry.source,
+            value: entry.value,
+            reason: '必须是完整 BSC 地址，不能带多余字符',
+          });
+          return;
+        }
+
+        const checksumAddress = ethers.getAddress(user);
+        const userKey = checksumAddress.toLowerCase();
+        const firstSeen = seenUsers.get(userKey);
+        if (firstSeen) {
+          duplicates.push({
+            rowNumber: entry.rowNumber,
+            tokenIndex: entry.tokenIndex,
+            source: entry.source,
+            firstRow: firstSeen.rowNumber,
+            firstSource: firstSeen.source,
+            user: checksumAddress,
+          });
+          return;
+        }
+
+        seenUsers.set(userKey, { rowNumber: entry.rowNumber, source: entry.source });
+        valid.push({
+          rowNumber: entry.rowNumber,
+          tokenIndex: entry.tokenIndex,
+          source: entry.source,
+          user: checksumAddress,
+        });
+      });
+
+      return {
+        valid,
+        invalid,
+        duplicates,
+        inputCount: entries.length,
         canSubmit: valid.length > 0 && invalid.length === 0 && duplicates.length === 0,
       };
     });
@@ -989,6 +1133,42 @@ export default {
       }
     };
 
+    const setBlacklistStatus = async (status) => {
+      const currentBatch = parsedBlacklist.value;
+      if (currentBatch.invalid.length) {
+        showToast('请先修改格式错误的地址', 'error');
+        return;
+      }
+      if (currentBatch.duplicates.length) {
+        showToast('请先删除重复地址', 'error');
+        return;
+      }
+      if (!currentBatch.valid.length) {
+        showToast('请先填写钱包地址', 'error');
+        return;
+      }
+      if (currentBatch.valid.length > 100) {
+        showToast('一次最多建议处理 100 个地址，请拆分批次', 'error');
+        return;
+      }
+
+      actionLoading.value = status ? 'blacklist-add' : 'blacklist-remove';
+      try {
+        const users = currentBatch.valid.map((row) => row.user);
+        const tx = await getAirdrop(walletState.signer).setBlacklistBatch(users, status);
+        showToast(status ? '拉黑交易已提交' : '解除交易已提交', 'info');
+        await tx.wait();
+        showToast(status ? '已加入黑名单' : '已解除黑名单', 'success');
+        blacklistText.value = '';
+        blacklistValidationTick.value += 1;
+        await refreshAdminData();
+      } catch (error) {
+        showToast(parseRevert(error) || (status ? '加入黑名单失败' : '解除黑名单失败'), 'error');
+      } finally {
+        actionLoading.value = null;
+      }
+    };
+
     onMounted(refreshAdminData);
 
     watch(() => [walletState.isConnected, walletState.address], () => {
@@ -1025,6 +1205,7 @@ export default {
       singleForm,
       batchText,
       customBatchText,
+      blacklistText,
       batchDefaults,
       syncBatchDefault,
       syncBatchDefaultAfterPaste,
@@ -1032,8 +1213,11 @@ export default {
       syncBatchTextAfterPaste,
       syncCustomBatchText,
       syncCustomBatchTextAfterPaste,
+      syncBlacklistText,
+      syncBlacklistTextAfterPaste,
       parsedBatch,
       parsedCustomBatch,
+      parsedBlacklist,
       refreshAdminData,
       loadMoreRecords,
       copyText,
@@ -1045,6 +1229,7 @@ export default {
       fundPool,
       createSingleAirdrop,
       createBatchAirdrop,
+      setBlacklistStatus,
     };
   },
 };
@@ -1122,22 +1307,28 @@ export default {
 }
 
 .tab-btn {
-  min-height: 3rem;
+  min-height: 2.7rem;
   border-radius: 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
+  gap: 0.1rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.72rem;
+  padding: 0.35rem 0.15rem;
+  font-size: clamp(0.58rem, 2.35vw, 0.72rem);
   font-weight: 700;
+  line-height: 1.15;
   font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
   transition: 0.2s ease;
 }
 
 .tab-btn i {
   font-size: 1rem;
+}
+
+.tab-btn span {
+  white-space: nowrap;
 }
 
 .tab-btn-active {
