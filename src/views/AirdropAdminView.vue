@@ -167,14 +167,14 @@
                 <span class="step-badge">2</span>
                 <div>
                   <h3 class="text-sm text-white tech-font font-bold">粘贴用户地址</h3>
-                  <p class="helper mt-1">每行只能放一个完整钱包地址，地址前后不要加备注、符号或其他字符。</p>
+                  <p class="helper mt-1">支持换行或空格分隔多个地址；每一项都必须是完整钱包地址，不能加备注或其他字符。</p>
                 </div>
               </div>
               <textarea
                 :value="batchText"
                 class="batch-input"
                 rows="6"
-                placeholder="举例：&#10;0x2222...2222&#10;0x3333...3333&#10;0x6666...6666"
+                placeholder="举例：&#10;0x2222...2222&#10;0x3333...3333 0x6666...6666"
                 @input="syncBatchText"
                 @change="syncBatchText"
                 @paste="syncBatchTextAfterPaste"
@@ -189,7 +189,7 @@
                   <p>将给 <b>{{ parsedBatch.valid.length }}</b> 个地址发放，每人 <b>{{ batchDefaults.amount || '未填' }} AFI</b>，分 <b>{{ batchDefaults.days || '未填' }} 天</b>释放，领取门槛 <b>{{ batchDefaults.threshold || '未填' }} USDT</b>。</p>
                 </div>
               </div>
-              <p class="mt-2">已输入 <b>{{ parsedBatch.inputCount }}</b> 行，已识别地址 <b>{{ parsedBatch.valid.length }}</b> 个，重复地址 <b>{{ parsedBatch.duplicates.length }}</b> 个，格式错误 <b>{{ parsedBatch.invalid.length }}</b> 行。</p>
+              <p class="mt-2">已输入 <b>{{ parsedBatch.inputCount }}</b> 个地址项，已识别地址 <b>{{ parsedBatch.valid.length }}</b> 个，重复地址 <b>{{ parsedBatch.duplicates.length }}</b> 个，格式错误 <b>{{ parsedBatch.invalid.length }}</b> 个。</p>
               <div v-if="parsedBatch.valid.length" class="batch-check-list">
                 <div v-for="(row, index) in parsedBatch.valid" :key="`${row.rowNumber}-${row.user}`" class="batch-check-row">
                   <span class="batch-check-index">{{ index + 1 }}</span>
@@ -199,11 +199,11 @@
               <p v-if="parsedBatch.needsDefaults" class="text-yellow-300 mt-1">请先填好第 1 步的空投规则，填好后即可确认发放。</p>
               <div v-if="parsedBatch.duplicates.length" class="batch-error-box">
                 <p class="font-bold text-yellow-200">重复地址</p>
-                <p v-for="row in parsedBatch.duplicates.slice(0, 8)" :key="`duplicate-${row.rowNumber}`">第 {{ row.rowNumber }} 行：{{ row.user }}，与第 {{ row.firstRow }} 行重复</p>
+                <p v-for="row in parsedBatch.duplicates.slice(0, 8)" :key="`duplicate-${row.rowNumber}-${row.tokenIndex}`">{{ row.source }}：{{ row.user }}，与{{ row.firstSource }}重复</p>
               </div>
               <div v-if="parsedBatch.invalid.length" class="batch-error-box">
                 <p class="font-bold text-yellow-200">格式错误</p>
-                <p v-for="row in parsedBatch.invalid.slice(0, 8)" :key="`invalid-${row.rowNumber}`">第 {{ row.rowNumber }} 行：{{ row.value }}（{{ row.reason }}）</p>
+                <p v-for="row in parsedBatch.invalid.slice(0, 8)" :key="`invalid-${row.rowNumber}-${row.tokenIndex}`">{{ row.source }}：{{ row.value }}（{{ row.reason }}）</p>
               </div>
             </div>
             <button @click="createBatchAirdrop" :disabled="actionLoading === 'batch' || !canManage || !parsedBatch.canSubmit" class="primary-btn w-full">
@@ -522,6 +522,15 @@ export default {
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter(Boolean);
+      const entries = rows.flatMap((line, rowIndex) => {
+        const tokens = line.split(/\s+/).filter(Boolean);
+        return tokens.map((value, tokenIndex) => ({
+          rowNumber: rowIndex + 1,
+          tokenIndex: tokenIndex + 1,
+          source: tokens.length > 1 ? `第 ${rowIndex + 1} 行第 ${tokenIndex + 1} 个` : `第 ${rowIndex + 1} 行`,
+          value,
+        }));
+      });
       const valid = [];
       const invalid = [];
       const duplicates = [];
@@ -531,58 +540,47 @@ export default {
       const addValidRow = (row) => {
         const checksumAddress = ethers.getAddress(row.user);
         const userKey = checksumAddress.toLowerCase();
-        const firstRow = seenUsers.get(userKey);
-        if (firstRow) {
+        const firstSeen = seenUsers.get(userKey);
+        if (firstSeen) {
           duplicates.push({
             rowNumber: row.rowNumber,
-            firstRow,
+            tokenIndex: row.tokenIndex,
+            source: row.source,
+            firstRow: firstSeen.rowNumber,
+            firstSource: firstSeen.source,
             user: checksumAddress,
           });
           return;
         }
-        seenUsers.set(userKey, row.rowNumber);
+        seenUsers.set(userKey, { rowNumber: row.rowNumber, source: row.source });
         valid.push({
           ...row,
           user: checksumAddress,
         });
       };
 
-      rows.forEach((line, index) => {
-        const rowNumber = index + 1;
-        const parts = line.split(',').map((item) => item.trim());
-        if (parts.length === 1) {
-          const [rawUser] = parts;
-          const user = rawUser;
-          if (!isBscAddress(user)) {
-            invalid.push({ rowNumber, value: rawUser || line, reason: '必须是完整 BSC 地址，不能带多余字符' });
-            return;
-          }
-          if (!hasValidDefaults) needsDefaults = true;
-          addValidRow({
-            rowNumber,
-            user,
-            amount: amountDefault,
-            days: daysDefault,
-            threshold: thresholdDefault,
+      entries.forEach((entry) => {
+        const user = entry.value;
+        if (!isBscAddress(user)) {
+          invalid.push({
+            rowNumber: entry.rowNumber,
+            tokenIndex: entry.tokenIndex,
+            source: entry.source,
+            value: entry.value,
+            reason: '必须是完整 BSC 地址，不能带多余字符',
           });
           return;
         }
-
-        // Exactly 3 English commas => exactly 4 fields: user,amount,days,threshold
-        if (parts.length !== 4) {
-          invalid.push({ rowNumber, value: line, reason: '每行只能填一个完整地址' });
-          return;
-        }
-        const [user, amount, days, threshold] = parts;
-        const isValid = isBscAddress(user)
-          && isNonNegativeNumber(amount) && Number(amount) > 0
-          && isPositiveInteger(days)
-          && isNonNegativeNumber(threshold);
-        if (!isValid) {
-          invalid.push({ rowNumber, value: line, reason: '地址或参数格式不正确' });
-          return;
-        }
-        addValidRow({ rowNumber, user, amount, days, threshold });
+        if (!hasValidDefaults) needsDefaults = true;
+        addValidRow({
+          rowNumber: entry.rowNumber,
+          tokenIndex: entry.tokenIndex,
+          source: entry.source,
+          user,
+          amount: amountDefault,
+          days: daysDefault,
+          threshold: thresholdDefault,
+        });
       });
 
       return {
@@ -590,7 +588,7 @@ export default {
         invalid,
         duplicates,
         needsDefaults,
-        inputCount: rows.length,
+        inputCount: entries.length,
         canSubmit: valid.length > 0 && invalid.length === 0 && duplicates.length === 0 && !needsDefaults,
       };
     });
