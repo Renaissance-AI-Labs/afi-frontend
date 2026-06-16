@@ -270,7 +270,6 @@ export default {
     };
 
     const canClaim = (order) => {
-      if (order.isBlacklisted) return false;
       if (computePending(order) <= 0n) return false;
       return order.stakingBalance >= order.claimThreshold;
     };
@@ -306,7 +305,6 @@ export default {
     };
 
     const getStatusText = (order) => {
-      if (order.isBlacklisted) return t('home.airdrop.statusBlocked');
       if (canClaim(order)) return t('home.airdrop.statusClaimable');
       if (computePending(order) <= 0n) {
         return now.value >= order.endTime ? t('home.airdrop.completed') : t('home.airdrop.statusReleasing');
@@ -316,7 +314,6 @@ export default {
     };
 
     const getStatusClass = (order) => {
-      if (order.isBlacklisted) return 'bg-red-500/20 text-red-400 border-red-500/30';
       if (canClaim(order)) return 'bg-green-500/20 text-green-400 border-green-500/30';
       if (computePending(order) <= 0n && now.value >= order.endTime) return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
       if (computePending(order) <= 0n) return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
@@ -325,7 +322,6 @@ export default {
     };
 
     const getHintText = (order) => {
-      if (order.isBlacklisted) return t('home.airdrop.blacklisted');
       if (order.claimThreshold <= 0n) return t('home.airdrop.noThreshold');
       if (order.stakingBalance >= order.claimThreshold) {
         return t('home.airdrop.thresholdMet', { amount: formatToken(order.claimThreshold) });
@@ -337,7 +333,6 @@ export default {
     };
 
     const getHintClass = (order) => {
-      if (order.isBlacklisted) return 'text-red-300';
       if (order.claimThreshold > order.stakingBalance) return 'text-yellow-300';
       return 'text-gray-400';
     };
@@ -345,7 +340,6 @@ export default {
     const getClaimButtonText = (order) => {
       if (actionLoading.value === order.recordId) return t('home.airdrop.claiming');
       if (canClaim(order)) return t('home.airdrop.claim');
-      if (order.isBlacklisted) return t('home.airdrop.unavailable');
       if (computePending(order) <= 0n) return t('home.airdrop.noPending');
       return t('home.airdrop.locked');
     };
@@ -357,23 +351,40 @@ export default {
         : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500';
     };
 
+    const translateErrorMessage = (message, error) => {
+      const rawMessage = String(message || '');
+      const normalized = rawMessage.toLowerCase();
+      if (error?.code === 4001 || error?.code === 'ACTION_REJECTED' || normalized.includes('reject')) {
+        return t('home.staking.cancelled');
+      }
+      if (rawMessage.includes('Amount below claimed')) {
+        return t('home.airdrop.amountBelowClaimed');
+      }
+      return rawMessage;
+    };
+
     const parseRevert = (error) => {
-      if (error?.reason) return error.reason;
-      if (error?.shortMessage) return error.shortMessage;
+      if (error?.reason) return translateErrorMessage(error.reason, error);
+      if (error?.shortMessage) return translateErrorMessage(error.shortMessage, error);
       const data = error?.data?.data || error?.data;
       if (typeof data === 'string' && data.startsWith('0x08c379a0')) {
         try {
-          return ethers.AbiCoder.defaultAbiCoder()
+          const decoded = ethers.AbiCoder.defaultAbiCoder()
             .decode(['string'], `0x${data.slice(10)}`)[0];
+          return translateErrorMessage(decoded, error);
         } catch (decodeError) {
           return '';
         }
       }
-      return '';
+      return translateErrorMessage(error?.message, error);
     };
 
     const handleClaim = async (order) => {
       if (!canClaim(order) || actionLoading.value !== null) return;
+      if (order.isBlacklisted) {
+        showToast(t('home.airdrop.tryLater'), 'warn');
+        return;
+      }
       if (!walletState.signer) {
         showToast(t('common.connectWalletFirst'), 'warn');
         return;
