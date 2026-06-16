@@ -359,7 +359,16 @@
             <div v-for="record in recentRecords" :key="record.recordId" class="record-row">
               <div class="flex items-center justify-between gap-2">
                 <p class="text-sm text-white tech-font font-bold">空投 #{{ record.recordId + 1 }}</p>
-                <p class="text-sm text-app-pink tech-font font-bold">{{ formatToken(record.totalAmount) }} AFI</p>
+                <div class="record-action-group">
+                  <p class="text-sm text-app-pink tech-font font-bold">{{ formatToken(record.totalAmount) }} AFI</p>
+                  <button
+                    @click="openEditRecord(record)"
+                    :disabled="actionLoading === 'edit-airdrop'"
+                    class="record-edit-btn"
+                  >
+                    修改
+                  </button>
+                </div>
               </div>
               <div class="record-address-row">
                 <span class="record-address">{{ record.user }}</span>
@@ -384,6 +393,70 @@
         </section>
       </template>
     </main>
+
+    <div
+      v-if="editModalVisible && editingRecord"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+      @click.self="closeEditRecord"
+    >
+      <div class="bg-[#1a153a] rounded-xl p-5 border border-white/10 w-full max-w-md shadow-2xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl"></div>
+        <div class="relative z-10 flex items-start justify-between gap-3 mb-4">
+          <div>
+            <h2 class="section-title mb-1"><i class="ph-fill ph-pencil-simple text-purple-400"></i> 修改空投记录</h2>
+            <p class="helper">空投 #{{ editingRecord.recordId + 1 }}，受益人和开始时间不可修改。</p>
+          </div>
+          <button
+            @click="closeEditRecord"
+            :disabled="actionLoading === 'edit-airdrop'"
+            class="record-copy-btn"
+            aria-label="关闭"
+          >
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+
+        <div class="relative z-10 bg-black/30 border border-white/10 rounded-lg p-3 mb-4 break-all text-[11px] text-gray-300 tech-font">
+          {{ editingRecord.user }}
+        </div>
+
+        <div class="relative z-10 grid grid-cols-1 gap-3">
+          <div class="input-block">
+            <label>空投数量 AFI</label>
+            <input v-model="editForm.amount" type="number" min="0" placeholder="例如 1000" />
+          </div>
+          <div class="input-block">
+            <label>释放天数</label>
+            <input v-model="editForm.days" type="number" min="1" placeholder="例如 30" />
+          </div>
+          <div class="input-block">
+            <label>领取门槛 USDT</label>
+            <input v-model="editForm.threshold" type="number" min="0" placeholder="没有门槛填 0" />
+          </div>
+        </div>
+
+        <div class="relative z-10 preview-box compact-preview">
+          <p>将把该记录改为 <b>{{ editForm.amount || '0' }} AFI</b>，分 <b>{{ editForm.days || '未填' }} 天</b>释放，领取门槛 <b>{{ editForm.threshold || '未填' }} USDT</b>。</p>
+        </div>
+
+        <div class="relative z-10 flex gap-2">
+          <button
+            @click="closeEditRecord"
+            :disabled="actionLoading === 'edit-airdrop'"
+            class="secondary-btn flex-1"
+          >
+            取消
+          </button>
+          <button
+            @click="submitEditAirdrop"
+            :disabled="actionLoading === 'edit-airdrop'"
+            class="primary-btn flex-1"
+          >
+            {{ actionLoading === 'edit-airdrop' ? '修改中...' : '确认修改' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -481,6 +554,8 @@ export default {
     const recentRecords = ref([]);
     const recordsNextCursor = ref(0);
     const recordsLoading = ref(false);
+    const editModalVisible = ref(false);
+    const editingRecord = ref(null);
     let fallbackProvider = null;
 
     const configForm = reactive({
@@ -490,6 +565,11 @@ export default {
     const fundAmount = ref('');
     const singleForm = reactive({
       user: '',
+      amount: '',
+      days: '',
+      threshold: '',
+    });
+    const editForm = reactive({
       amount: '',
       days: '',
       threshold: '',
@@ -817,6 +897,14 @@ export default {
       }
     };
 
+    const formatDecimalInput = (value) => {
+      try {
+        return ethers.formatEther(value || 0n).replace(/\.?0+$/, '') || '0';
+      } catch (error) {
+        return '';
+      }
+    };
+
     const shortAddress = (address) => {
       if (!address || !ethers.isAddress(address)) return '';
       return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -829,18 +917,61 @@ export default {
       return `${total} 秒`;
     };
 
+    const formatDurationDaysInput = (seconds) => {
+      const total = Number(seconds || 0);
+      if (!Number.isFinite(total) || total <= 0) return '';
+      const days = total / 86400;
+      return Number.isInteger(days)
+        ? days.toString()
+        : days.toFixed(6).replace(/\.?0+$/, '');
+    };
+
+    const resetEditForm = () => {
+      editForm.amount = '';
+      editForm.days = '';
+      editForm.threshold = '';
+    };
+
+    const openEditRecord = (record) => {
+      editingRecord.value = record;
+      editForm.amount = formatDecimalInput(record.totalAmount);
+      editForm.days = formatDurationDaysInput(record.duration);
+      editForm.threshold = formatDecimalInput(record.claimThreshold);
+      editModalVisible.value = true;
+    };
+
+    const closeEditRecord = () => {
+      if (actionLoading.value === 'edit-airdrop') return;
+      editModalVisible.value = false;
+      editingRecord.value = null;
+      resetEditForm();
+    };
+
+    const translateErrorMessage = (message, error) => {
+      const rawMessage = String(message || '');
+      const normalized = rawMessage.toLowerCase();
+      if (error?.code === 4001 || error?.code === 'ACTION_REJECTED' || normalized.includes('reject')) {
+        return '交易已取消';
+      }
+      if (rawMessage.includes('Amount below claimed')) {
+        return '空投数量不能低于已领取数量';
+      }
+      return rawMessage;
+    };
+
     const parseRevert = (error) => {
-      if (error?.reason) return error.reason;
-      if (error?.shortMessage) return error.shortMessage;
+      if (error?.reason) return translateErrorMessage(error.reason, error);
+      if (error?.shortMessage) return translateErrorMessage(error.shortMessage, error);
       const data = error?.data?.data || error?.data;
       if (typeof data === 'string' && data.startsWith('0x08c379a0')) {
         try {
-          return ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${data.slice(10)}`)[0];
+          const decoded = ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${data.slice(10)}`)[0];
+          return translateErrorMessage(decoded, error);
         } catch (decodeError) {
           return '';
         }
       }
-      return '';
+      return translateErrorMessage(error?.message, error);
     };
 
     const copyText = async (text) => {
@@ -1169,6 +1300,49 @@ export default {
       }
     };
 
+    const submitEditAirdrop = async () => {
+      const record = editingRecord.value;
+      if (!record) return;
+
+      const amount = editForm.amount.toString().trim();
+      const days = editForm.days.toString().trim();
+      const threshold = editForm.threshold.toString().trim();
+
+      if (!isNonNegativeNumber(amount) || Number(amount) <= 0) {
+        showToast('空投总量必须大于 0', 'error');
+        return;
+      }
+      if (!isPositiveInteger(days)) {
+        showToast('释放天数必须是大于 0 的整数', 'error');
+        return;
+      }
+      if (!isNonNegativeNumber(threshold)) {
+        showToast('请输入正确的领取门槛，没有门槛请填 0', 'error');
+        return;
+      }
+
+      actionLoading.value = 'edit-airdrop';
+      try {
+        const tx = await getAirdrop(walletState.signer).updateAirdropBatch(
+          [record.recordId],
+          [ethers.parseEther(amount)],
+          [toDurationSeconds(days)],
+          [ethers.parseEther(threshold)],
+        );
+        showToast('修改交易已提交', 'info');
+        await tx.wait();
+        showToast('空投记录修改成功', 'success');
+        editModalVisible.value = false;
+        editingRecord.value = null;
+        resetEditForm();
+        await refreshAdminData();
+      } catch (error) {
+        showToast(parseRevert(error) || '空投记录修改失败', 'error');
+      } finally {
+        actionLoading.value = null;
+      }
+    };
+
     onMounted(refreshAdminData);
 
     watch(() => [walletState.isConnected, walletState.address], () => {
@@ -1200,9 +1374,12 @@ export default {
       recentRecords,
       recordsNextCursor,
       recordsLoading,
+      editModalVisible,
+      editingRecord,
       configForm,
       fundAmount,
       singleForm,
+      editForm,
       batchText,
       customBatchText,
       blacklistText,
@@ -1224,12 +1401,15 @@ export default {
       formatToken,
       shortAddress,
       formatDuration,
+      openEditRecord,
+      closeEditRecord,
       setAfiToken,
       setStakingContract,
       fundPool,
       createSingleAirdrop,
       createBatchAirdrop,
       setBlacklistStatus,
+      submitEditAirdrop,
     };
   },
 };
@@ -1549,6 +1729,35 @@ export default {
   align-items: center;
   gap: 0.4rem;
   min-width: 0;
+}
+
+.record-action-group {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.record-edit-btn {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(168, 85, 247, 0.28);
+  background: rgba(168, 85, 247, 0.14);
+  color: rgb(216 180 254);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.25rem 0.45rem;
+  transition: 0.2s ease;
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.record-edit-btn:hover {
+  color: white;
+  background: rgba(168, 85, 247, 0.24);
+}
+
+.record-edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .record-address {

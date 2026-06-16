@@ -351,19 +351,32 @@ export default {
         : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500';
     };
 
+    const translateErrorMessage = (message, error) => {
+      const rawMessage = String(message || '');
+      const normalized = rawMessage.toLowerCase();
+      if (error?.code === 4001 || error?.code === 'ACTION_REJECTED' || normalized.includes('reject')) {
+        return t('home.staking.cancelled');
+      }
+      if (rawMessage.includes('Amount below claimed')) {
+        return t('home.airdrop.amountBelowClaimed');
+      }
+      return rawMessage;
+    };
+
     const parseRevert = (error) => {
-      if (error?.reason) return error.reason;
-      if (error?.shortMessage) return error.shortMessage;
+      if (error?.reason) return translateErrorMessage(error.reason, error);
+      if (error?.shortMessage) return translateErrorMessage(error.shortMessage, error);
       const data = error?.data?.data || error?.data;
       if (typeof data === 'string' && data.startsWith('0x08c379a0')) {
         try {
-          return ethers.AbiCoder.defaultAbiCoder()
+          const decoded = ethers.AbiCoder.defaultAbiCoder()
             .decode(['string'], `0x${data.slice(10)}`)[0];
+          return translateErrorMessage(decoded, error);
         } catch (decodeError) {
           return '';
         }
       }
-      return '';
+      return translateErrorMessage(error?.message, error);
     };
 
     const handleClaim = async (order) => {
