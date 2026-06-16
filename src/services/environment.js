@@ -33,6 +33,17 @@ export const getDefaultRpcUrl = () =>
   IS_PROD ? 'https://bsc-rpc.publicnode.com' : 'https://bsc-testnet-rpc.publicnode.com';
 
 /**
+ * Claimable order actions
+ * When disabled, claimable order redeem/compound buttons keep the current
+ * behavior: clickable, but only show an unavailable toast.
+ */
+export const ENABLE_CLAIMABLE_ORDER_ACTIONS_TEST = true;
+export const ENABLE_CLAIMABLE_ORDER_ACTIONS_PROD = false;
+export const ENABLE_CLAIMABLE_ORDER_ACTIONS = IS_PROD
+  ? ENABLE_CLAIMABLE_ORDER_ACTIONS_PROD
+  : ENABLE_CLAIMABLE_ORDER_ACTIONS_TEST;
+
+/**
  * Global Dashboard Whitelist
  * Addresses that can see all global data on the homepage.
  */
