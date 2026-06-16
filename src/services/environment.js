@@ -38,7 +38,7 @@ export const getDefaultRpcUrl = () =>
  * behavior: clickable, but only show an unavailable toast.
  */
 export const ENABLE_CLAIMABLE_ORDER_ACTIONS_TEST = true;
-export const ENABLE_CLAIMABLE_ORDER_ACTIONS_PROD = false;
+export const ENABLE_CLAIMABLE_ORDER_ACTIONS_PROD = true;
 export const ENABLE_CLAIMABLE_ORDER_ACTIONS = IS_PROD
   ? ENABLE_CLAIMABLE_ORDER_ACTIONS_PROD
   : ENABLE_CLAIMABLE_ORDER_ACTIONS_TEST;
