@@ -106,14 +106,14 @@
               <button 
                 @click="handleClaimableRedeem(order)"
                 :disabled="actionLoading === order.id"
-                class="flex-1 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
+                class="flex-[4] bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300 border border-white/10 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
               >
                 {{ actionLoading === order.id ? t('orders.processingAction') : t('orders.redeem') }}
               </button>
               <button 
                 @click="handleClaimableCompound(order)"
                 :disabled="actionLoading === order.id"
-                class="flex-1 bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 border border-pink-500/30 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
+                class="flex-[6] bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 border border-pink-500/30 font-bold py-2 rounded-lg text-sm transition tech-font disabled:opacity-50"
               >
                 {{ actionLoading === order.id ? t('orders.processingAction') : t('orders.compound') }}
               </button>
@@ -136,30 +136,86 @@
     <div v-if="confirmModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div class="bg-[#1a153a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <h3 class="text-xl tech-font font-bold text-white mb-3">{{ confirmModal.title }}</h3>
-        <div v-if="confirmModal.modalType === 'redeem' && confirmModal.redeemMeta" class="space-y-3 mb-6">
-          <p class="text-sm text-gray-300 tech-font leading-relaxed">
-            {{ t('orders.redeemCompoundLine', { count: confirmModal.redeemMeta.compoundCount }) }}
+        <div v-if="confirmModal.modalType === 'redeem' && confirmModal.redeemMeta" class="space-y-4 mb-6">
+          <div class="relative overflow-hidden rounded-xl border border-red-500/30 bg-gradient-to-br from-red-500/10 via-red-900/10 to-transparent p-4 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+            <div class="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-red-500/10 blur-xl"></div>
+            
+            <div class="relative">
+              <div v-if="confirmModal.redeemMeta.principalLossPct > 0" class="text-center animate-principal-loss-shake pt-1 pb-2">
+                <p class="text-[13px] tech-font font-bold text-white drop-shadow-md">
+                  {{ t('orders.redeemPrincipalLossPrefix') }}<span class="text-[#ff4d8d]">{{ t('orders.redeemPrincipalLossLabel') }}</span>
+                </p>
+                <div class="my-1.5 flex items-baseline justify-center gap-1 drop-shadow-[0_0_12px_rgba(255,77,141,0.6)]">
+                  <span class="text-4xl tech-font font-black text-[#ff4d8d] leading-none">-{{ confirmModal.redeemMeta.principalLossUsdt }}</span>
+                  <span class="text-sm tech-font font-bold text-[#ff4d8d]">USDT</span>
+                </div>
+                <p class="text-[11px] tech-font text-white/70">
+                  {{ t('orders.redeemPrincipalLossDetail', { count: confirmModal.redeemMeta.compoundCount, pct: confirmModal.redeemMeta.principalLossPct }) }}
+                </p>
+                <div class="mt-2 inline-flex items-center gap-1 rounded border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5">
+                  <i class="ph ph-trend-up text-cyan-400 text-[10px]"></i>
+                  <p class="text-[10px] tech-font text-cyan-300">
+                    {{ t('orders.redeemCompoundHint') }}
+                  </p>
+                </div>
+              </div>
+              
+              <div class="mt-4 flex flex-col gap-2">
+                <div class="flex items-center justify-between rounded-lg bg-black/20 p-2.5 border border-white/5">
+                  <span class="text-[12px] text-gray-400 tech-font">{{ t('orders.redeemPrincipalReturnLabel') }}</span>
+                  <span class="text-[13px] tech-font font-bold text-white">{{ t('orders.redeemPrincipalReturnAmount', { pct: confirmModal.redeemMeta.principalPct, amount: confirmModal.redeemMeta.principalUsdt }) }}</span>
+                </div>
+                <div class="flex items-center justify-between rounded-lg bg-black/20 p-2.5 border border-white/5">
+                  <span class="text-[12px] text-gray-400 tech-font">{{ t('orders.redeemInterestReturnLabel') }}</span>
+                  <span class="text-[13px] tech-font font-bold text-white">{{ t('orders.redeemInterestReturnAmount', { amount: confirmModal.redeemMeta.interestAfiFormatted }) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <p class="text-[11px] text-gray-500 tech-font text-center flex items-center justify-center gap-1">
+            <i class="ph ph-info text-[12px]"></i>
+            {{ t('orders.redeemNote') }}
           </p>
-          <div class="rounded-lg border border-cyan-500/25 bg-cyan-500/10 p-3">
-            <p class="text-[10px] text-cyan-200/80 tech-font uppercase tracking-wider mb-1">{{ t('orders.redeemPrincipalLead') }}</p>
-            <p class="text-base tech-font font-bold text-cyan-300 leading-snug">
-              {{ t('orders.redeemPrincipalDetail', { pct: confirmModal.redeemMeta.principalPct, amount: confirmModal.redeemMeta.principalUsdt }) }}
-            </p>
-            <p v-if="confirmModal.redeemMeta.principalLossPct > 0" class="mt-2 text-xs tech-font font-bold leading-snug animate-principal-loss-shake text-[rgb(103_232_249_/_var(--tw-text-opacity,1))]">
-              <span class="mr-1 text-sm">!</span>
-              {{ t('orders.redeemPrincipalLoss', { pct: confirmModal.redeemMeta.principalLossPct, amount: confirmModal.redeemMeta.principalLossUsdt }) }}
-            </p>
-          </div>
-          <div class="rounded-lg border border-pink-500/25 bg-pink-500/10 p-3">
-            <p class="text-[10px] text-pink-200/80 tech-font uppercase tracking-wider mb-1">{{ t('orders.redeemInterestLead') }}</p>
-            <p class="text-base tech-font font-bold text-app-pink leading-snug">
-              {{ t('orders.redeemInterestDetail', { amount: confirmModal.redeemMeta.interestAfi }) }}
-            </p>
-          </div>
-          <p class="text-[11px] text-gray-500 tech-font">{{ t('orders.redeemNote') }}</p>
         </div>
-        <div v-else-if="confirmModal.modalType === 'compound' && confirmModal.compoundMeta" class="mb-6">
-          <p class="text-sm text-gray-300 tech-font leading-relaxed mb-2" v-html="t('orders.compoundConfirmDesc', { amount: `<span class='text-cyan-300 font-bold'>${confirmModal.compoundMeta.interestUsdt} USDT</span>` })"></p>
+        <div v-else-if="confirmModal.modalType === 'compound' && confirmModal.compoundMeta" class="mb-5">
+          <div class="relative overflow-hidden rounded-xl border border-pink-400/30 bg-gradient-to-br from-pink-500/20 via-purple-500/15 to-cyan-500/10 p-4 shadow-[0_0_35px_rgba(236,72,153,0.16)]">
+            <div class="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-pink-400/20 blur-2xl"></div>
+            <div class="absolute -left-12 bottom-0 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl"></div>
+
+            <div class="relative">
+              <p class="text-[10px] tech-font font-bold uppercase tracking-[0.2em] text-pink-200/80">{{ t('orders.compoundBenefitsTitle') }}</p>
+              <div class="mt-1.5 flex items-baseline gap-2">
+                <span class="text-3xl font-black tech-font leading-none text-white drop-shadow-[0_0_12px_rgba(244,114,182,0.5)]">+10%</span>
+                <span class="pb-0.5 text-xs tech-font font-bold text-pink-100">{{ t('orders.compoundHeroSuffix') }}</span>
+              </div>
+              <p class="mt-2 text-[13px] text-gray-200 tech-font leading-snug" v-html="t('orders.compoundConfirmDesc', { amount: `<span class='text-cyan-200 font-bold'>${confirmModal.compoundMeta.interestUsdt} USDT</span>` })"></p>
+
+              <div class="mt-3 grid grid-cols-1 gap-2">
+                <div class="flex items-start gap-2.5 rounded-lg bg-white/5 p-2.5 border border-white/10">
+                  <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-400/20 text-pink-200 tech-font text-[10px] font-bold">1</span>
+                  <div>
+                    <p class="text-[13px] tech-font font-bold text-white leading-none">{{ t('orders.compoundBenefitPrincipalTitle') }}</p>
+                    <p class="mt-1.5 text-[11px] tech-font text-gray-300 leading-snug">{{ t('orders.compoundBenefitPrincipal') }}</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2.5 rounded-lg bg-white/5 p-2.5 border border-white/10">
+                  <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-400/20 text-pink-200 tech-font text-[10px] font-bold">2</span>
+                  <div>
+                    <p class="text-[13px] tech-font font-bold text-white leading-none">{{ t('orders.compoundBenefitDividendTitle') }}</p>
+                    <p class="mt-1.5 text-[11px] tech-font text-gray-300 leading-snug">{{ t('orders.compoundBenefitDividend') }}</p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-2.5 rounded-lg bg-white/5 p-2.5 border border-white/10">
+                  <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-pink-400/20 text-pink-200 tech-font text-[10px] font-bold">3</span>
+                  <div>
+                    <p class="text-[13px] tech-font font-bold text-white leading-none">{{ t('orders.compoundBenefitMomentumTitle') }}</p>
+                    <p class="mt-1.5 text-[11px] tech-font text-gray-300 leading-snug">{{ t('orders.compoundBenefitMomentum') }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <p v-else class="text-sm text-gray-300 tech-font mb-6 leading-relaxed">{{ confirmModal.message }}</p>
         
@@ -175,12 +231,42 @@
             @click="executeConfirmAction"
             :disabled="confirmModal.countdown > 0 || confirmModal.loading"
             class="flex-1 py-2.5 rounded-lg font-bold transition tech-font text-sm disabled:opacity-50 flex justify-center items-center gap-2"
-            :class="confirmModal.isDestructive ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:bg-purple-500/30'"
+            :class="confirmModal.modalType === 'redeem' ? 'bg-[#ff4d8d] text-white hover:bg-[#ff4d8d]/90 shadow-[0_0_15px_rgba(255,77,141,0.4)]' : (confirmModal.isDestructive ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:bg-purple-500/30')"
           >
             <i v-if="confirmModal.loading" class="ph ph-spinner animate-spin"></i>
+            <span v-else-if="confirmModal.modalType === 'redeem' && confirmModal.redeemMeta" class="flex flex-col items-center leading-tight">
+              <span>{{ confirmModal.countdown > 0 ? t('orders.confirmRedeemWithCountdown', { count: confirmModal.countdown }) : t('orders.confirmRedeem') }}</span>
+              <span class="mt-1 text-[10px] font-normal opacity-80">{{ t('orders.redeemConfirmLossLine', { amount: confirmModal.redeemMeta.principalLossUsdt }) }}</span>
+            </span>
             <span v-else>
               {{ confirmModal.countdown > 0 ? t('common.confirmWithCountdown', { count: confirmModal.countdown }) : t('common.confirm') }}
             </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second Confirmation Modal -->
+    <div v-if="secondConfirmModal.show" class="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+      <div class="bg-[#1a153a] border border-red-500/30 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+        <h3 class="text-xl tech-font font-bold text-white mb-3">{{ t('orders.redeemSecondConfirmTitle') }}</h3>
+        <p class="text-sm text-gray-300 tech-font mb-6 leading-relaxed">{{ secondConfirmModal.message }}</p>
+
+        <div class="flex gap-3">
+          <button
+            @click="closeSecondConfirmModal"
+            :disabled="confirmModal.loading"
+            class="flex-1 py-2.5 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 transition tech-font text-sm disabled:opacity-50"
+          >
+            {{ t('common.cancel') }}
+          </button>
+          <button
+            @click="executeSecondConfirmAction"
+            :disabled="confirmModal.loading"
+            class="flex-1 py-2.5 rounded-lg bg-[#ff4d8d] text-white hover:bg-[#ff4d8d]/90 shadow-[0_0_15px_rgba(255,77,141,0.4)] font-bold transition tech-font text-sm disabled:opacity-50 flex justify-center items-center gap-2"
+          >
+            <i v-if="confirmModal.loading" class="ph ph-spinner animate-spin"></i>
+            <span v-else>{{ t('orders.confirmRedeem') }}</span>
           </button>
         </div>
       </div>
@@ -225,6 +311,10 @@ export default {
       modalType: null,
       redeemMeta: null,
       compoundMeta: null
+    });
+    const secondConfirmModal = ref({
+      show: false,
+      message: ''
     });
     let countdownInterval = null;
     
@@ -402,18 +492,15 @@ export default {
       }
     };
 
-    // Reward-only formatter: keeps full integer part and truncates to 4 fractional digits
-    // (no rounding) so that displayed yields never exceed actual on-chain values.
+    // Reward-only formatter: rounds to 4 fractional digits
     const formatReward = (val) => {
       if (val === undefined || val === null) return '0.0000';
       try {
         const formatted = ethers.formatEther(val);
-        const isNegative = formatted.startsWith('-');
-        const absFormatted = isNegative ? formatted.slice(1) : formatted;
-        const [intPartRaw, decPart = ''] = absFormatted.split('.');
-        const intPart = intPartRaw || '0';
-        const truncatedDec = decPart.slice(0, 4).padEnd(4, '0');
-        return `${isNegative ? '-' : ''}${intPart}.${truncatedDec}`;
+        const floatVal = parseFloat(formatted);
+        const isNegative = floatVal < 0;
+        const absVal = Math.abs(floatVal);
+        return `${isNegative ? '-' : ''}${absVal.toFixed(4)}`;
       } catch (e) {
         console.warn("formatReward error:", e, val);
         return '0.0000';
@@ -461,6 +548,7 @@ export default {
       message = '',
       action,
       requireCountdown = false,
+      countdownSeconds = 5,
       isDestructive = false,
       modalType = null,
       redeemMeta = null,
@@ -475,7 +563,7 @@ export default {
         title,
         message,
         action,
-        countdown: requireCountdown ? 5 : 0,
+        countdown: requireCountdown ? countdownSeconds : 0,
         loading: false,
         isDestructive,
         modalType,
@@ -496,17 +584,42 @@ export default {
 
     const closeConfirmModal = () => {
       confirmModal.value.show = false;
+      secondConfirmModal.value.show = false;
+      secondConfirmModal.value.message = '';
       if (countdownInterval) {
         clearInterval(countdownInterval);
       }
     };
 
-    const executeConfirmAction = async () => {
+    const closeSecondConfirmModal = () => {
+      secondConfirmModal.value.show = false;
+      secondConfirmModal.value.message = '';
+    };
+
+    const runConfirmAction = async () => {
       if (confirmModal.value.action) {
         confirmModal.value.loading = true;
         await confirmModal.value.action();
         closeConfirmModal();
       }
+    };
+
+    const executeConfirmAction = async () => {
+      if (confirmModal.value.modalType === 'redeem' && confirmModal.value.redeemMeta) {
+        secondConfirmModal.value = {
+          show: true,
+          message: t('orders.redeemSecondConfirm', {
+            pct: confirmModal.value.redeemMeta.principalLossPct,
+            amount: confirmModal.value.redeemMeta.principalLossUsdt
+          })
+        };
+        return;
+      }
+      await runConfirmAction();
+    };
+
+    const executeSecondConfirmAction = async () => {
+      await runConfirmAction();
     };
 
     const handleCancelQueue = (id, amount) => {
@@ -580,13 +693,16 @@ export default {
         const principalLossWei = amt > principalWei ? amt - principalWei : 0n;
         const principalLossPct = Number.isFinite(principalPct) ? Math.max(0, 100 - principalPct) : 0;
         const interestWei = rewardWei > amt ? rewardWei - amt : 0n;
+        const interestUsdtStr = ethers.formatEther(interestWei);
+        const interestUsdtFormatted = parseFloat(interestUsdtStr).toFixed(2);
         const redeemMeta = {
           compoundCount: Number(order.compoundCount ?? 0),
           principalPct: Number.isFinite(principalPct) ? principalPct : 0,
           principalUsdt: formatUnits(principalWei),
           principalLossPct,
           principalLossUsdt: formatUnits(principalLossWei),
-          interestAfi: formatReward(interestWei)
+          interestAfi: formatReward(interestWei),
+          interestAfiFormatted: interestUsdtFormatted
         };
         openConfirmModal({
           title: t('orders.redeemConfirmTitle'),
@@ -594,6 +710,7 @@ export default {
           modalType: 'redeem',
           redeemMeta,
           requireCountdown: true,
+          countdownSeconds: 10,
           action: async () => {
             actionLoading.value = id;
             try {
@@ -672,8 +789,11 @@ export default {
       handleRedeem,
       handleCompound,
       confirmModal,
+      secondConfirmModal,
       closeConfirmModal,
+      closeSecondConfirmModal,
       executeConfirmAction,
+      executeSecondConfirmAction,
       t
     };
   }
